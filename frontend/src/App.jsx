@@ -1,53 +1,104 @@
-import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import { getToken } from "./lib/auth";
+import Incomes from "./pages/Incomes";
+import Expenses from "./pages/Expenses";
+import Closing from "./pages/Closing";
+import { Layout } from "./components/layout/Layout";
+import { getToken, clearToken } from "./lib/auth";
+import { apiFetch } from "./lib/api";
 
-function Home() {
-  const navigate = useNavigate();
-  const [authed, setAuthed] = useState(!!getToken());
+function ProtectedRoute({ children, onLogout }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setAuthed(!!getToken());
+    // Fetch user info or just validate token presence
+    const token = getToken();
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    
+    // We can try to fetch user details here if there is an endpoint
+    // For now we assume token is enough or we decode it.
+    // Let's assume valid for UI speed, or fetch /users/me if it exists.
+    // Based on routes, /users is admin only?
+    // Let's just use a placeholder user or decode token if needed.
+    // I'll just set a dummy user state for the layout avatar.
+    setUser({ name: "Usuario", email: "user@evongo.com" });
+    setLoading(false);
   }, []);
 
-  function onAuthed() {
-    setAuthed(true);
-    navigate("/dashboard");
-  }
-
-  function onLogout() {
-    setAuthed(false);
-    navigate("/login");
-  }
+  const token = getToken();
+  if (!token) return <Navigate to="/login" replace />;
 
   return (
-    <div>
-      <nav style={{ display: "flex", gap: 12, padding: 12, borderBottom: "1px solid #eee", fontFamily: "system-ui" }}>
-        <Link to="/login">Login</Link>
-        <Link to="/register">Register</Link>
-        <Link to="/dashboard">Dashboard</Link>
-      </nav>
-
-      <Routes>
-        <Route path="/" element={<div style={{ padding: 20, fontFamily: "system-ui" }}>
-          <h2>Frontend conectado</h2>
-          <p>Authed: <b>{authed ? "sí" : "no"}</b></p>
-        </div>} />
-        <Route path="/login" element={<Login onAuthed={onAuthed} />} />
-        <Route path="/register" element={<Register onAuthed={onAuthed} />} />
-        <Route path="/dashboard" element={<Dashboard onLogout={onLogout} />} />
-      </Routes>
-    </div>
+    <Layout onLogout={onLogout} user={user}>
+      {children}
+    </Layout>
   );
 }
 
 export default function App() {
+  const [authed, setAuthed] = useState(Boolean(getToken()));
+
+  const handleLogin = () => {
+    setAuthed(true);
+  };
+
+  const handleLogout = () => {
+    clearToken();
+    setAuthed(false);
+  };
+
   return (
     <BrowserRouter>
-      <Home />
+      <Routes>
+        <Route 
+          path="/login" 
+          element={!authed ? <Login onAuthed={handleLogin} /> : <Navigate to="/" replace />} 
+        />
+        
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute onLogout={handleLogout}>
+              <Dashboard />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/incomes" 
+          element={
+            <ProtectedRoute onLogout={handleLogout}>
+              <Incomes />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/expenses" 
+          element={
+            <ProtectedRoute onLogout={handleLogout}>
+              <Expenses />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="/closing" 
+          element={
+            <ProtectedRoute onLogout={handleLogout}>
+              <Closing />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </BrowserRouter>
   );
 }
