@@ -3,8 +3,9 @@ import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 
 export function Layout({ children, onLogout, user }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
+  const initialDesktop = window.innerWidth >= 768;
+  const [sidebarOpen, setSidebarOpen] = useState(initialDesktop);
+  const [isDesktop, setIsDesktop] = useState(initialDesktop);
 
   useEffect(() => {
     const handleResize = () => {
@@ -14,6 +15,7 @@ export function Layout({ children, onLogout, user }) {
       else setSidebarOpen(false);
     };
 
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);

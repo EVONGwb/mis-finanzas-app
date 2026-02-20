@@ -3,7 +3,7 @@ import { LayoutDashboard, TrendingUp, TrendingDown, FileText, LogOut, X } from "
 
 export function Sidebar({ isOpen, onClose, onLogout }) {
   const links = [
-    { to: "/", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/incomes", label: "Ingresos", icon: TrendingUp },
     { to: "/expenses", label: "Gastos", icon: TrendingDown },
     { to: "/closing", label: "Cierre Mensual", icon: FileText },
@@ -40,11 +40,6 @@ export function Sidebar({ isOpen, onClose, onLogout }) {
           flexDirection: "column",
           padding: "1.5rem"
         }}
-        // On desktop (md), we want it always visible if the layout allows, 
-        // but here we are controlling visibility via transform.
-        // In Layout.jsx, we will handle the margin-left of content.
-        // For Sidebar itself, we need to ensure it's visible on desktop.
-        // We can override the transform with a class for desktop.
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>

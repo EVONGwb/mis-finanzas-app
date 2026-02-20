@@ -12,29 +12,24 @@ export default function Closing() {
   
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
-  const [closed, setClosed] = useState(false); // Simulación local
-
-  const fetchSummary = async () => {
-    setLoading(true);
-    try {
-      const res = await apiFetch(`/summary?year=${year}&month=${month}`, { token: getToken() });
-      setSummary(res.data);
-      // Reset simulated closed state when changing period
-      setClosed(false);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [closed, setClosed] = useState(false);
 
   useEffect(() => {
-    fetchSummary();
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await apiFetch(`/summary?year=${year}&month=${month}`, { token: getToken() });
+        setSummary(res.data);
+        setClosed(false);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [month, year]);
 
   const handleCloseMonth = () => {
-    // Aquí iría la llamada al backend si existiera endpoint de cerrar mes.
-    // Como no existe, simulamos el cierre visualmente.
     setClosed(true);
     alert(`Mes de ${new Date(0, month - 1).toLocaleString('es-ES', { month: 'long' })} cerrado correctamente. (Simulación)`);
   };

@@ -18,7 +18,7 @@ export function Card({ children, className = "", padding = "1.5rem" }) {
   );
 }
 
-export function StatsCard({ title, value, icon: Icon, subtext, trend, color = "primary" }) {
+export function StatsCard({ title, value, icon: Icon, subtext, color = "primary" }) {
   const colorMap = {
     primary: "var(--color-primary)",
     danger: "var(--color-danger)",

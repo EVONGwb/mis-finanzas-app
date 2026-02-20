@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Card } from "../components/ui/Card";
 import { TrendingUp } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Login({ onAuthed }) {
   const [email, setEmail] = useState("user1@evongo.com");
@@ -79,9 +80,20 @@ export default function Login({ onAuthed }) {
                 onChange={(e) => setPassword(e.target.value)} 
               />
               <div style={{ textAlign: "right" }}>
-                <a href="#" style={{ fontSize: "0.75rem", color: "var(--color-primary)", fontWeight: 500 }}>
+                <button
+                  type="button"
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--color-primary)",
+                    fontWeight: 500,
+                    background: "transparent",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer"
+                  }}
+                >
                   ¿Olvidaste tu contraseña?
-                </a>
+                </button>
               </div>
             </div>
 
@@ -97,13 +109,16 @@ export default function Login({ onAuthed }) {
               </div>
             )}
 
-            <Button type="button" variant="primary" size="lg" isLoading={loading} onClick={submit} style={{ width: "100%", marginTop: "0.5rem" }}>
+            <Button type="submit" variant="primary" size="lg" isLoading={loading} style={{ width: "100%", marginTop: "0.5rem" }}>
               Entrar
             </Button>
           </form>
 
           <div style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
-            ¿No tienes cuenta? <a href="#" style={{ color: "var(--color-primary)", fontWeight: 600 }}>Crear cuenta</a>
+            ¿No tienes cuenta?{" "}
+            <Link to="/register" style={{ color: "var(--color-primary)", fontWeight: 600 }}>
+              Crear cuenta
+            </Link>
           </div>
         </Card>
       </div>

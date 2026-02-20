@@ -91,6 +91,18 @@ a {
   animation: fadeIn 0.3s ease-out forwards;
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes pulse {
+  50% { opacity: 0.5; }
+}
+
 /* Responsive Utilities */
 .hidden { display: none !important; }
 .block { display: block !important; }
