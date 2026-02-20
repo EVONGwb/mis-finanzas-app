@@ -1,74 +1,60 @@
-import express from "express";
-import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import dotenv from "dotenv";
+import express from "express";
+import cors from "cors";
+import incomesRoutes from "./src/routes/incomes.routes.js";
+import expensesRoutes from "./src/routes/expenses.routes.js";
+import { env } from "./src/config/env.js";
+import { logger } from "./src/config/logger.js";
+import { httpLogger } from "./src/middlewares/httpLogger.js";
 
 import { connectDB } from "./src/config/db.js";
-
-import { httpLogger } from "./src/middlewares/httpLogger.js";
+import healthRoutes from "./src/routes/health.routes.js";
+import authRoutes from "./src/routes/auth.routes.js";
+import usersRoutes from "./src/routes/users.routes.js";
 import { notFound } from "./src/middlewares/notFound.js";
 import { errorHandler } from "./src/middlewares/errorHandler.js";
 
-import healthRoutes from "./src/routes/health.routes.js";
-import usersRoutes from "./src/routes/users.routes.js";
-import authRoutes from "./src/routes/auth.routes.js";
-import incomesRoutes from "./src/routes/incomes.routes.js";
-import expensesRoutes from "./src/routes/expenses.routes.js";
-import summaryRoutes from "./src/routes/summary.routes.js";
-dotenv.config();
-
 const app = express();
-
-const CORS_ORIGINS = (process.env.CORS_ORIGINS || "")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
-
 app.use(
   cors({
-    origin: CORS_ORIGINS.length ? CORS_ORIGINS : true,
-    credentials: true
+    origin: env.CORS_ORIGINS.length ? env.CORS_ORIGINS : true
   })
 );
-
-app.use(helmet());
-app.use(express.json());
+app.use(express.json()); app.use(helmet());
 
 app.use(
   rateLimit({
-    windowMs: 60 * 1000,
-    limit: 120,
+    windowMs: env.RATE_LIMIT_WINDOW_MS,
+    max: env.RATE_LIMIT_MAX,
     standardHeaders: true,
     legacyHeaders: false
   })
 );
 
+// Logs de cada request
 app.use(httpLogger);
 
 // Rutas
 app.use("/api", healthRoutes);
 app.use("/api", usersRoutes);
 app.use("/api", authRoutes);
+
 app.use("/api", incomesRoutes);
 app.use("/api", expensesRoutes);
-app.use("/api", summaryRoutes);
-app.use("/api", summaryRoutes);
-
 // 404 + errores
 app.use(notFound);
 app.use(errorHandler);
 
 async function start() {
-  const port = process.env.PORT || 5051;
-  await connectDB(process.env.MONGODB_URI);
+  await connectDB(env.MONGODB_URI);
 
-  app.listen(port, () => {
-    console.log(`🚀 API en http://localhost:${port} (development)`);
+  app.listen(env.PORT, () => {
+    logger.info(`🚀 API en http://localhost:${env.PORT} (${env.NODE_ENV})`);
   });
 }
 
 start().catch((err) => {
-  console.error("❌ Error al iniciar:", err);
+  logger.error(err, "❌ Error al iniciar");
   process.exit(1);
 });
