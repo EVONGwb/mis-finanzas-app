@@ -32,7 +32,7 @@ export default function Dashboard() {
   if (error) {
     return (
       <div style={{ padding: "1rem", color: "var(--color-danger)", backgroundColor: "var(--color-danger-bg)", borderRadius: "var(--radius-md)" }}>
-        Error: {error}
+        {error}
       </div>
     );
   }

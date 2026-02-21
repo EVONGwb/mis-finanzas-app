@@ -83,7 +83,7 @@ export default function App() {
         }
       />
 
-      <Route path="*" element={<div style={{ padding: 20 }}>Ruta no encontrada</div>} />
+      <Route path="*" element={<div style={{ padding: 20 }}>Página no encontrada</div>} />
     </Routes>
   );
 }

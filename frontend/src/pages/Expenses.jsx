@@ -12,6 +12,7 @@ import { Plus, Filter } from "lucide-react";
 export default function Expenses() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
@@ -28,10 +29,11 @@ export default function Expenses() {
   const fetchItems = async () => {
     setLoading(true);
     try {
+      setError("");
       const res = await apiFetch("/expenses", { token: getToken() });
       setItems(res.data);
     } catch (e) {
-      console.error(e);
+      setError(e.message || "Error API");
     } finally {
       setLoading(false);
     }
@@ -73,6 +75,12 @@ export default function Expenses() {
           <Plus size={18} /> Nuevo Gasto
         </Button>
       </div>
+
+      {error && (
+        <div style={{ marginBottom: "1rem", padding: "1rem", color: "var(--color-danger)", backgroundColor: "var(--color-danger-bg)", borderRadius: "var(--radius-md)" }}>
+          {error}
+        </div>
+      )}
 
       <Card style={{ marginBottom: "2rem" }} padding="1rem">
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
