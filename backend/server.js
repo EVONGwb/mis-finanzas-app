@@ -17,15 +17,29 @@ import { notFound } from "./src/middlewares/notFound.js";
 import { errorHandler } from "./src/middlewares/errorHandler.js";
 
 const app = express();
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://traec4kjypht.vercel.app"
-    ],
-    credentials: true
-  })
-);
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://traec4kjypht.vercel.app",
+  "https://mis-finanzas-app-nine.vercel.app"
+];
+
+app.use(cors({
+  origin: function(origin, cb) {
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error("Not allowed by CORS: " + origin));
+  },
+  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization"],
+  credentials: true
+}));
+
+// Express 5 / path-to-regexp requires escaping or using correct syntax for wildcards
+// app.options("*", cors()); // This fails in Express 5 with "Missing parameter name"
+// Using a middleware for OPTIONS instead:
+app.options(/.*/, cors()); 
+
 app.use(express.json()); app.use(helmet());
 
 app.use(
