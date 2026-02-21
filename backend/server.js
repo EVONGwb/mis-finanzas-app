@@ -4,6 +4,7 @@ import express from "express";
 import cors from "cors";
 import incomesRoutes from "./src/routes/incomes.routes.js";
 import expensesRoutes from "./src/routes/expenses.routes.js";
+import summaryRoutes from "./src/routes/summary.routes.js";
 import { env } from "./src/config/env.js";
 import { logger } from "./src/config/logger.js";
 import { httpLogger } from "./src/middlewares/httpLogger.js";
@@ -42,6 +43,7 @@ app.use("/api", authRoutes);
 
 app.use("/api", incomesRoutes);
 app.use("/api", expensesRoutes);
+app.use("/api", summaryRoutes);
 // 404 + errores
 app.use(notFound);
 app.use(errorHandler);
