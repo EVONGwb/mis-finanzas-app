@@ -13,6 +13,7 @@ import { connectDB } from "./src/config/db.js";
 import healthRoutes from "./src/routes/health.routes.js";
 import authRoutes from "./src/routes/auth.routes.js";
 import usersRoutes from "./src/routes/users.routes.js";
+import adminRoutes from "./src/routes/admin.routes.js";
 import { notFound } from "./src/middlewares/notFound.js";
 import { errorHandler } from "./src/middlewares/errorHandler.js";
 
@@ -58,6 +59,7 @@ app.use(httpLogger);
 app.use("/api", healthRoutes);
 app.use("/api", usersRoutes);
 app.use("/api", authRoutes);
+app.use("/api", adminRoutes);
 
 app.use("/api", incomesRoutes);
 app.use("/api", expensesRoutes);

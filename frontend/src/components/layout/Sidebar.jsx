@@ -1,13 +1,17 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, TrendingUp, TrendingDown, FileText, LogOut, X } from "lucide-react";
+import { LayoutDashboard, TrendingUp, TrendingDown, FileText, LogOut, X, Shield } from "lucide-react";
 
-export function Sidebar({ isOpen, onClose, onLogout }) {
+export function Sidebar({ isOpen, onClose, onLogout, user }) {
   const links = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/incomes", label: "Ingresos", icon: TrendingUp },
     { to: "/expenses", label: "Gastos", icon: TrendingDown },
     { to: "/closing", label: "Cierre Mensual", icon: FileText },
   ];
+
+  if (user?.role === "admin") {
+    links.push({ to: "/admin/users", label: "Panel Admin", icon: Shield });
+  }
 
   return (
     <>

@@ -26,6 +26,7 @@ export function Layout({ children, onLogout, user }) {
         isOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)} 
         onLogout={onLogout}
+        user={user}
       />
       
       <div style={{ 
