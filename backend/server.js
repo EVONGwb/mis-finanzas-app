@@ -60,7 +60,7 @@ app.use(httpLogger);
 app.use("/api", healthRoutes);
 app.use("/api", usersRoutes);
 app.use("/api", authRoutes);
-app.use("/api", adminRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api", auditRoutes);
 
 app.use("/api", incomesRoutes);
