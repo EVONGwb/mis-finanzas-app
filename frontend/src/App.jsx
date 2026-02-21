@@ -34,14 +34,10 @@ function Protected({ children }) {
 
 function AdminRoute({ children }) {
   const { user, loading } = useAuth();
-  const token = getToken();
 
-  if (!token) return <Navigate to="/login" replace />;
   if (loading) return <div>Cargando...</div>;
-  
-  if (user?.role !== "admin") {
-    return <Navigate to="/dashboard" replace />;
-  }
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== "admin") return <Navigate to="/dashboard" replace />;
 
   return <AppLayout>{children}</AppLayout>;
 }

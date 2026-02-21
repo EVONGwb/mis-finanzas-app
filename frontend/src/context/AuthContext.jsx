@@ -10,6 +10,7 @@ export function AuthProvider({ children }) {
 
   const fetchUser = async () => {
     const token = getToken();
+    setLoading(true);
     if (!token) {
       setUser(null);
       setLoading(false);
