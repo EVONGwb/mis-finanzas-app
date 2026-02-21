@@ -14,6 +14,7 @@ import healthRoutes from "./src/routes/health.routes.js";
 import authRoutes from "./src/routes/auth.routes.js";
 import usersRoutes from "./src/routes/users.routes.js";
 import adminRoutes from "./src/routes/admin.routes.js";
+import auditRoutes from "./src/routes/audit.routes.js";
 import { notFound } from "./src/middlewares/notFound.js";
 import { errorHandler } from "./src/middlewares/errorHandler.js";
 
@@ -60,6 +61,7 @@ app.use("/api", healthRoutes);
 app.use("/api", usersRoutes);
 app.use("/api", authRoutes);
 app.use("/api", adminRoutes);
+app.use("/api", auditRoutes);
 
 app.use("/api", incomesRoutes);
 app.use("/api", expensesRoutes);

@@ -1,5 +1,6 @@
 import { User } from "../models/user.model.js";
 import { HttpError } from "../utils/httpError.js";
+import { writeAuditLog } from "../utils/audit.js";
 import bcrypt from "bcryptjs";
 
 // GET /api/admin/users
@@ -39,6 +40,15 @@ export const createUser = async (req, res, next) => {
     const userObj = newUser.toObject();
     delete userObj.passwordHash;
 
+    // Audit Log
+    writeAuditLog(req, {
+      action: "USER_CREATE",
+      entity: "User",
+      entityId: newUser._id,
+      after: userObj,
+      message: `User created: ${email}`
+    });
+
     res.status(201).json({ ok: true, data: userObj });
   } catch (error) {
     next(error);
@@ -55,18 +65,27 @@ export const updateUserRole = async (req, res, next) => {
       throw new HttpError(400, "Rol inválido");
     }
 
-    // Evitar que un admin se quite permisos a sí mismo si es el único (opcional, pero buena práctica)
-    // Aquí simplemente validamos que exista
     const user = await User.findById(id);
     if (!user) throw new HttpError(404, "Usuario no encontrado");
 
+    const beforeRole = user.role;
+
     if (user._id.toString() === req.user._id.toString() && role !== "admin") {
-       // Opcional: impedir degradarse a uno mismo para evitar bloqueo accidental
-       // throw new HttpError(403, "No puedes quitarte el rol de admin a ti mismo");
+       // Opcional: impedir degradarse a uno mismo
     }
 
     user.role = role;
     await user.save();
+
+    // Audit Log
+    writeAuditLog(req, {
+      action: "USER_ROLE_CHANGE",
+      entity: "User",
+      entityId: user._id,
+      before: { role: beforeRole },
+      after: { role: user.role },
+      message: `Role changed from ${beforeRole} to ${role} for ${user.email}`
+    });
 
     res.json({ ok: true, data: { _id: user._id, role: user.role } });
   } catch (error) {
@@ -91,6 +110,15 @@ export const resetUserPassword = async (req, res, next) => {
     user.passwordHash = await bcrypt.hash(password, salt);
     await user.save();
 
+    // Audit Log (NO guardar password)
+    writeAuditLog(req, {
+      action: "USER_PASSWORD_RESET",
+      entity: "User",
+      entityId: user._id,
+      before: { _id: user._id, email: user.email },
+      message: `Password reset for ${user.email}`
+    });
+
     res.json({ ok: true, message: "Contraseña actualizada correctamente" });
   } catch (error) {
     next(error);
@@ -108,6 +136,19 @@ export const deleteUser = async (req, res, next) => {
 
     const user = await User.findByIdAndDelete(id);
     if (!user) throw new HttpError(404, "Usuario no encontrado");
+
+    // Preparar objeto para log (sin passwordHash)
+    const userLog = user.toObject();
+    delete userLog.passwordHash;
+
+    // Audit Log
+    writeAuditLog(req, {
+      action: "USER_DELETE",
+      entity: "User",
+      entityId: user._id,
+      before: userLog,
+      message: `User deleted: ${user.email}`
+    });
 
     res.json({ ok: true, message: "Usuario eliminado" });
   } catch (error) {
