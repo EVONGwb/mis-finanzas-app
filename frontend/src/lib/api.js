@@ -1,3 +1,5 @@
+import { getToken } from "./auth";
+
 const RAW = import.meta.env.VITE_API_BASE || "";
 const BASE = (RAW || "http://localhost:5050").replace(/\/+$/, "");
 const BASE_NO_API = BASE.replace(/\/api$/, "");
@@ -5,7 +7,16 @@ const API_ROOT = `${BASE_NO_API}/api`;
 
 export async function apiFetch(path, { token, method = "GET", body } = {}) {
   const headers = { "Content-Type": "application/json" };
-  if (token) headers.Authorization = `Bearer ${token}`;
+  const authToken = token || getToken();
+  
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
+  } else {
+    // Si no es un endpoint público (como login/register), exigimos token
+    if (!path.includes("/auth/")) {
+      throw new Error("No hay token, inicia sesión");
+    }
+  }
 
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const url = `${API_ROOT}${normalizedPath}`;
