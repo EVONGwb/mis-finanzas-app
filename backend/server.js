@@ -19,7 +19,11 @@ import { errorHandler } from "./src/middlewares/errorHandler.js";
 const app = express();
 app.use(
   cors({
-    origin: env.CORS_ORIGINS.length ? env.CORS_ORIGINS : true
+    origin: [
+      "http://localhost:5173",
+      "https://traec4kjypht.vercel.app"
+    ],
+    credentials: true
   })
 );
 app.use(express.json()); app.use(helmet());
