@@ -181,6 +181,16 @@ export default function DeliveriesDashboard() {
     setCustomDate(newDate);
   };
 
+  const handleDeleteCompany = async (id) => {
+    if (!window.confirm("¿Eliminar empresa? Se perderán las estadísticas asociadas si no están guardadas.")) return;
+    try {
+      await apiFetch(`/companies/${id}`, { method: "DELETE", token: getToken() });
+      fetchCompanies();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "5rem" }}>
       {/* Header & Filters */}
@@ -524,7 +534,15 @@ export default function DeliveriesDashboard() {
                       ${c.hourlyRateDefault}/h
                     </span>
                   </div>
-                  {/* Aquí se podría añadir botón de eliminar empresa */}
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    style={{ color: "var(--color-danger)" }}
+                    onClick={() => handleDeleteCompany(c._id)}
+                    title="Eliminar empresa"
+                  >
+                    <Trash2 size={16} />
+                  </Button>
                 </div>
               ))}
             </div>

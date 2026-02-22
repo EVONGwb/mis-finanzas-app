@@ -7,13 +7,15 @@ import { Input } from "../components/ui/Input";
 import { Table, TableRow, TableCell } from "../components/ui/Table";
 import { Modal } from "../components/ui/Modal";
 import { Badge } from "../components/ui/Badge";
-import { Plus, Filter } from "lucide-react";
+import { Plus, Filter, Trash2 } from "lucide-react";
 
 export default function Expenses() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     amount: "",
@@ -56,6 +58,24 @@ export default function Expenses() {
       fetchItems();
     } catch (e) {
       alert(e.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("¿Estás seguro de que quieres eliminar este gasto?")) return;
+    
+    setDeletingId(id);
+    try {
+      await apiFetch(`/expenses/${id}`, {
+        method: "DELETE",
+        token: getToken()
+      });
+      // Remove from UI immediately
+      setItems(items.filter(item => item._id !== id));
+    } catch (e) {
+      alert(e.message || "Error al eliminar");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -117,7 +137,7 @@ export default function Expenses() {
       </Card>
 
       <Card padding="0">
-        <Table headers={["Fecha", "Concepto", "Categoría", "Método", "Monto"]}>
+        <Table headers={["Fecha", "Concepto", "Categoría", "Método", "Monto", "Acciones"]}>
           {loading ? (
             <TableRow><TableCell>Cargando...</TableCell></TableRow>
           ) : filteredItems.length === 0 ? (
@@ -130,6 +150,23 @@ export default function Expenses() {
                 <TableCell><Badge variant="default">{item.category}</Badge></TableCell>
                 <TableCell>{item.paymentMethod}</TableCell>
                 <TableCell className="font-bold text-danger">-${item.amount.toLocaleString()}</TableCell>
+                <TableCell>
+                  <button 
+                    onClick={() => handleDelete(item._id)}
+                    disabled={deletingId === item._id}
+                    style={{ 
+                      background: "none", 
+                      border: "none", 
+                      cursor: deletingId === item._id ? "wait" : "pointer", 
+                      color: "var(--color-danger)",
+                      opacity: deletingId === item._id ? 0.5 : 1,
+                      padding: "0.25rem"
+                    }}
+                    title="Eliminar gasto"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </TableCell>
               </TableRow>
             ))
           )}
