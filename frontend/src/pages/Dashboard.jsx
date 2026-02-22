@@ -17,10 +17,18 @@ export default function Dashboard() {
       try {
         setError("");
         const token = getToken();
-        // Get user from local storage
+        
+        // Attempt to get fresh user data from context or local storage on mount
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
           setUser(JSON.parse(storedUser));
+        } else {
+           // Fallback if not in local storage yet (rare if logged in)
+           const resUser = await apiFetch("/auth/me", { token });
+           if (resUser.data) {
+             setUser(resUser.data);
+             localStorage.setItem("user", JSON.stringify(resUser.data));
+           }
         }
 
         const now = new Date();

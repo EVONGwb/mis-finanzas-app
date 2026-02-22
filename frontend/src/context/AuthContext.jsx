@@ -20,10 +20,13 @@ export function AuthProvider({ children }) {
     try {
       const res = await apiFetch("/auth/me");
       setUser(res.data);
+      // Sync local storage if needed, or rely on state
+      localStorage.setItem("user", JSON.stringify(res.data));
     } catch (error) {
       console.error("Error fetching user", error);
       clearToken();
       setUser(null);
+      localStorage.removeItem("user");
     } finally {
       setLoading(false);
     }
