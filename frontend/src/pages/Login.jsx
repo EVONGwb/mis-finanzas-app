@@ -114,8 +114,8 @@ export default function Login({ onAuthed }) {
               onChange={(e) => setEmail(e.target.value)} 
               required
               style={{ 
-                height: "52px", 
-                fontSize: "1rem", 
+                height: "60px", // Increased height for better comfort
+                fontSize: "1.05rem", // Slightly larger font
                 borderRadius: "12px",
                 backgroundColor: "#F9FAFB", // Fondo gris muy claro
                 border: "1px solid #E5E7EB",
@@ -137,8 +137,8 @@ export default function Login({ onAuthed }) {
               onChange={(e) => setPassword(e.target.value)} 
               required
               style={{ 
-                height: "52px", 
-                fontSize: "1rem", 
+                height: "60px", // Increased height for better comfort
+                fontSize: "1.05rem", // Slightly larger font
                 borderRadius: "12px",
                 backgroundColor: "#F9FAFB",
                 border: "1px solid #E5E7EB",
