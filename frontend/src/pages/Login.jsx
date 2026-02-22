@@ -49,7 +49,7 @@ export default function Login({ onAuthed }) {
       alignItems: "center", 
       justifyContent: "center", 
       backgroundColor: "var(--color-background)",
-      padding: "1.5rem",
+      padding: "1rem",
       position: "relative",
       overflow: "hidden"
     }}>
@@ -86,7 +86,7 @@ export default function Login({ onAuthed }) {
         // The image shows a clean white card or just the background. Let's keep a very subtle white card to ensure readability.
         backgroundColor: "rgba(255, 255, 255, 0.9)", 
         borderRadius: "24px",
-        padding: "2rem",
+        padding: "1.5rem",
         // No shadow or very subtle shadow as per image which looks flat/clean
         boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)"
       }}>

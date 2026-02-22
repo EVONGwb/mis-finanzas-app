@@ -54,11 +54,10 @@ export default function Register({ onAuthed }) {
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "var(--color-background)",
-        padding: "1.5rem",
-        position: "relative",
-        overflow: "hidden"
-      }}
-    >
+      padding: "1rem",
+      position: "relative",
+      overflow: "hidden"
+    }}>
       {/* Decorative background elements (Waves) */}
       <div style={{
         position: "absolute",
@@ -90,7 +89,7 @@ export default function Register({ onAuthed }) {
         alignItems: "center",
         backgroundColor: "rgba(255, 255, 255, 0.9)", 
         borderRadius: "24px",
-        padding: "2rem",
+        padding: "1.5rem",
         boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)"
       }}>
         
