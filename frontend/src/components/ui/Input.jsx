@@ -6,7 +6,7 @@ export function Input({ label, error, icon: Icon, rightElement, ...props }) {
           {label}
         </label>
       )}
-      <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+      <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
         {Icon && (
           <div style={{ 
             position: "absolute", 
