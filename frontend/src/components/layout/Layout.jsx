@@ -49,9 +49,9 @@ export function Layout({ children, onLogout, user }) {
         backgroundColor: "var(--color-surface)",
         borderTop: "1px solid var(--color-border)", 
         display: "flex",
-        justifyContent: "space-around",
+        justifyContent: "space-between", // Distribute space
         alignItems: "center",
-        padding: "0.75rem 0",
+        padding: "0.75rem 1.5rem", // Add side padding
         paddingBottom: "1.5rem", 
         zIndex: 50,
         boxShadow: "0 -4px 20px rgba(0,0,0,0.05)",
@@ -60,26 +60,33 @@ export function Layout({ children, onLogout, user }) {
         <NavLink to="/dashboard" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
           color: isActive ? "#10B981" : "#9CA3AF",
-          fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none"
+          fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
+          // Center the active Dashboard button
+          order: 3, // Position in the center
+          marginTop: "-20px" // Slight lift effect
         })}>
           {({ isActive }) => (
             <>
               <div style={{
-                backgroundColor: isActive ? "#D1FAE5" : "transparent",
+                backgroundColor: "#10B981", // Always green background for main button
                 borderRadius: "50%",
-                padding: "8px",
-                transition: "all 0.2s"
+                padding: "12px", // Larger padding
+                transition: "all 0.2s",
+                boxShadow: "0 4px 10px rgba(16, 185, 129, 0.4)",
+                color: "white" // Always white icon
               }}>
-                <LayoutDashboard size={20} strokeWidth={isActive ? 2.5 : 2} />
+                <LayoutDashboard size={24} strokeWidth={2.5} />
               </div>
-              <span>Dashboard</span>
+              <span style={{ color: isActive ? "#10B981" : "#9CA3AF" }}>Inicio</span>
             </>
           )}
         </NavLink>
+
         <NavLink to="/deliveries" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
           color: isActive ? "#10B981" : "#9CA3AF",
-          fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none"
+          fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
+          order: 1 // Position 1
         })}>
           {({ isActive }) => (
              <>
@@ -95,10 +102,12 @@ export function Layout({ children, onLogout, user }) {
              </>
           )}
         </NavLink>
+
         <NavLink to="/expenses" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
           color: isActive ? "#10B981" : "#9CA3AF",
-          fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none"
+          fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
+          order: 2 // Position 2
         })}>
           {({ isActive }) => (
              <>
@@ -114,10 +123,12 @@ export function Layout({ children, onLogout, user }) {
              </>
           )}
         </NavLink>
+
         <NavLink to="/closing" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
           color: isActive ? "#10B981" : "#9CA3AF",
-          fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none"
+          fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
+          order: 4 // Position 4
         })}>
           {({ isActive }) => (
              <>
@@ -133,6 +144,7 @@ export function Layout({ children, onLogout, user }) {
              </>
           )}
         </NavLink>
+
         {/* New Menu Button (More/Others) */}
         <button 
           onClick={() => setSidebarOpen(true)}
@@ -140,7 +152,8 @@ export function Layout({ children, onLogout, user }) {
             display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
             color: "#9CA3AF",
             fontSize: "0.7rem", fontWeight: 500, textDecoration: "none",
-            background: "none", border: "none"
+            background: "none", border: "none",
+            order: 5 // Position 5
           }}
         >
           <div style={{
