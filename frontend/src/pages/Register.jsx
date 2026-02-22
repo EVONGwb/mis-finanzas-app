@@ -139,7 +139,7 @@ export default function Register({ onAuthed }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            style={{ height: "56px", fontSize: "1rem" }}
+            style={{ height: "60px", fontSize: "1rem", borderRadius: "12px" }}
           />
           <Input
             icon={Mail}
@@ -149,7 +149,7 @@ export default function Register({ onAuthed }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ height: "56px", fontSize: "1rem" }}
+            style={{ height: "60px", fontSize: "1rem", borderRadius: "12px" }}
           />
           <Input
             icon={Lock}
@@ -159,7 +159,7 @@ export default function Register({ onAuthed }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{ height: "56px", fontSize: "1rem" }}
+            style={{ height: "60px", fontSize: "1rem", borderRadius: "12px" }}
           />
           <Input
             icon={Lock}
@@ -169,7 +169,7 @@ export default function Register({ onAuthed }) {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            style={{ height: "56px", fontSize: "1rem" }}
+            style={{ height: "60px", fontSize: "1rem", borderRadius: "12px" }}
             rightElement={
               <button
                 type="button"
@@ -232,11 +232,14 @@ export default function Register({ onAuthed }) {
             isLoading={loading}
             style={{ 
               width: "100%", 
-              marginTop: "0.5rem", 
-              height: "56px", 
+              marginTop: "2rem", 
+              height: "64px", 
               fontSize: "1.125rem",
-              borderRadius: "16px",
-              background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)"
+              borderRadius: "50px",
+              background: "linear-gradient(180deg, #34D399 0%, #059669 100%)",
+              boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.4), 0 4px 6px -2px rgba(16, 185, 129, 0.2)",
+              color: "white",
+              border: "none"
             }}
           >
             Crear cuenta
