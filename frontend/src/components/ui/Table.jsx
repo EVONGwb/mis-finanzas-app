@@ -1,4 +1,14 @@
 export function Table({ headers, children }) {
+  if (!headers) {
+    return (
+      <div style={{ width: "100%", overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
+          {children}
+        </table>
+      </div>
+    );
+  }
+
   return (
     <div style={{ width: "100%", overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
