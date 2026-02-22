@@ -215,9 +215,12 @@ export default function DeliveriesDashboard() {
           backgroundColor: "var(--color-surface)", 
           padding: "0.5rem", 
           borderRadius: "var(--radius-md)",
-          border: "1px solid var(--color-border)"
+          border: "1px solid var(--color-border)",
+          overflowX: "auto", // Allow scrolling if needed on very small screens
+          flexWrap: "wrap",  // Wrap content on small screens
+          gap: "0.5rem"
         }}>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
+          <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
             {["today", "week", "month"].map(range => (
               <button
                 key={range}
@@ -231,7 +234,8 @@ export default function DeliveriesDashboard() {
                   cursor: "pointer",
                   fontWeight: 500,
                   fontSize: "0.875rem",
-                  transition: "all 0.2s"
+                  transition: "all 0.2s",
+                  whiteSpace: "nowrap"
                 }}
               >
                 {range === "today" ? "Día" : range === "week" ? "Semana" : "Mes"}
@@ -239,14 +243,29 @@ export default function DeliveriesDashboard() {
             ))}
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <button onClick={() => changeDate(-1)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)" }}>
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "0.5rem", 
+            flexGrow: 1, 
+            justifyContent: "flex-end", // Align to right on larger screens
+            minWidth: "200px" // Ensure date has space
+          }}>
+            <button onClick={() => changeDate(-1)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)", padding: "0.25rem" }}>
               <ChevronLeft size={20} />
             </button>
-            <span style={{ fontWeight: 600, minWidth: "150px", textAlign: "center", textTransform: "capitalize" }}>
+            <span style={{ 
+              fontWeight: 600, 
+              textAlign: "center", 
+              textTransform: "capitalize",
+              flexGrow: 1, // Let text take available space
+              whiteSpace: "nowrap", // Prevent date wrapping awkwardly
+              overflow: "hidden",
+              textOverflow: "ellipsis"
+            }}>
               {formatDateLabel()}
             </span>
-            <button onClick={() => changeDate(1)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)" }}>
+            <button onClick={() => changeDate(1)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)", padding: "0.25rem" }}>
               <ChevronRight size={20} />
             </button>
           </div>
