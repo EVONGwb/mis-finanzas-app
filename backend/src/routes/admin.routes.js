@@ -6,13 +6,9 @@ import {
   updateUserRole, 
   resetUserPassword, 
   deleteUser, 
-  promoteSelf // Importar controlador temporal
 } from "../controllers/admin.controller.js";
 
 const router = Router();
-
-// RUTA DE EMERGENCIA (GET para facilitar acceso por navegador, protegida por secret)
-router.get("/promote-self", promoteSelf);
 
 router.use(requireAuth);
 router.use(requireRole("admin"));
