@@ -83,12 +83,17 @@ export default function Expenses() {
       )}
 
       <Card style={{ marginBottom: "2rem" }} padding="1rem">
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "1rem", alignItems: "center", width: "100%" }}>
           <Filter size={18} color="var(--color-text-secondary)" />
           <select 
             value={month} 
             onChange={(e) => setMonth(e.target.value)}
-            style={{ padding: "0.5rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)" }}
+            style={{ 
+              padding: "0.5rem", 
+              borderRadius: "var(--radius-sm)", 
+              border: "1px solid var(--color-border)",
+              flex: 1
+            }}
           >
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i + 1} value={i + 1}>{new Date(0, i).toLocaleString('es-ES', { month: 'long' })}</option>
@@ -97,7 +102,12 @@ export default function Expenses() {
           <select 
             value={year} 
             onChange={(e) => setYear(e.target.value)}
-            style={{ padding: "0.5rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)" }}
+            style={{ 
+              padding: "0.5rem", 
+              borderRadius: "var(--radius-sm)", 
+              border: "1px solid var(--color-border)",
+              flex: 1
+            }}
           >
             <option value="2024">2024</option>
             <option value="2025">2025</option>
