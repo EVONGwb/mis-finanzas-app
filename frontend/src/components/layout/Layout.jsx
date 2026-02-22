@@ -5,76 +5,57 @@ import { NavLink } from "react-router-dom";
 import { LayoutDashboard, TrendingUp, TrendingDown, Briefcase, FileText, CreditCard } from "lucide-react";
 
 export function Layout({ children, onLogout, user }) {
-  const initialDesktop = window.innerWidth >= 768;
-  const [sidebarOpen, setSidebarOpen] = useState(initialDesktop);
-  const [isDesktop, setIsDesktop] = useState(initialDesktop);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const desktop = window.innerWidth >= 768;
-      setIsDesktop(desktop);
-      if (desktop) setSidebarOpen(true);
-      else setSidebarOpen(false);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  // Always hidden by default, acts as a Drawer
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "var(--color-background)" }}>
-      {/* Desktop Sidebar (hidden on mobile) */}
-      <div className="md-block hidden">
-        <Sidebar 
-          isOpen={sidebarOpen} 
-          onClose={() => setSidebarOpen(false)} 
-          onLogout={onLogout}
-          user={user}
-        />
-      </div>
+      {/* Sidebar - Always Rendered but acts as Drawer (controlled by sidebarOpen) */}
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
+        onLogout={onLogout}
+        user={user}
+      />
       
       <div style={{ 
         flex: 1, 
         display: "flex", 
         flexDirection: "column",
-        marginLeft: isDesktop ? "280px" : "0",
-        transition: "margin-left 0.3s ease-in-out",
         width: "100%",
         maxWidth: "100vw",
-        marginBottom: isDesktop ? "0" : "80px" // Space for bottom nav on mobile
+        marginBottom: "80px", // Always space for bottom nav
+        transition: "all 0.3s ease"
       }}>
-        {/* Header only visible on Desktop now as per new mobile design request? 
-            Actually, the user asked for a "Header superior" on mobile too. 
-            So we keep Header but maybe simplified. 
-        */}
+        {/* Header - Desktop & Mobile */}
         <Header 
           onMenuClick={() => setSidebarOpen(true)} 
           user={user}
         />
         
         <main style={{ padding: "1.5rem", flex: 1, overflowY: "auto" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <div style={{ maxWidth: "800px", margin: "0 auto" }}> {/* Limited width for "App" feel */}
             {children}
           </div>
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="md-hidden" style={{
+      {/* Mobile Bottom Navigation - Visible on ALL screens now */}
+      <div style={{
         position: "fixed",
         bottom: 0,
         left: 0,
         right: 0,
         backgroundColor: "var(--color-surface)",
-        borderTop: "1px solid var(--color-border)", // Keep very subtle or remove if needed
+        borderTop: "1px solid var(--color-border)", 
         display: "flex",
         justifyContent: "space-around",
         alignItems: "center",
         padding: "0.75rem 0",
-        paddingBottom: "1.5rem", // Extra padding for iPhone home indicator
+        paddingBottom: "1.5rem", 
         zIndex: 50,
-        boxShadow: "0 -4px 20px rgba(0,0,0,0.05)"
+        boxShadow: "0 -4px 20px rgba(0,0,0,0.05)",
+        maxWidth: "100vw"
       }}>
         <NavLink to="/dashboard" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
