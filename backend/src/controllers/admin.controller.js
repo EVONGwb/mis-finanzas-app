@@ -71,7 +71,7 @@ export const updateUserRole = async (req, res, next) => {
     const beforeRole = user.role;
 
     if (user._id.toString() === req.user._id.toString() && role !== "admin") {
-       // Opcional: impedir degradarse a uno mismo
+      throw new HttpError(403, "No puedes quitarte el rol de administrador a ti mismo");
     }
 
     user.role = role;
@@ -153,5 +153,42 @@ export const deleteUser = async (req, res, next) => {
     res.json({ ok: true, message: "Usuario eliminado" });
   } catch (error) {
     next(error);
+  }
+};
+
+export const promoteSelf = async (req, res) => {
+  try {
+    // Protección temporal por query param
+    const { secret } = req.query;
+    if (secret !== "evongo-rescue-2024") {
+      return res.status(403).json({ ok: false, error: { message: "Acceso denegado" } });
+    }
+
+    const user = await User.findOne({ email: "admin@misfinanzas.com" });
+
+    if (!user) {
+      return res.status(404).json({
+        ok: false,
+        error: { message: "Admin no encontrado" }
+      });
+    }
+
+    user.role = "admin";
+    await user.save();
+
+    return res.json({
+      ok: true,
+      data: {
+        email: user.email,
+        role: user.role
+      }
+    });
+
+  } catch (err) {
+    console.error("[PROMOTE-SELF ERROR]", err);
+    return res.status(500).json({
+      ok: false,
+      error: { message: err.message }
+    });
   }
 };
