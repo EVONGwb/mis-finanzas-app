@@ -7,6 +7,7 @@ import Expenses from "./pages/Expenses";
 import Closing from "./pages/Closing";
 import DeliveriesDashboard from "./pages/deliveries/DeliveriesDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
+import Profile from "./pages/Profile";
 import { Layout } from "./components/layout/Layout";
 import { getToken, clearToken } from "./lib/auth";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -118,6 +119,14 @@ export default function App() {
           element={
             <Protected>
               <DeliveriesDashboard />
+            </Protected>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <Protected>
+              <Profile />
             </Protected>
           }
         />

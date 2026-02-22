@@ -1,6 +1,8 @@
 import { Menu, Bell, ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export function Header({ onMenuClick, user }) {
+  const navigate = useNavigate();
   // Capitalize month properly
   const date = new Date();
   const monthName = date.toLocaleString('es-ES', { month: 'long' });
@@ -41,12 +43,15 @@ export function Header({ onMenuClick, user }) {
 
       <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
         {/* User Avatar */}
-        <div style={{ 
-          display: "flex", 
-          alignItems: "center", 
-          gap: "0.75rem", 
-          cursor: "pointer"
-        }}>
+        <div 
+          onClick={() => navigate('/profile')} 
+          style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "0.75rem", 
+            cursor: "pointer"
+          }}
+        >
           <img 
             src={`https://ui-avatars.com/api/?name=${user?.name || "User"}&background=E5E7EB&color=374151`} 
             alt="Profile" 
