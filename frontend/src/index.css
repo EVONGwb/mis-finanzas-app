@@ -1,34 +1,51 @@
 :root {
-  /* Colors */
-  --color-primary: #1B4D3E; /* Verde oscuro elegante */
-  --color-primary-hover: #143A2F;
-  --color-secondary: #E0F2F1; /* Verde/Azul muy suave */
-  --color-accent: #00897B; /* Verde azulado vibrante */
-  --color-background: #F8F9FA; /* Gris casi blanco */
-  --color-surface: #FFFFFF;
-  --color-text: #1F2937;
-  --color-text-secondary: #6B7280;
-  --color-border: #E5E7EB;
+  /* Financial Theme Colors (Modern & Clean) */
+  --color-primary: #10B981;      /* Modern Financial Green */
+  --color-primary-dark: #059669; /* Darker Green for hover */
+  --color-primary-rgb: 16, 185, 129;
   
-  --color-success: #10B981;
-  --color-success-bg: #D1FAE5;
-  --color-danger: #EF4444; /* Rojo elegante */
-  --color-danger-bg: #FEE2E2;
-  --color-warning: #F59E0B;
+  --color-secondary: #3B82F6;    /* Elegant Blue */
+  --color-secondary-dark: #2563EB;
+  
+  --color-accent: #6366F1;       /* Indigo for highlights */
+  
+  /* Backgrounds */
+  --color-background: #F8FAFC;   /* Slate 50 - Very light grey/blue */
+  --color-surface: #FFFFFF;      /* Pure White */
+  --color-surface-hover: #F1F5F9; /* Slate 100 */
+  
+  /* Text */
+  --color-text: #1E293B;         /* Slate 800 - Deep Blue/Grey */
+  --color-text-secondary: #64748B; /* Slate 500 */
+  --color-text-tertiary: #94A3B8;  /* Slate 400 */
+  
+  /* Status Colors */
+  --color-success: #10B981;      /* Green */
+  --color-success-bg: #D1FAE5;   /* Light Green */
+  --color-success-rgb: 16, 185, 129;
+  
+  --color-danger: #EF4444;       /* Red */
+  --color-danger-bg: #FEE2E2;    /* Light Red */
+  
+  --color-warning: #F59E0B;      /* Amber */
+  --color-warning-bg: #FEF3C7;   /* Light Amber */
+  
+  --color-border: #E2E8F0;       /* Slate 200 */
   
   /* Typography */
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
   
   /* Spacing & Radius */
-  --radius-sm: 6px;
-  --radius-md: 12px; /* User requested 12px */
-  --radius-lg: 16px;
+  --radius-sm: 8px;
+  --radius-md: 16px;  /* Softer, more modern */
+  --radius-lg: 24px;
   --radius-full: 9999px;
   
-  /* Shadows */
+  /* Shadows - Soft & Diffused */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 * {
@@ -42,26 +59,34 @@ body {
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  line-height: 1.6;
 }
 
 h1, h2, h3, h4, h5, h6 {
   margin: 0;
   font-weight: 600;
   color: var(--color-text);
+  letter-spacing: -0.02em; /* Tighter tracking for headings */
 }
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
 
 p {
   margin: 0;
-  line-height: 1.5;
+  color: var(--color-text-secondary);
 }
 
 button {
   font-family: inherit;
+  cursor: pointer;
 }
 
 a {
   text-decoration: none;
   color: inherit;
+  transition: color 0.2s;
 }
 
 /* Utilities */
@@ -74,9 +99,13 @@ a {
 .gap-4 { gap: 1rem; }
 .w-full { width: 100%; }
 .h-full { height: 100%; }
+
 .text-sm { font-size: 0.875rem; }
+.text-xs { font-size: 0.75rem; }
 .font-medium { font-weight: 500; }
 .font-bold { font-weight: 700; }
+
+.text-primary { color: var(--color-primary); }
 .text-secondary { color: var(--color-text-secondary); }
 .text-danger { color: var(--color-danger); }
 .text-success { color: var(--color-success); }
@@ -88,7 +117,7 @@ a {
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes spin {
@@ -99,8 +128,20 @@ a {
   animation: spin 1s linear infinite;
 }
 
-@keyframes pulse {
-  50% { opacity: 0.5; }
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }
 
 /* Responsive Utilities */

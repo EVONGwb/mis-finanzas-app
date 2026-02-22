@@ -35,7 +35,7 @@ export function Sidebar({ isOpen, onClose, onLogout, user }) {
           top: 0,
           left: 0,
           bottom: 0,
-          width: "260px",
+          width: "280px", // Increased width for better spacing
           backgroundColor: "var(--color-surface)",
           borderRight: "1px solid var(--color-border)",
           zIndex: 50,
@@ -46,18 +46,19 @@ export function Sidebar({ isOpen, onClose, onLogout, user }) {
           padding: "1.5rem"
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "3rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <div style={{ 
-              width: "32px", height: "32px", 
-              borderRadius: "8px", 
-              backgroundColor: "var(--color-primary)",
+              width: "40px", height: "40px", 
+              borderRadius: "12px", 
+              background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: "white", fontWeight: "bold"
+              color: "white", fontWeight: "bold",
+              boxShadow: "var(--shadow-md)"
             }}>
               M
             </div>
-            <span style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-primary)" }}>
+            <span style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-text)", letterSpacing: "-0.5px" }}>
               Mis Finanzas
             </span>
           </div>
@@ -67,6 +68,17 @@ export function Sidebar({ isOpen, onClose, onLogout, user }) {
         </div>
 
         <nav style={{ display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>
+          <p style={{ 
+            fontSize: "0.75rem", 
+            fontWeight: 600, 
+            color: "var(--color-text-tertiary)", 
+            textTransform: "uppercase", 
+            letterSpacing: "0.05em",
+            marginBottom: "0.5rem",
+            paddingLeft: "1rem"
+          }}>
+            Menú Principal
+          </p>
           {links.map((link) => (
             <NavLink
               key={link.to}
@@ -78,22 +90,57 @@ export function Sidebar({ isOpen, onClose, onLogout, user }) {
                 display: "flex",
                 alignItems: "center",
                 gap: "0.75rem",
-                padding: "0.75rem 1rem",
+                padding: "0.875rem 1rem",
                 borderRadius: "var(--radius-sm)",
                 color: isActive ? "var(--color-primary)" : "var(--color-text-secondary)",
-                backgroundColor: isActive ? "var(--color-secondary)" : "transparent",
+                backgroundColor: isActive ? "var(--color-success-bg)" : "transparent",
                 fontWeight: isActive ? 600 : 500,
                 textDecoration: "none",
-                transition: "all 0.2s"
+                transition: "all 0.2s",
+                position: "relative"
               })}
             >
-              <link.icon size={20} />
-              {link.label}
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <div style={{
+                      position: "absolute",
+                      left: 0,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      width: "4px",
+                      height: "20px",
+                      backgroundColor: "var(--color-primary)",
+                      borderTopRightRadius: "4px",
+                      borderBottomRightRadius: "4px"
+                    }} />
+                  )}
+                  <link.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                  {link.label}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
 
-        <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1rem", marginTop: "auto" }}>
+        <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1.5rem", marginTop: "auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem", padding: "0 0.5rem" }}>
+            <div style={{ 
+              width: "40px", height: "40px", 
+              borderRadius: "50%", 
+              backgroundColor: "var(--color-secondary)",
+              color: "white",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontWeight: "bold"
+            }}>
+              {user?.name?.charAt(0).toUpperCase() || "U"}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text)" }}>{user?.name || "Usuario"}</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{user?.email}</span>
+            </div>
+          </div>
+          
           <button
             onClick={onLogout}
             style={{
@@ -103,16 +150,26 @@ export function Sidebar({ isOpen, onClose, onLogout, user }) {
               width: "100%",
               padding: "0.75rem 1rem",
               background: "none",
-              border: "none",
+              border: "1px solid var(--color-border)",
               color: "var(--color-text-secondary)",
               cursor: "pointer",
               borderRadius: "var(--radius-sm)",
-              transition: "background 0.2s"
+              transition: "all 0.2s",
+              justifyContent: "center",
+              fontWeight: 500
             }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = "var(--color-danger-bg)"}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = "var(--color-danger-bg)";
+              e.currentTarget.style.borderColor = "var(--color-danger-bg)";
+              e.currentTarget.style.color = "var(--color-danger)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.borderColor = "var(--color-border)";
+              e.currentTarget.style.color = "var(--color-text-secondary)";
+            }}
           >
-            <LogOut size={20} />
+            <LogOut size={18} />
             Cerrar Sesión
           </button>
         </div>

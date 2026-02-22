@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../../lib/api";
 import { getToken } from "../../lib/auth";
-import { Card } from "../../components/ui/Card";
+import { Card, StatsCard } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
 import { Input } from "../../components/ui/Input";
@@ -22,50 +22,6 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-// Componente para KPI Cards
-function KpiCard({ title, value, subtext, icon: Icon, color = "primary" }) {
-  const colors = {
-    primary: "var(--color-primary)",
-    success: "var(--color-success)",
-    warning: "#f59e0b",
-    info: "#3b82f6"
-  };
-
-  const bgColors = {
-    primary: "rgba(var(--color-primary-rgb), 0.1)",
-    success: "rgba(var(--color-success-rgb), 0.1)",
-    warning: "rgba(245, 158, 11, 0.1)",
-    info: "rgba(59, 130, 246, 0.1)"
-  };
-
-  return (
-    <div style={{ 
-      backgroundColor: "var(--color-surface)", 
-      padding: "1.5rem", 
-      borderRadius: "var(--radius-md)", 
-      boxShadow: "var(--shadow-sm)",
-      border: "1px solid var(--color-border)",
-      display: "flex",
-      alignItems: "flex-start",
-      justifyContent: "space-between"
-    }}>
-      <div>
-        <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem", marginBottom: "0.5rem" }}>{title}</p>
-        <h3 style={{ fontSize: "1.5rem", fontWeight: "700", color: "var(--color-text)" }}>{value}</h3>
-        {subtext && <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "0.25rem" }}>{subtext}</p>}
-      </div>
-      <div style={{ 
-        padding: "0.75rem", 
-        borderRadius: "var(--radius-md)", 
-        backgroundColor: bgColors[color] || bgColors.primary,
-        color: colors[color] || colors.primary
-      }}>
-        <Icon size={24} />
-      </div>
-    </div>
-  );
-}
 
 export default function DeliveriesDashboard() {
   const navigate = useNavigate();
@@ -307,25 +263,25 @@ export default function DeliveriesDashboard() {
         </div>
       ) : (
         <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginBottom: "2rem" }}>
-          <KpiCard 
+          <StatsCard 
             title="Ganancias Totales" 
             value={`$${stats?.totalEarnings?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`} 
             icon={DollarSign} 
             color="success" 
           />
-          <KpiCard 
+          <StatsCard 
             title="Horas Trabajadas" 
             value={`${stats?.totalHours || 0} h`} 
             icon={Clock} 
             color="info" 
           />
-          <KpiCard 
+          <StatsCard 
             title="Promedio Diario" 
             value={`$${stats?.dailyAverage?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`} 
             icon={TrendingUp} 
             color="warning" 
           />
-          <KpiCard 
+          <StatsCard 
             title="Top Empresa" 
             value={stats?.topCompany?.companyName || "-"} 
             subtext={stats?.topCompany ? `$${stats.topCompany.totalEarnings.toLocaleString()}` : "Sin datos"}
