@@ -160,23 +160,39 @@ export const deleteUser = async (req, res, next) => {
 export const promoteSelf = async (req, res, next) => {
   try {
     const targetEmail = "admin@misfinanzas.com";
-    const user = await User.findOne({ email: targetEmail });
-    if (!user) throw new HttpError(404, "Usuario objetivo no encontrado");
+    console.log(`[PROMOTE-SELF] Buscando usuario: ${targetEmail}`);
     
+    const user = await User.findOne({ email: targetEmail });
+    
+    if (!user) {
+      console.log(`[PROMOTE-SELF] Usuario no encontrado: ${targetEmail}`);
+      return res.status(404).json({ ok: false, error: { message: "Admin no existe" } });
+    }
+    
+    console.log(`[PROMOTE-SELF] Usuario encontrado: ${user._id}, Rol actual: ${user.role}`);
+
     user.role = "admin";
     await user.save();
     
-    // Audit Log
-    writeAuditLog(req, {
-      action: "USER_ROLE_CHANGE",
-      entity: "User",
-      entityId: user._id,
-      after: { role: "admin" },
-      message: `User auto-promoted to admin via temp endpoint: ${targetEmail}`
-    });
+    console.log(`[PROMOTE-SELF] Usuario actualizado a admin`);
 
-    res.json({ ok: true, message: "Usuario promovido a admin exitosamente" });
+    // Audit Log
+    try {
+      writeAuditLog(req, {
+        action: "USER_ROLE_CHANGE",
+        entity: "User",
+        entityId: user._id,
+        after: { role: "admin" },
+        message: `User auto-promoted to admin via temp endpoint: ${targetEmail}`
+      });
+    } catch (auditError) {
+      console.error("[PROMOTE-SELF] Error escribiendo log de auditoría:", auditError);
+    }
+
+    res.json({ ok: true, data: { email: user.email, role: user.role } });
   } catch (error) {
-    next(error);
+    console.error("[PROMOTE-SELF] Error crítico:", error);
+    // Devolvemos 500 explícito pero JSON seguro
+    res.status(500).json({ ok: false, error: { message: error.message || "Error interno al promover usuario" } });
   }
 };
