@@ -11,22 +11,6 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Mock data for charts (until backend supports historical data better)
-  const mockChartData = [
-    { name: 'S 1', ingresos: 400, gastos: 240 },
-    { name: 'S 2', ingresos: 300, gastos: 139 },
-    { name: 'S 3', ingresos: 200, gastos: 980 },
-    { name: 'S 4', ingresos: 278, gastos: 390 },
-    { name: 'S 5', ingresos: 189, gastos: 480 },
-  ];
-
-  const mockCategories = [
-    { name: 'Hogar', value: 400, fill: '#6366F1' },
-    { name: 'Comida', value: 300, fill: '#10B981' },
-    { name: 'Ocio', value: 300, fill: '#F59E0B' },
-    { name: 'Otros', value: 200, fill: '#EF4444' },
-  ];
-
   useEffect(() => {
     (async () => {
       try {
@@ -136,89 +120,100 @@ export default function Dashboard() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "1.5rem", marginBottom: "2rem" }}>
         <Card title="Resumen Mensual" className="col-span-2">
           <div style={{ height: "300px", width: "100%", marginTop: "1rem" }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={mockChartData}>
-                <defs>
-                  <linearGradient id="colorIngresos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-success)" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="var(--color-success)" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorGastos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-danger)" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="var(--color-danger)" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-secondary)', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-secondary)', fontSize: 12}} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: 'var(--color-surface)', borderRadius: '8px', border: 'none', boxShadow: 'var(--shadow-lg)' }}
-                  itemStyle={{ fontSize: '14px', fontWeight: 500 }}
-                />
-                <Area type="monotone" dataKey="ingresos" stroke="var(--color-success)" strokeWidth={3} fillOpacity={1} fill="url(#colorIngresos)" name="Ingresos" />
-                <Area type="monotone" dataKey="gastos" stroke="var(--color-danger)" strokeWidth={3} fillOpacity={1} fill="url(#colorGastos)" name="Gastos" />
-              </AreaChart>
-            </ResponsiveContainer>
+            {summary?.chartData?.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={summary.chartData}>
+                  <defs>
+                    <linearGradient id="colorIngresos" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--color-success)" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="var(--color-success)" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorGastos" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--color-danger)" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="var(--color-danger)" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-secondary)', fontSize: 12}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-secondary)', fontSize: 12}} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'var(--color-surface)', borderRadius: '8px', border: 'none', boxShadow: 'var(--shadow-lg)' }}
+                    itemStyle={{ fontSize: '14px', fontWeight: 500 }}
+                  />
+                  <Area type="monotone" dataKey="ingresos" stroke="var(--color-success)" strokeWidth={3} fillOpacity={1} fill="url(#colorIngresos)" name="Ingresos" />
+                  <Area type="monotone" dataKey="gastos" stroke="var(--color-danger)" strokeWidth={3} fillOpacity={1} fill="url(#colorGastos)" name="Gastos" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--color-text-secondary)" }}>
+                No hay datos para mostrar este mes
+              </div>
+            )}
           </div>
         </Card>
 
         <Card title="Categorías de Gastos">
            <div style={{ height: "300px", width: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-             {/* Placeholder for Pie Chart - Recharts Pie is a bit verbose, using Bar for simplicity or just visual placeholder */}
-             <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={mockCategories} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" />
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" width={80} tick={{fill: 'var(--color-text-secondary)'}} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '8px' }} />
-                  <Bar dataKey="value" fill="var(--color-primary)" radius={[0, 4, 4, 0]} barSize={20} />
-                </BarChart>
-             </ResponsiveContainer>
+             {summary?.expensesByCategory?.length > 0 ? (
+               <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={summary.expensesByCategory} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" />
+                    <XAxis type="number" hide />
+                    <YAxis dataKey="name" type="category" width={80} tick={{fill: 'var(--color-text-secondary)'}} axisLine={false} tickLine={false} />
+                    <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '8px' }} />
+                    <Bar dataKey="value" fill="var(--color-primary)" radius={[0, 4, 4, 0]} barSize={20} />
+                  </BarChart>
+               </ResponsiveContainer>
+             ) : (
+               <div style={{ color: "var(--color-text-secondary)" }}>Sin gastos registrados</div>
+             )}
            </div>
         </Card>
       </div>
 
       {/* Recent Activity */}
-      <Card title="Actividad Reciente" action={<button style={{ color: "var(--color-primary)", fontWeight: 600, background: "none", border: "none", fontSize: "0.875rem" }}>Ver todo</button>}>
+      <Card title="Actividad Reciente">
         <div style={{ display: "flex", flexDirection: "column" }}>
-          {/* Mock Recent Activity */}
-          {[
-            { id: 1, title: "Pago Nómina", date: "Hoy, 10:30", amount: 2450.00, type: "income" },
-            { id: 2, title: "Supermercado Mercadona", date: "Ayer, 18:45", amount: -85.20, type: "expense" },
-            { id: 3, title: "Netflix Suscripción", date: "22 May, 09:00", amount: -12.99, type: "expense" },
-            { id: 4, title: "Transferencia Recibida", date: "20 May, 14:20", amount: 150.00, type: "income" },
-          ].map((item, i) => (
-            <div key={item.id} style={{ 
-              display: "flex", 
-              alignItems: "center", 
-              justifyContent: "space-between", 
-              padding: "1rem 0",
-              borderBottom: i < 3 ? "1px solid var(--color-border)" : "none"
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                <div style={{ 
-                  width: "40px", height: "40px", 
-                  borderRadius: "50%", 
-                  backgroundColor: item.type === 'income' ? "var(--color-success-bg)" : "var(--color-danger-bg)",
-                  color: item.type === 'income' ? "var(--color-success)" : "var(--color-danger)",
-                  display: "flex", alignItems: "center", justifyContent: "center"
-                }}>
-                  {item.type === 'income' ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
-                </div>
-                <div>
-                  <div style={{ fontWeight: 600, color: "var(--color-text)" }}>{item.title}</div>
-                  <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>{item.date}</div>
-                </div>
-              </div>
-              <div style={{ 
-                fontWeight: 700, 
-                color: item.type === 'income' ? "var(--color-success)" : "var(--color-text)",
-                fontSize: "1rem"
+          {summary?.recentActivity?.length > 0 ? (
+            summary.recentActivity.map((item, i) => (
+              <div key={item._id || i} style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "space-between", 
+                padding: "1rem 0",
+                borderBottom: i < summary.recentActivity.length - 1 ? "1px solid var(--color-border)" : "none"
               }}>
-                {item.type === 'income' ? "+" : ""}{item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}€
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  <div style={{ 
+                    width: "40px", height: "40px", 
+                    borderRadius: "50%", 
+                    backgroundColor: item.type === 'income' ? "var(--color-success-bg)" : "var(--color-danger-bg)",
+                    color: item.type === 'income' ? "var(--color-success)" : "var(--color-danger)",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    {item.type === 'income' ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, color: "var(--color-text)" }}>{item.title || "Sin descripción"}</div>
+                    <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
+                      {new Date(item.date).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ 
+                  fontWeight: 700, 
+                  color: item.type === 'income' ? "var(--color-success)" : "var(--color-text)",
+                  fontSize: "1rem"
+                }}>
+                  {item.type === 'income' ? "+" : "-"}${Math.abs(item.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </div>
               </div>
+            ))
+          ) : (
+            <div style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-secondary)" }}>
+              No hay movimientos recientes
             </div>
-          ))}
+          )}
         </div>
       </Card>
     </div>
