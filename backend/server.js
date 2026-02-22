@@ -15,6 +15,7 @@ import authRoutes from "./src/routes/auth.routes.js";
 import usersRoutes from "./src/routes/users.routes.js";
 import adminRoutes from "./src/routes/admin.routes.js";
 import auditRoutes from "./src/routes/audit.routes.js";
+import tempRoutes from "./src/routes/temp.routes.js";
 import { notFound } from "./src/middlewares/notFound.js";
 import { errorHandler } from "./src/middlewares/errorHandler.js";
 
@@ -62,6 +63,7 @@ app.use("/api", usersRoutes);
 app.use("/api", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", auditRoutes);
+app.use("/api/temp", tempRoutes);
 
 app.use("/api", incomesRoutes);
 app.use("/api", expensesRoutes);
