@@ -40,22 +40,30 @@ export function StatsCard({ title, value, subtext, color = "primary", trend }) {
     primary: { // Bank - Blue
       gradient: "linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)",
       stroke: "#60A5FA",
-      fill: "rgba(59, 130, 246, 0.3)"
+      fill: "rgba(59, 130, 246, 0.3)",
+      textColor: "white",
+      subTextColor: "rgba(255, 255, 255, 0.8)"
     },
     success: { // Income - Green
       gradient: "linear-gradient(135deg, #065F46 0%, #10B981 100%)",
       stroke: "#34D399",
-      fill: "rgba(16, 185, 129, 0.3)"
+      fill: "rgba(16, 185, 129, 0.3)",
+      textColor: "white",
+      subTextColor: "rgba(255, 255, 255, 0.8)"
     },
     danger: { // Expense - Red
       gradient: "linear-gradient(135deg, #991B1B 0%, #EF4444 100%)",
       stroke: "#F87171",
-      fill: "rgba(239, 68, 68, 0.3)"
+      fill: "rgba(239, 68, 68, 0.3)",
+      textColor: "white",
+      subTextColor: "rgba(255, 255, 255, 0.8)"
     },
     info: { // Benefit - Light Blue
       gradient: "linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)",
       stroke: "#93C5FD",
-      fill: "rgba(96, 165, 250, 0.3)"
+      fill: "rgba(96, 165, 250, 0.3)",
+      textColor: "white",
+      subTextColor: "rgba(255, 255, 255, 0.8)"
     }
   };
 
@@ -78,7 +86,7 @@ export function StatsCard({ title, value, subtext, color = "primary", trend }) {
       position: "relative",
       overflow: "hidden",
       boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-      color: "white"
+      color: currentStyle.textColor
     }}>
       {/* Background Mini Chart */}
       <div style={{ position: "absolute", bottom: -10, left: 0, right: 0, height: "60%", opacity: 0.5, zIndex: 0 }}>
@@ -97,7 +105,7 @@ export function StatsCard({ title, value, subtext, color = "primary", trend }) {
 
       {/* Content */}
       <div style={{ zIndex: 1, position: "relative" }}>
-        <p style={{ fontSize: "0.875rem", fontWeight: 500, opacity: 0.9, marginBottom: "0.25rem" }}>{title}</p>
+        <p style={{ fontSize: "0.875rem", fontWeight: 500, opacity: 0.9, marginBottom: "0.25rem", color: currentStyle.subTextColor }}>{title}</p>
         <h3 style={{ fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.5px" }}>{value}</h3>
       </div>
       
