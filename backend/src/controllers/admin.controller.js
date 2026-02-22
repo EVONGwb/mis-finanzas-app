@@ -156,43 +156,33 @@ export const deleteUser = async (req, res, next) => {
   }
 };
 
-// TEMPORAL: Promover admin@misfinanzas.com a admin
-export const promoteSelf = async (req, res, next) => {
+export const promoteSelf = async (req, res) => {
   try {
-    const targetEmail = "admin@misfinanzas.com";
-    console.log(`[PROMOTE-SELF] Buscando usuario: ${targetEmail}`);
-    
-    const user = await User.findOne({ email: targetEmail });
-    
+    const user = await User.findOne({ email: "admin@misfinanzas.com" });
+
     if (!user) {
-      console.log(`[PROMOTE-SELF] Usuario no encontrado: ${targetEmail}`);
-      return res.status(404).json({ ok: false, error: { message: "Admin no existe" } });
+      return res.status(404).json({
+        ok: false,
+        error: { message: "Admin no encontrado" }
+      });
     }
-    
-    console.log(`[PROMOTE-SELF] Usuario encontrado: ${user._id}, Rol actual: ${user.role}`);
 
     user.role = "admin";
     await user.save();
-    
-    console.log(`[PROMOTE-SELF] Usuario actualizado a admin`);
 
-    // Audit Log
-    try {
-      writeAuditLog(req, {
-        action: "USER_ROLE_CHANGE",
-        entity: "User",
-        entityId: user._id,
-        after: { role: "admin" },
-        message: `User auto-promoted to admin via temp endpoint: ${targetEmail}`
-      });
-    } catch (auditError) {
-      console.error("[PROMOTE-SELF] Error escribiendo log de auditoría:", auditError);
-    }
+    return res.json({
+      ok: true,
+      data: {
+        email: user.email,
+        role: user.role
+      }
+    });
 
-    res.json({ ok: true, data: { email: user.email, role: user.role } });
-  } catch (error) {
-    console.error("[PROMOTE-SELF] Error crítico:", error);
-    // Devolvemos 500 explícito pero JSON seguro
-    res.status(500).json({ ok: false, error: { message: error.message || "Error interno al promover usuario" } });
+  } catch (err) {
+    console.error("[PROMOTE-SELF ERROR]", err);
+    return res.status(500).json({
+      ok: false,
+      error: { message: err.message }
+    });
   }
 };
