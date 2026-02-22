@@ -7,16 +7,14 @@ const API_ROOT = `${BASE_NO_API}/api`;
 
 export async function apiFetch(path, { token, method = "GET", body } = {}) {
   const headers = { "Content-Type": "application/json" };
-  const authToken = token || getToken();
+  const authToken = token || localStorage.getItem("token"); // Lectura directa o via parámetro
   
   if (authToken) {
     headers.Authorization = `Bearer ${authToken}`;
-  } else {
-    // Si no es un endpoint público (como login/register), exigimos token
-    if (!path.includes("/auth/")) {
-      throw new Error("No hay token, inicia sesión");
-    }
   }
+  
+  // Eliminamos validación rígida para permitir endpoints públicos sin /auth/ si fuera necesario
+  // pero mantenemos la lógica de Authorization si existe token.
 
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const url = `${API_ROOT}${normalizedPath}`;

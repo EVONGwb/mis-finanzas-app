@@ -22,8 +22,19 @@ export default function Login({ onAuthed }) {
         method: "POST",
         body: { email, password }
       });
-      setToken(res.data.token);
-      onAuthed();
+      
+      const token = res.data?.token;
+      const user = res.data?.user;
+
+      if (token) {
+        localStorage.setItem("token", token);
+        if (user) {
+          localStorage.setItem("user", JSON.stringify(user));
+        }
+        onAuthed();
+      } else {
+        setError("Respuesta inválida del servidor");
+      }
     } catch (err) {
       setError(err.message);
     } finally {
