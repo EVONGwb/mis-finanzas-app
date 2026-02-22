@@ -155,3 +155,28 @@ export const deleteUser = async (req, res, next) => {
     next(error);
   }
 };
+
+// TEMPORAL: Promover admin@misfinanzas.com a admin
+export const promoteSelf = async (req, res, next) => {
+  try {
+    const targetEmail = "admin@misfinanzas.com";
+    const user = await User.findOne({ email: targetEmail });
+    if (!user) throw new HttpError(404, "Usuario objetivo no encontrado");
+    
+    user.role = "admin";
+    await user.save();
+    
+    // Audit Log
+    writeAuditLog(req, {
+      action: "USER_ROLE_CHANGE",
+      entity: "User",
+      entityId: user._id,
+      after: { role: "admin" },
+      message: `User auto-promoted to admin via temp endpoint: ${targetEmail}`
+    });
+
+    res.json({ ok: true, message: "Usuario promovido a admin exitosamente" });
+  } catch (error) {
+    next(error);
+  }
+};
