@@ -1,4 +1,4 @@
-export function Input({ label, error, icon: Icon, rightElement, ...props }) {
+export function Input({ label, error, icon: Icon, iconColor, rightElement, ...props }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", width: "100%" }}>
       {label && (
@@ -11,7 +11,7 @@ export function Input({ label, error, icon: Icon, rightElement, ...props }) {
           <div style={{ 
             position: "absolute", 
             left: "1rem", 
-            color: "var(--color-text-tertiary)",
+            color: iconColor || "var(--color-text-tertiary)",
             pointerEvents: "none",
             display: "flex"
           }}>
