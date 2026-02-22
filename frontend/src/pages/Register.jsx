@@ -225,20 +225,29 @@ export default function Register({ onAuthed }) {
             </div>
           )}
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
+          <Button 
+            type="submit" 
             isLoading={loading}
             style={{ 
+              display: "inline-flex", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              gap: "0.5rem", 
+              fontWeight: 600, 
+              transition: "0.2s cubic-bezier(0.4, 0, 0.2, 1)", 
+              cursor: "pointer", 
+              outline: "none", 
+              fontFamily: "var(--font-family)",
+              opacity: 1, 
+              color: "white", 
+              padding: "1rem 2rem", 
               width: "100%", 
               marginTop: "2rem", 
               height: "64px", 
               fontSize: "1.125rem",
-              borderRadius: "50px",
-              background: "linear-gradient(180deg, #34D399 0%, #059669 100%)",
+              borderRadius: "50px", // Pill shape as per image
+              background: "linear-gradient(180deg, #34D399 0%, #059669 100%)", // Green gradient
               boxShadow: "0 10px 15px -3px rgba(16, 185, 129, 0.4), 0 4px 6px -2px rgba(16, 185, 129, 0.2)",
-              color: "white",
               border: "none"
             }}
           >
