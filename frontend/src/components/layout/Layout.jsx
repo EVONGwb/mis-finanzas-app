@@ -152,6 +152,26 @@ export function Layout({ children, onLogout, user }) {
              </>
           )}
         </NavLink>
+        {/* New Menu Button (More/Others) */}
+        <button 
+          onClick={() => setSidebarOpen(true)}
+          style={{
+            display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
+            color: "#9CA3AF",
+            fontSize: "0.7rem", fontWeight: 500, textDecoration: "none",
+            background: "none", border: "none"
+          }}
+        >
+          <div style={{
+             backgroundColor: "transparent",
+             borderRadius: "50%",
+             padding: "8px",
+             transition: "all 0.2s"
+           }}>
+             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+           </div>
+           <span>Menú</span>
+        </button>
       </div>
     </div>
   );
