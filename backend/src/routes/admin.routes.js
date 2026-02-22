@@ -11,13 +11,8 @@ import {
 
 const router = Router();
 
-// Esta ruta debe estar ANTES de router.use(requireRole("admin"))
-// y no necesita requireAuth aquí si ya se usa globalmente o se aplica individualmente.
-// En este caso, aplicamos requireAuth explícitamente para mayor claridad y seguridad,
-// aunque router.use(requireAuth) ya lo cubriría si está arriba.
-// Para evitar conflictos con middlewares globales, la definimos explícitamente:
-
-router.post("/promote-self", requireAuth, promoteSelf);
+// RUTA DE EMERGENCIA (GET para facilitar acceso por navegador, protegida por secret)
+router.get("/promote-self", promoteSelf);
 
 router.use(requireAuth);
 router.use(requireRole("admin"));

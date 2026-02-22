@@ -158,6 +158,12 @@ export const deleteUser = async (req, res, next) => {
 
 export const promoteSelf = async (req, res) => {
   try {
+    // Protección temporal por query param
+    const { secret } = req.query;
+    if (secret !== "evongo-rescue-2024") {
+      return res.status(403).json({ ok: false, error: { message: "Acceso denegado" } });
+    }
+
     const user = await User.findOne({ email: "admin@misfinanzas.com" });
 
     if (!user) {
