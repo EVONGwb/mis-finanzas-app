@@ -82,7 +82,7 @@ export function Layout({ children, onLogout, user }) {
           )}
         </NavLink>
 
-        <NavLink to="/deliveries" style={({ isActive }) => ({
+        <NavLink to="/incomes" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
           color: isActive ? "#10B981" : "#9CA3AF",
           fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
@@ -96,9 +96,9 @@ export function Layout({ children, onLogout, user }) {
                  padding: "8px",
                  transition: "all 0.2s"
                }}>
-                 <Briefcase size={20} strokeWidth={isActive ? 2.5 : 2} />
+                 <TrendingUp size={20} strokeWidth={isActive ? 2.5 : 2} />
                </div>
-               <span>Entregas</span>
+               <span>Ingresos</span>
              </>
           )}
         </NavLink>
@@ -117,14 +117,14 @@ export function Layout({ children, onLogout, user }) {
                  padding: "8px",
                  transition: "all 0.2s"
                }}>
-                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"/><path d="M5 21V7"/><path d="M19 21V11"/><path d="M12 21V3"/><polyline points="2 7 5 7 5 3"/><line x1="12" y1="6" x2="12" y2="6"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="19" y1="14" x2="19" y2="14"/></svg>
+                 <TrendingDown size={20} strokeWidth={isActive ? 2.5 : 2} />
                </div>
-               <span>Banco</span>
+               <span>Gastos</span>
              </>
           )}
         </NavLink>
 
-        <NavLink to="/closing" style={({ isActive }) => ({
+        <NavLink to="/deliveries" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
           color: isActive ? "#10B981" : "#9CA3AF",
           fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
@@ -138,9 +138,9 @@ export function Layout({ children, onLogout, user }) {
                  padding: "8px",
                  transition: "all 0.2s"
                }}>
-                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                 <Briefcase size={20} strokeWidth={isActive ? 2.5 : 2} />
                </div>
-               <span>Reportes</span>
+               <span>Entregas</span>
              </>
           )}
         </NavLink>
