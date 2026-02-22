@@ -11,7 +11,8 @@ RATE_LIMIT_MAX: Number(process.env.RATE_LIMIT_MAX || 120),
   MONGODB_URI: process.env.MONGODB_URI || "",
 
   JWT_SECRET: process.env.JWT_SECRET || "",
-  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d"
+  JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || ""
 };
 
 // Si quieres OBLIGAR Mongo en producción:
