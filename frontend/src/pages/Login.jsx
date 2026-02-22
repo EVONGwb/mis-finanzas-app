@@ -77,7 +77,7 @@ export default function Login({ onAuthed }) {
 
       <div style={{ 
         width: "100%", 
-        maxWidth: "420px", 
+        maxWidth: "100%", 
         zIndex: 1, 
         display: "flex", 
         flexDirection: "column", 

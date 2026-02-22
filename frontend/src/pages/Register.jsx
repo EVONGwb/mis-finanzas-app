@@ -83,13 +83,14 @@ export default function Register({ onAuthed }) {
 
       <div style={{ 
         width: "100%", 
-        maxWidth: "420px", 
+        maxWidth: "100%", 
         zIndex: 1, 
         display: "flex", 
         flexDirection: "column", 
         alignItems: "center",
         backgroundColor: "rgba(255, 255, 255, 0.85)", // Glass effect
         backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
         borderRadius: "24px",
         padding: "2.5rem 2rem",
         boxShadow: "0 20px 40px -10px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.5)"
