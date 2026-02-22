@@ -10,12 +10,19 @@ export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     (async () => {
       try {
         setError("");
         const token = getToken();
+        // Get user from local storage
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+
         const now = new Date();
         const year = now.getFullYear();
         const month = now.getMonth() + 1;
@@ -41,22 +48,36 @@ export default function Dashboard() {
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "6rem" }}>
       
-      <div style={{ marginBottom: "2.5rem", display: "flex", justifyContent: "space-between", alignItems: "end" }}>
-        {/* Simple Month Selector Mockup */}
+      <div style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        {/* User Greeting centered/prominent instead of just "Dashboard" */}
         <div style={{ 
           display: "flex", 
           alignItems: "center", 
-          gap: "0.5rem", 
-          backgroundColor: "#F3F4F6", 
-          padding: "0.5rem 1rem", 
-          borderRadius: "12px", 
-          color: "#4B5563",
-          fontWeight: 600,
-          fontSize: "0.9rem"
+          gap: "0.75rem",
+          width: "100%",
+          justifyContent: "space-between"
         }}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{color: "#10B981"}}><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-          Dashboard
-          <ChevronDown size={16} />
+           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text)", letterSpacing: "-0.5px" }}>
+             Hola, {user?.name?.split(' ')[0] || "Usuario"} 👋
+           </h1>
+           
+           {/* Month Selector Compact */}
+           <div style={{ 
+             display: "flex", 
+             alignItems: "center", 
+             gap: "0.25rem", 
+             backgroundColor: "var(--color-surface)", 
+             padding: "0.5rem 0.75rem", 
+             borderRadius: "99px", 
+             border: "1px solid var(--color-border)",
+             color: "var(--color-text-secondary)",
+             fontWeight: 600,
+             fontSize: "0.8rem",
+             boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+           }}>
+             <span style={{ textTransform: "capitalize" }}>{new Date().toLocaleString('es-ES', { month: 'long' })}</span>
+             <ChevronDown size={14} />
+           </div>
         </div>
       </div>
       
