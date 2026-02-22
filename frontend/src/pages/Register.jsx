@@ -2,8 +2,7 @@ import { useState } from "react";
 import { apiFetch } from "../lib/api";
 import { setToken } from "../lib/auth";
 import { Link } from "react-router-dom";
-import { TrendingUp } from "lucide-react";
-import { Card } from "../components/ui/Card";
+import { TrendingUp, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 
@@ -11,12 +10,26 @@ export default function Register({ onAuthed }) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function submit(e) {
     e.preventDefault();
     setError("");
+
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden");
+      return;
+    }
+
+    if (!acceptTerms) {
+      setError("Debes aceptar los términos y condiciones");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await apiFetch("/auth/register", {
@@ -37,103 +50,207 @@ export default function Register({ onAuthed }) {
       style={{
         minHeight: "100vh",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "var(--color-background)",
-        padding: "1rem"
+        padding: "1.5rem",
+        position: "relative",
+        overflow: "hidden"
       }}
     >
-      <div style={{ width: "100%", maxWidth: "420px" }}>
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+      {/* Decorative background elements */}
+      <div style={{
+        position: "absolute",
+        top: -100,
+        left: -100,
+        width: "300px",
+        height: "300px",
+        borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, rgba(255,255,255,0) 70%)",
+        zIndex: 0
+      }} />
+      <div style={{
+        position: "absolute",
+        bottom: -50,
+        right: -50,
+        width: "250px",
+        height: "250px",
+        borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(255,255,255,0) 70%)",
+        zIndex: 0
+      }} />
+
+      <div style={{ width: "100%", maxWidth: "420px", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        
+        {/* Header Section */}
+        <div style={{ marginBottom: "2rem", textAlign: "center" }}>
           <div
             style={{
-              width: "48px",
-              height: "48px",
-              backgroundColor: "var(--color-primary)",
-              borderRadius: "12px",
-              display: "inline-flex",
-              alignItems: "center",
+              width: "64px", height: "64px", 
+              borderRadius: "16px", 
+              background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)",
+              display: "inline-flex", 
+              alignItems: "center", 
               justifyContent: "center",
               color: "white",
               marginBottom: "1rem",
-              boxShadow: "var(--shadow-md)"
+              boxShadow: "0 10px 25px -5px rgba(16, 185, 129, 0.4)"
             }}
           >
-            <TrendingUp size={28} />
+            <TrendingUp size={32} strokeWidth={2.5} />
           </div>
-          <h1 style={{ fontSize: "1.875rem", fontWeight: 700, color: "var(--color-primary)" }}>
-            Mis Finanzas
+          <h1 style={{ 
+            fontSize: "2rem", 
+            fontWeight: 800, 
+            color: "var(--color-text)",
+            letterSpacing: "-0.03em",
+            marginBottom: "0.5rem"
+          }}>
+            Crear cuenta
           </h1>
-          <p style={{ color: "var(--color-text-secondary)", marginTop: "0.5rem" }}>
-            Crea tu cuenta en segundos
+          <p style={{ 
+            color: "var(--color-text-secondary)", 
+            fontSize: "1rem",
+            maxWidth: "280px",
+            margin: "0 auto",
+            lineHeight: 1.5
+          }}>
+            Empieza a controlar tus finanzas hoy
           </p>
         </div>
 
-        <Card className="animate-fade-in" padding="2rem">
-          <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-            <Input
-              label="Nombre"
-              placeholder="Tu nombre"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <Input
-              label="Email"
-              type="email"
-              placeholder="tu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <Input
-              label="Contraseña"
-              type="password"
-              placeholder="Mínimo 6 caracteres"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-
-            {error && (
-              <div
+        {/* Form Section */}
+        <form onSubmit={submit} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <Input
+            icon={User}
+            placeholder="Nombre completo"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            style={{ height: "56px", fontSize: "1rem" }}
+          />
+          <Input
+            icon={Mail}
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={{ height: "56px", fontSize: "1rem" }}
+          />
+          <Input
+            icon={Lock}
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={{ height: "56px", fontSize: "1rem" }}
+          />
+          <Input
+            icon={Lock}
+            type={showPassword ? "text" : "password"}
+            placeholder="Confirmar contraseña"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            style={{ height: "56px", fontSize: "1rem" }}
+            rightElement={
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
                 style={{
-                  padding: "0.75rem",
-                  backgroundColor: "var(--color-danger-bg)",
-                  color: "var(--color-danger)",
-                  borderRadius: "var(--radius-sm)",
-                  fontSize: "0.875rem"
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--color-text-tertiary)",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "0.25rem"
                 }}
               >
-                {error}
-              </div>
-            )}
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            }
+          />
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              isLoading={loading}
-              style={{ width: "100%", marginTop: "0.5rem" }}
+          {/* Checkbox */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0 0.25rem" }}>
+            <input 
+              type="checkbox" 
+              id="terms" 
+              checked={acceptTerms}
+              onChange={(e) => setAcceptTerms(e.target.checked)}
+              style={{ 
+                width: "20px", 
+                height: "20px", 
+                accentColor: "var(--color-primary)",
+                cursor: "pointer"
+              }} 
+            />
+            <label htmlFor="terms" style={{ fontSize: "0.9rem", color: "var(--color-text-secondary)", cursor: "pointer" }}>
+              Acepto los <span style={{ fontWeight: 600, color: "var(--color-text)" }}>términos y condiciones</span>
+            </label>
+          </div>
+
+          {error && (
+            <div
+              style={{
+                padding: "0.875rem",
+                backgroundColor: "#FEF2F2",
+                color: "#EF4444",
+                borderRadius: "12px",
+                fontSize: "0.875rem",
+                textAlign: "center",
+                fontWeight: 500,
+                border: "1px solid #FEE2E2"
+              }}
             >
-              Crear cuenta
-            </Button>
-          </form>
+              {error}
+            </div>
+          )}
 
-          <div
-            style={{
-              marginTop: "1.5rem",
-              textAlign: "center",
-              fontSize: "0.875rem",
-              color: "var(--color-text-secondary)"
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            isLoading={loading}
+            style={{ 
+              width: "100%", 
+              marginTop: "0.5rem", 
+              height: "56px", 
+              fontSize: "1.125rem",
+              borderRadius: "16px",
+              background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)"
             }}
           >
-            ¿Ya tienes cuenta?{" "}
-            <Link to="/login" style={{ color: "var(--color-primary)", fontWeight: 600 }}>
-              Iniciar sesión
-            </Link>
-          </div>
-        </Card>
+            Crear cuenta
+          </Button>
+        </form>
+
+        {/* Footer */}
+        <div
+          style={{
+            marginTop: "2rem",
+            textAlign: "center",
+            fontSize: "0.95rem",
+            color: "var(--color-text-secondary)"
+          }}
+        >
+          ¿Ya tienes cuenta?{" "}
+          <Link to="/login" style={{ color: "var(--color-primary)", fontWeight: 700 }}>
+            Inicia sesión
+          </Link>
+        </div>
+
+        {/* Pagination Dots */}
+        <div style={{ display: "flex", gap: "0.5rem", marginTop: "3rem" }}>
+          <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-primary)", opacity: 0.3 }}></div>
+          <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-primary)", opacity: 0.3 }}></div>
+          <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-primary)" }}></div>
+        </div>
+
       </div>
     </div>
   );

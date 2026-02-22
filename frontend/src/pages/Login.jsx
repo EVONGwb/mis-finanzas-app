@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { apiFetch } from "../lib/api";
-import { setToken } from "../lib/auth";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
-import { Card } from "../components/ui/Card";
-import { TrendingUp } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Login({ onAuthed }) {
-  const [email, setEmail] = useState("user1@evongo.com");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -46,92 +45,177 @@ export default function Login({ onAuthed }) {
     <div style={{ 
       minHeight: "100vh", 
       display: "flex", 
+      flexDirection: "column",
       alignItems: "center", 
       justifyContent: "center", 
       backgroundColor: "var(--color-background)",
-      padding: "1rem"
+      padding: "1.5rem",
+      position: "relative",
+      overflow: "hidden"
     }}>
-      <div style={{ width: "100%", maxWidth: "400px" }}>
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+      {/* Decorative background elements */}
+      <div style={{
+        position: "absolute",
+        top: -100,
+        right: -100,
+        width: "300px",
+        height: "300px",
+        borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, rgba(255,255,255,0) 70%)",
+        zIndex: 0
+      }} />
+      <div style={{
+        position: "absolute",
+        bottom: -50,
+        left: -50,
+        width: "250px",
+        height: "250px",
+        borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(255,255,255,0) 70%)",
+        zIndex: 0
+      }} />
+
+      <div style={{ width: "100%", maxWidth: "400px", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        
+        {/* Logo Section */}
+        <div style={{ marginBottom: "2.5rem", textAlign: "center" }}>
           <div style={{ 
-            width: "48px", height: "48px", 
-            backgroundColor: "var(--color-primary)", 
-            borderRadius: "12px", 
+            width: "64px", height: "64px", 
+            borderRadius: "16px", 
+            background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)",
             display: "inline-flex", 
             alignItems: "center", 
             justifyContent: "center",
             color: "white",
             marginBottom: "1rem",
-            boxShadow: "var(--shadow-md)"
+            boxShadow: "0 10px 25px -5px rgba(16, 185, 129, 0.4)"
           }}>
-            <TrendingUp size={28} />
+            <TrendingUp size={32} strokeWidth={2.5} />
           </div>
-          <h1 style={{ fontSize: "1.875rem", fontWeight: 700, color: "var(--color-primary)" }}>Mis Finanzas</h1>
-          <p style={{ color: "var(--color-text-secondary)", marginTop: "0.5rem" }}>
-            Gestiona tus ingresos y gastos de forma inteligente
+          <h1 style={{ 
+            fontSize: "2rem", 
+            fontWeight: 800, 
+            color: "var(--color-text)",
+            letterSpacing: "-0.03em",
+            marginBottom: "0.5rem"
+          }}>
+            Mis Finanzas
+          </h1>
+          <p style={{ 
+            color: "var(--color-text-secondary)", 
+            fontSize: "1rem",
+            maxWidth: "280px",
+            margin: "0 auto",
+            lineHeight: 1.5
+          }}>
+            Controla tu economía al milímetro
           </p>
         </div>
 
-        <Card className="animate-fade-in" padding="2rem">
-          <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-            <Input 
-              label="Email" 
-              type="email" 
-              placeholder="tu@email.com" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-            />
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-              <Input 
-                label="Contraseña" 
-                type="password" 
-                placeholder="••••••" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-              />
-              <div style={{ textAlign: "right" }}>
-                <button
-                  type="button"
-                  style={{
-                    fontSize: "0.75rem",
-                    color: "var(--color-primary)",
-                    fontWeight: 500,
-                    background: "transparent",
-                    border: "none",
-                    padding: 0,
-                    cursor: "pointer"
-                  }}
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
-              </div>
-            </div>
+        {/* Form Section */}
+        <form onSubmit={submit} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <Input 
+            icon={Mail}
+            type="email" 
+            placeholder="Correo electrónico" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            required
+            style={{ height: "56px", fontSize: "1rem" }}
+          />
+          
+          <Input 
+            icon={Lock}
+            type={showPassword ? "text" : "password"} 
+            placeholder="Contraseña" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            required
+            style={{ height: "56px", fontSize: "1rem" }}
+            rightElement={
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--color-text-tertiary)",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "0.25rem"
+                }}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            }
+          />
 
-            {error && (
-              <div style={{ 
-                padding: "0.75rem", 
-                backgroundColor: "var(--color-danger-bg)", 
-                color: "var(--color-danger)", 
-                borderRadius: "var(--radius-sm)",
-                fontSize: "0.875rem"
-              }}>
-                {error}
-              </div>
-            )}
-
-            <Button type="submit" variant="primary" size="lg" isLoading={loading} style={{ width: "100%", marginTop: "0.5rem" }}>
-              Entrar
-            </Button>
-          </form>
-
-          <div style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
-            ¿No tienes cuenta?{" "}
-            <Link to="/register" style={{ color: "var(--color-primary)", fontWeight: 600 }}>
-              Crear cuenta
-            </Link>
+          <div style={{ textAlign: "right", marginTop: "-0.25rem" }}>
+            <button
+              type="button"
+              style={{
+                fontSize: "0.875rem",
+                color: "var(--color-text-secondary)",
+                fontWeight: 500,
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                padding: "0.25rem 0"
+              }}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
           </div>
-        </Card>
+
+          {error && (
+            <div style={{ 
+              padding: "0.875rem", 
+              backgroundColor: "#FEF2F2", 
+              color: "#EF4444", 
+              borderRadius: "12px",
+              fontSize: "0.875rem",
+              textAlign: "center",
+              fontWeight: 500,
+              border: "1px solid #FEE2E2"
+            }}>
+              {error}
+            </div>
+          )}
+
+          <Button 
+            type="submit" 
+            variant="primary" 
+            size="lg" 
+            isLoading={loading} 
+            style={{ 
+              width: "100%", 
+              marginTop: "1rem", 
+              height: "56px", 
+              fontSize: "1.125rem",
+              borderRadius: "16px", // Matching input radius roughly or slightly more rounded
+              background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)"
+            }}
+          >
+            Iniciar sesión
+          </Button>
+        </form>
+
+        {/* Footer */}
+        <div style={{ marginTop: "2rem", display: "flex", gap: "0.5rem", fontSize: "0.95rem" }}>
+          <span style={{ color: "var(--color-text-secondary)" }}>¿No tienes cuenta?</span>
+          <Link to="/register" style={{ color: "var(--color-primary)", fontWeight: 700 }}>
+            Crear cuenta
+          </Link>
+        </div>
+
+        {/* Pagination Dots (Visual only as per image) */}
+        <div style={{ display: "flex", gap: "0.5rem", marginTop: "3rem" }}>
+          <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-primary)", opacity: 0.3 }}></div>
+          <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-primary)" }}></div>
+          <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-primary)", opacity: 0.3 }}></div>
+        </div>
+
       </div>
     </div>
   );
