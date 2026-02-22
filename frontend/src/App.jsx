@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Incomes from "./pages/Incomes";
 import Expenses from "./pages/Expenses";
 import Closing from "./pages/Closing";
+import DeliveriesDashboard from "./pages/deliveries/DeliveriesDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import { Layout } from "./components/layout/Layout";
 import { getToken, clearToken } from "./lib/auth";
@@ -109,6 +110,14 @@ export default function App() {
           element={
             <Protected>
               <Closing />
+            </Protected>
+          }
+        />
+        <Route
+          path="/deliveries"
+          element={
+            <Protected>
+              <DeliveriesDashboard />
             </Protected>
           }
         />
