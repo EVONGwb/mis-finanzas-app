@@ -54,7 +54,7 @@ export default function Login({ onAuthed }) {
       
       <div style={{ 
         width: "100%", 
-        maxWidth: "400px", 
+        maxWidth: "480px", // Slightly wider for better presence
         backgroundColor: "white", 
         borderRadius: "24px",
         padding: "2.5rem 2rem",
