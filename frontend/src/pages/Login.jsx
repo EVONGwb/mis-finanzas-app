@@ -10,8 +10,18 @@ export default function Login({ onAuthed }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Cargar email guardado si existe
+  useState(() => {
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -30,6 +40,12 @@ export default function Login({ onAuthed }) {
           localStorage.setItem("token", token);
           if (user) {
             localStorage.setItem("user", JSON.stringify(user));
+            // Guardar o eliminar email recordado
+            if (rememberMe) {
+              localStorage.setItem("rememberedEmail", email);
+            } else {
+              localStorage.removeItem("rememberedEmail");
+            }
           }
           onAuthed();
         } else {
@@ -59,10 +75,16 @@ export default function Login({ onAuthed }) {
 
       if (token) {
         localStorage.setItem("token", token);
-        if (user) {
-          localStorage.setItem("user", JSON.stringify(user));
-        }
-        onAuthed();
+          if (user) {
+            localStorage.setItem("user", JSON.stringify(user));
+            // Guardar o eliminar email recordado
+            if (rememberMe) {
+              localStorage.setItem("rememberedEmail", email);
+            } else {
+              localStorage.removeItem("rememberedEmail");
+            }
+          }
+          onAuthed();
       } else {
         setError("Respuesta inválida del servidor");
       }
@@ -197,7 +219,27 @@ export default function Login({ onAuthed }) {
                 </button>
               }
             />
-            <div style={{ textAlign: "right", marginTop: "0.25rem" }}>
+            
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input 
+                  type="checkbox" 
+                  id="remember" 
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  style={{ 
+                    width: "16px", 
+                    height: "16px", 
+                    accentColor: "#10B981",
+                    cursor: "pointer",
+                    borderRadius: "4px"
+                  }} 
+                />
+                <label htmlFor="remember" style={{ fontSize: "0.875rem", color: "#6B7280", cursor: "pointer", userSelect: "none" }}>
+                  Recordar usuario
+                </label>
+              </div>
+
               <button
                 type="button"
                 style={{
