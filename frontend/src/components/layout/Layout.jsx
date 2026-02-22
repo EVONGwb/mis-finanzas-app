@@ -67,51 +67,90 @@ export function Layout({ children, onLogout, user }) {
         left: 0,
         right: 0,
         backgroundColor: "var(--color-surface)",
-        borderTop: "1px solid var(--color-border)",
+        borderTop: "1px solid var(--color-border)", // Keep very subtle or remove if needed
         display: "flex",
         justifyContent: "space-around",
         alignItems: "center",
         padding: "0.75rem 0",
+        paddingBottom: "1.5rem", // Extra padding for iPhone home indicator
         zIndex: 50,
-        boxShadow: "0 -2px 10px rgba(0,0,0,0.05)"
+        boxShadow: "0 -4px 20px rgba(0,0,0,0.05)"
       }}>
         <NavLink to="/dashboard" style={({ isActive }) => ({
-          display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-          color: isActive ? "var(--color-primary)" : "var(--color-text-tertiary)",
-          fontSize: "0.75rem", fontWeight: isActive ? 600 : 500, textDecoration: "none"
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
+          color: isActive ? "#10B981" : "#9CA3AF",
+          fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none"
         })}>
-          <LayoutDashboard size={24} />
-          <span>Dashboard</span>
+          {({ isActive }) => (
+            <>
+              <div style={{
+                backgroundColor: isActive ? "#D1FAE5" : "transparent",
+                borderRadius: "50%",
+                padding: "8px",
+                transition: "all 0.2s"
+              }}>
+                <LayoutDashboard size={20} strokeWidth={isActive ? 2.5 : 2} />
+              </div>
+              <span>Dashboard</span>
+            </>
+          )}
         </NavLink>
         <NavLink to="/deliveries" style={({ isActive }) => ({
-          display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-          color: isActive ? "var(--color-primary)" : "var(--color-text-tertiary)",
-          fontSize: "0.75rem", fontWeight: isActive ? 600 : 500, textDecoration: "none"
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
+          color: isActive ? "#10B981" : "#9CA3AF",
+          fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none"
         })}>
-          <Briefcase size={24} />
-          <span>Entregas</span>
+          {({ isActive }) => (
+             <>
+               <div style={{
+                 backgroundColor: isActive ? "#D1FAE5" : "transparent",
+                 borderRadius: "50%",
+                 padding: "8px",
+                 transition: "all 0.2s"
+               }}>
+                 <Briefcase size={20} strokeWidth={isActive ? 2.5 : 2} />
+               </div>
+               <span>Entregas</span>
+             </>
+          )}
         </NavLink>
-        {/* Placeholder for "Banco" - using Expenses/Incomes or a new page if exists. 
-            User asked for "Banco", let's map it to a generic view or Expenses for now if no Bank page exists.
-            Actually, let's just put a placeholder link or map to Expenses/Incomes combo.
-            User said "Banco" module... I don't have a Bank module. I'll link to Expenses as placeholder or create a dummy.
-            Let's link to /expenses for now but label "Banco" as requested visually.
-        */}
         <NavLink to="/expenses" style={({ isActive }) => ({
-          display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-          color: isActive ? "var(--color-primary)" : "var(--color-text-tertiary)",
-          fontSize: "0.75rem", fontWeight: isActive ? 600 : 500, textDecoration: "none"
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
+          color: isActive ? "#10B981" : "#9CA3AF",
+          fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none"
         })}>
-          <CreditCard size={24} />
-          <span>Banco</span>
+          {({ isActive }) => (
+             <>
+               <div style={{
+                 backgroundColor: isActive ? "#D1FAE5" : "transparent",
+                 borderRadius: "50%",
+                 padding: "8px",
+                 transition: "all 0.2s"
+               }}>
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"/><path d="M5 21V7"/><path d="M19 21V11"/><path d="M12 21V3"/><polyline points="2 7 5 7 5 3"/><line x1="12" y1="6" x2="12" y2="6"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="19" y1="14" x2="19" y2="14"/></svg>
+               </div>
+               <span>Banco</span>
+             </>
+          )}
         </NavLink>
         <NavLink to="/closing" style={({ isActive }) => ({
-          display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-          color: isActive ? "var(--color-primary)" : "var(--color-text-tertiary)",
-          fontSize: "0.75rem", fontWeight: isActive ? 600 : 500, textDecoration: "none"
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
+          color: isActive ? "#10B981" : "#9CA3AF",
+          fontSize: "0.7rem", fontWeight: isActive ? 700 : 500, textDecoration: "none"
         })}>
-          <FileText size={24} />
-          <span>Reportes</span>
+          {({ isActive }) => (
+             <>
+               <div style={{
+                 backgroundColor: isActive ? "#D1FAE5" : "transparent",
+                 borderRadius: "50%",
+                 padding: "8px",
+                 transition: "all 0.2s"
+               }}>
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+               </div>
+               <span>Reportes</span>
+             </>
+          )}
         </NavLink>
       </div>
     </div>

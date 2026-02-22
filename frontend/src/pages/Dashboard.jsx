@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "../lib/api";
 import { getToken } from "../lib/auth";
 import { StatsCard, Card } from "../components/ui/Card";
-import { TrendingUp, TrendingDown, Wallet, CreditCard, ArrowUpRight, ArrowDownRight, Coffee, ShoppingBag, Home, Zap, MoreHorizontal } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, CreditCard, ArrowUpRight, ArrowDownRight, Coffee, ShoppingBag, Home, Zap, MoreHorizontal, ChevronDown } from "lucide-react";
 import { Skeleton } from "../components/ui/Skeleton";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -40,6 +40,25 @@ export default function Dashboard() {
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "6rem" }}>
+      
+      <div style={{ marginBottom: "2.5rem", display: "flex", justifyContent: "space-between", alignItems: "end" }}>
+        {/* Simple Month Selector Mockup */}
+        <div style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: "0.5rem", 
+          backgroundColor: "#F3F4F6", 
+          padding: "0.5rem 1rem", 
+          borderRadius: "12px", 
+          color: "#4B5563",
+          fontWeight: 600,
+          fontSize: "0.9rem"
+        }}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{color: "#10B981"}}><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+          Dashboard
+          <ChevronDown size={16} />
+        </div>
+      </div>
       
       {/* KPI Cards Grid (2 Columns Mobile) */}
       <div style={{ 
@@ -92,31 +111,32 @@ export default function Dashboard() {
       {/* Visual Summary (Chart) */}
       <div style={{ marginBottom: "2rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-          <h3 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--color-text)" }}>Resumen Mensual</h3>
+          <h3 style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--color-text)" }}>Resumen Semanal</h3>
+          <div style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--color-success)" }}>+250 h</div>
         </div>
         <Card padding="1rem">
-          <div style={{ height: "200px", width: "100%" }}>
+          <div style={{ height: "180px", width: "100%" }}>
             {summary?.chartData?.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={summary.chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                <AreaChart data={summary.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorIngresos" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-success)" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="var(--color-success)" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="colorGastos" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-danger)" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="var(--color-danger)" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-tertiary)', fontSize: 10}} dy={10} minTickGap={15} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-tertiary)', fontSize: 10}} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9CA3AF', fontSize: 12}} dy={10} interval="preserveStartEnd" />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#9CA3AF', fontSize: 12}} tickFormatter={(value) => `€${value}`} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: 'var(--color-surface)', borderRadius: '8px', border: 'none', boxShadow: 'var(--shadow-md)', fontSize: '12px' }}
+                    contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                   />
-                  <Area type="monotone" dataKey="ingresos" stroke="var(--color-success)" strokeWidth={2} fillOpacity={1} fill="url(#colorIngresos)" />
-                  <Area type="monotone" dataKey="gastos" stroke="var(--color-danger)" strokeWidth={2} fillOpacity={1} fill="url(#colorGastos)" />
+                  <Area type="monotone" dataKey="ingresos" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorIngresos)" dot={{ r: 4, fill: "#fff", stroke: "#10B981", strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Area type="monotone" dataKey="gastos" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorGastos)" dot={{ r: 4, fill: "#fff", stroke: "#3B82F6", strokeWidth: 2 }} activeDot={{ r: 6 }} />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
@@ -125,12 +145,12 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-          <div style={{ display: "flex", justifyContent: "center", gap: "1.5rem", marginTop: "1rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "var(--color-success)" }}></div> Ingresos
+          <div style={{ display: "flex", justifyContent: "center", gap: "2rem", marginTop: "1.5rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: "#10B981" }}></div> Ingresos
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "var(--color-danger)" }}></div> Gastos
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: "#3B82F6" }}></div> Gastos
             </div>
           </div>
         </Card>
@@ -148,37 +168,43 @@ export default function Dashboard() {
                 justifyContent: "space-between", 
                 padding: "1rem",
                 backgroundColor: "var(--color-surface)",
-                borderRadius: "var(--radius-md)",
+                borderRadius: "16px", // Softer border radius like image
                 border: "1px solid var(--color-border)",
-                boxShadow: "var(--shadow-sm)"
+                boxShadow: "0 2px 5px rgba(0,0,0,0.02)"
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                   <div style={{ 
-                    width: "40px", height: "40px", 
+                    width: "48px", height: "48px", // Larger icon box
                     borderRadius: "12px", 
-                    backgroundColor: item.type === 'income' ? "var(--color-success-bg)" : "var(--color-danger-bg)",
-                    color: item.type === 'income' ? "var(--color-success)" : "var(--color-danger)",
-                    display: "flex", alignItems: "center", justifyContent: "center"
+                    backgroundColor: item.type === 'income' ? "#10B981" : "#EF4444", // Solid colors like image
+                    color: "white",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: item.type === 'income' ? "0 4px 6px -1px rgba(16, 185, 129, 0.3)" : "0 4px 6px -1px rgba(239, 68, 68, 0.3)"
                   }}>
                     {/* Icon based on category or type */}
-                    {item.category === 'Hogar' ? <Home size={20} /> : 
-                     item.category === 'Comida' ? <Coffee size={20} /> :
-                     item.category === 'Compras' ? <ShoppingBag size={20} /> :
-                     item.type === 'income' ? <ArrowUpRight size={20} /> : <Zap size={20} />}
+                    {item.category === 'Hogar' ? <Home size={24} /> : 
+                     item.category === 'Comida' ? <Coffee size={24} /> :
+                     item.category === 'Compras' ? <ShoppingBag size={24} /> :
+                     item.type === 'income' ? <ArrowUpRight size={24} /> : <Zap size={24} />}
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600, color: "var(--color-text)", fontSize: "0.95rem" }}>{item.title || "Sin título"}</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                      {new Date(item.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                    <div style={{ fontWeight: 700, color: "var(--color-text)", fontSize: "1rem" }}>{item.title || "Sin título"}</div>
+                    <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)", marginTop: "2px" }}>
+                      {item.category || "General"}
                     </div>
                   </div>
                 </div>
-                <div style={{ 
-                  fontWeight: 700, 
-                  color: item.type === 'income' ? "var(--color-success)" : "var(--color-text)",
-                  fontSize: "1rem"
-                }}>
-                  {item.type === 'income' ? "+" : "-"}${Math.abs(item.amount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ 
+                    fontWeight: 700, 
+                    color: item.type === 'income' ? "#10B981" : "#EF4444",
+                    fontSize: "1rem"
+                  }}>
+                    {item.type === 'income' ? "+" : "-"}${Math.abs(item.amount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  </div>
+                   <div style={{ fontSize: "0.75rem", color: "var(--color-text-tertiary)", marginTop: "2px" }}>
+                      €{Math.abs(item.amount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} {/* Mock secondary currency if needed or just repeated value style */}
+                   </div>
                 </div>
               </div>
             ))

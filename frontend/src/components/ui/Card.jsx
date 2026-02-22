@@ -1,3 +1,5 @@
+import { Area, AreaChart, ResponsiveContainer } from "recharts";
+
 export function Card({ children, className = "", padding = "1.5rem", title, action }) {
   return (
     <div 
@@ -5,7 +7,7 @@ export function Card({ children, className = "", padding = "1.5rem", title, acti
       style={{
         backgroundColor: "var(--color-surface)",
         borderRadius: "var(--radius-md)",
-        boxShadow: "var(--shadow-md)", // Softer, more diffuse shadow
+        boxShadow: "var(--shadow-md)", 
         border: "1px solid var(--color-border)",
         height: "100%",
         display: "flex",
@@ -32,82 +34,86 @@ export function Card({ children, className = "", padding = "1.5rem", title, acti
   );
 }
 
-export function StatsCard({ title, value, icon: Icon, subtext, color = "primary", trend }) {
-  const colorMap = {
-    primary: "var(--color-primary)",
-    danger: "var(--color-danger)",
-    success: "var(--color-success)",
-    warning: "var(--color-warning)",
-    info: "var(--color-secondary)"
+export function StatsCard({ title, value, subtext, color = "primary", trend }) {
+  // Map internal variant names to gradients and solid colors
+  const styles = {
+    primary: { // Bank - Blue
+      gradient: "linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)",
+      stroke: "#60A5FA",
+      fill: "rgba(59, 130, 246, 0.3)"
+    },
+    success: { // Income - Green
+      gradient: "linear-gradient(135deg, #065F46 0%, #10B981 100%)",
+      stroke: "#34D399",
+      fill: "rgba(16, 185, 129, 0.3)"
+    },
+    danger: { // Expense - Red
+      gradient: "linear-gradient(135deg, #991B1B 0%, #EF4444 100%)",
+      stroke: "#F87171",
+      fill: "rgba(239, 68, 68, 0.3)"
+    },
+    info: { // Benefit - Light Blue
+      gradient: "linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)",
+      stroke: "#93C5FD",
+      fill: "rgba(96, 165, 250, 0.3)"
+    }
   };
 
-  const bgMap = {
-    primary: "rgba(var(--color-primary-rgb), 0.1)",
-    danger: "var(--color-danger-bg)",
-    success: "var(--color-success-bg)",
-    warning: "var(--color-warning-bg)",
-    info: "#EFF6FF" // Light blue
-  };
+  const currentStyle = styles[color] || styles.primary;
+
+  // Mock data for mini chart
+  const data = [
+    { v: 10 }, { v: 25 }, { v: 15 }, { v: 35 }, { v: 20 }, { v: 45 }, { v: 40 }
+  ];
 
   return (
     <div style={{
-      backgroundColor: "var(--color-surface)",
-      borderRadius: "var(--radius-md)",
-      boxShadow: "var(--shadow-md)",
-      border: "1px solid var(--color-border)",
-      padding: "1.5rem",
+      background: currentStyle.gradient,
+      borderRadius: "16px",
+      padding: "1.25rem",
       display: "flex",
       flexDirection: "column",
       justifyContent: "space-between",
-      height: "100%",
-      transition: "transform 0.2s ease",
-      cursor: "default"
-    }}
-    onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-    onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
-        <div>
-          <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem", fontWeight: 500, marginBottom: "0.25rem" }}>{title}</p>
-          <h3 style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--color-text)", letterSpacing: "-0.5px" }}>{value}</h3>
-        </div>
-        {Icon && (
-          <div style={{ 
-            padding: "10px", 
-            borderRadius: "12px", 
-            backgroundColor: bgMap[color] || bgMap.primary,
-            color: colorMap[color],
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}>
-            <Icon size={22} />
-          </div>
-        )}
+      height: "140px",
+      position: "relative",
+      overflow: "hidden",
+      boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+      color: "white"
+    }}>
+      {/* Background Mini Chart */}
+      <div style={{ position: "absolute", bottom: -10, left: 0, right: 0, height: "60%", opacity: 0.5, zIndex: 0 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data}>
+            <Area 
+              type="monotone" 
+              dataKey="v" 
+              stroke={currentStyle.stroke} 
+              strokeWidth={2} 
+              fill={currentStyle.fill} 
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Content */}
+      <div style={{ zIndex: 1, position: "relative" }}>
+        <p style={{ fontSize: "0.875rem", fontWeight: 500, opacity: 0.9, marginBottom: "0.25rem" }}>{title}</p>
+        <h3 style={{ fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.5px" }}>{value}</h3>
       </div>
       
-      {(subtext || trend) && (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem" }}>
-          {trend && (
-             <span style={{ 
-               color: trend > 0 ? "var(--color-success)" : "var(--color-danger)",
-               fontWeight: 600,
-               display: "flex",
-               alignItems: "center",
-               gap: "2px",
-               backgroundColor: trend > 0 ? "var(--color-success-bg)" : "var(--color-danger-bg)",
-               padding: "2px 6px",
-               borderRadius: "4px",
-               fontSize: "0.75rem"
-             }}>
-               {trend > 0 ? "↑" : "↓"} {Math.abs(trend)}%
-             </span>
-          )}
-          <span style={{ color: "var(--color-text-tertiary)" }}>
-            {subtext}
-          </span>
-        </div>
-      )}
+      <div style={{ zIndex: 1, position: "relative", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem" }}>
+        {trend !== undefined && (
+           <span style={{ 
+             fontWeight: 600,
+             display: "flex",
+             alignItems: "center",
+             gap: "2px",
+             fontSize: "0.875rem"
+           }}>
+             {trend > 0 ? "▲" : "▼"} €{Math.abs(trend)}
+           </span>
+        )}
+      </div>
     </div>
   );
 }
