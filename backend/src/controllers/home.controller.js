@@ -188,7 +188,7 @@ export const addToShoppingList = async (req, res, next) => {
 export const buyItem = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { price, updateInventory } = req.body; // updateInventory: boolean
+    const { pricePerUnit, quantity, updateInventory } = req.body; 
     
     const home = await Home.findOne({ members: req.user._id });
     if (!home) throw new HttpError(404, "No tienes un hogar vinculado");
@@ -196,19 +196,25 @@ export const buyItem = async (req, res, next) => {
     const item = await HomeShoppingItem.findOne({ _id: id, home: home._id });
     if (!item) throw new HttpError(404, "Item no encontrado");
 
+    const finalQuantity = Number(quantity) || item.quantity;
+    const finalPricePerUnit = Number(pricePerUnit) || 0;
+    const totalPrice = parseFloat((finalQuantity * finalPricePerUnit).toFixed(2));
+
     // Marcar como comprado
     item.status = "bought";
     item.boughtBy = req.user._id;
     item.boughtAt = new Date();
+    // Actualizamos la cantidad en el item si se cambió al comprar
+    item.quantity = finalQuantity; 
     await item.save();
 
     // Registrar en historial
     await HomePurchase.create({
       home: home._id,
       productName: item.productName,
-      quantity: item.quantity,
+      quantity: finalQuantity,
       unit: item.unit,
-      price: price || 0,
+      price: totalPrice,
       buyer: req.user._id
     });
 
@@ -221,7 +227,7 @@ export const buyItem = async (req, res, next) => {
       });
 
       if (product) {
-        product.stock += item.quantity;
+        product.stock += finalQuantity;
         await product.save();
       }
     }

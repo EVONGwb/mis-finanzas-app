@@ -38,7 +38,7 @@ export default function Home() {
 
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const [selectedItemToBuy, setSelectedItemToBuy] = useState(null);
-  const [buyPrice, setBuyPrice] = useState("");
+  const [buyForm, setBuyForm] = useState({ quantity: "", pricePerUnit: "" });
   const [isBuying, setIsBuying] = useState(false);
 
   // Forms
@@ -157,7 +157,7 @@ export default function Home() {
 
   const openBuyModal = (item) => {
     setSelectedItemToBuy(item);
-    setBuyPrice("");
+    setBuyForm({ quantity: item.quantity, pricePerUnit: "" });
     setIsBuyModalOpen(true);
   };
 
@@ -171,7 +171,8 @@ export default function Home() {
         method: "POST",
         token: getToken(),
         body: { 
-          price: parseFloat(buyPrice) || 0, 
+          quantity: parseFloat(buyForm.quantity) || selectedItemToBuy.quantity,
+          pricePerUnit: parseFloat(buyForm.pricePerUnit) || 0,
           updateInventory: true 
         }
       });
@@ -441,16 +442,35 @@ export default function Home() {
       <Modal isOpen={isBuyModalOpen} onClose={() => setIsBuyModalOpen(false)} title="Confirmar Compra">
         <form onSubmit={handleConfirmBuy} style={{ display: "grid", gap: "1rem" }}>
           <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
-            Estás marcando como comprado: <strong>{selectedItemToBuy?.productName}</strong> ({selectedItemToBuy?.quantity} {selectedItemToBuy?.unit})
+            Producto: <strong>{selectedItemToBuy?.productName}</strong>
           </p>
-          <Input 
-            label="Precio Total (Opcional)" 
-            type="number" 
-            step="0.01" 
-            placeholder="0.00"
-            value={buyPrice} 
-            onChange={e => setBuyPrice(e.target.value)} 
-          />
+          
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <Input 
+              label={`Cantidad (${selectedItemToBuy?.unit || "ud"})`}
+              type="number" 
+              step="0.01" 
+              required
+              value={buyForm.quantity} 
+              onChange={e => setBuyForm({...buyForm, quantity: e.target.value})} 
+            />
+            <Input 
+              label="Precio por Unidad ($)" 
+              type="number" 
+              step="0.01" 
+              placeholder="0.00"
+              value={buyForm.pricePerUnit} 
+              onChange={e => setBuyForm({...buyForm, pricePerUnit: e.target.value})} 
+            />
+          </div>
+
+          <div style={{ padding: "0.75rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-sm)", textAlign: "right" }}>
+            <span style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Total Estimado: </span>
+            <span style={{ fontWeight: "bold", fontSize: "1.1rem" }}>
+              ${((parseFloat(buyForm.quantity) || 0) * (parseFloat(buyForm.pricePerUnit) || 0)).toFixed(2)}
+            </span>
+          </div>
+
           <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
             <Button type="button" variant="ghost" onClick={() => setIsBuyModalOpen(false)} style={{ flex: 1 }}>Cancelar</Button>
             <Button type="submit" style={{ flex: 1 }} isLoading={isBuying}>Confirmar</Button>
