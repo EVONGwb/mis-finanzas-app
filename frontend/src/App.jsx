@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Incomes from "./pages/Incomes";
 import Expenses from "./pages/Expenses";
 import Debts from "./pages/Debts";
+import Home from "./pages/Home";
 import Closing from "./pages/Closing";
 import DeliveriesDashboard from "./pages/deliveries/DeliveriesDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -114,6 +115,14 @@ export default function App() {
           element={
             <Protected>
               <Debts />
+            </Protected>
+          }
+        />
+        <Route
+          path="/home"
+          element={
+            <Protected>
+              <Home />
             </Protected>
           }
         />

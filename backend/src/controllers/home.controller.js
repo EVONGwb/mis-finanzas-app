@@ -1,0 +1,263 @@
+import { Home, HomeRequest, HomeProduct, HomeShoppingItem, HomePurchase } from "../models/home.model.js";
+import { User } from "../models/user.model.js";
+import { HttpError } from "../utils/httpError.js";
+
+// === GESTIÓN DE HOGAR (VINCULACIÓN) ===
+
+export const getHome = async (req, res, next) => {
+  try {
+    // Buscar hogar donde el usuario sea miembro
+    const home = await Home.findOne({ members: req.user._id }).populate("members", "name email");
+    
+    // Si no tiene hogar, buscar si tiene solicitudes pendientes (recibidas o enviadas)
+    let pendingRequest = null;
+    if (!home) {
+      pendingRequest = await HomeRequest.findOne({ 
+        $or: [{ fromUser: req.user._id }, { toUser: req.user._id }],
+        status: "pending"
+      }).populate("fromUser", "name email").populate("toUser", "name email");
+    }
+
+    res.json({ ok: true, data: { home, pendingRequest } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const sendHomeRequest = async (req, res, next) => {
+  try {
+    const { partnerId } = req.body;
+    
+    if (!partnerId) throw new HttpError(400, "ID de pareja obligatorio");
+    if (partnerId === req.user._id.toString()) throw new HttpError(400, "No puedes vincularte contigo mismo");
+
+    // Verificar si ya tiene hogar
+    const existingHome = await Home.findOne({ members: req.user._id });
+    if (existingHome) throw new HttpError(400, "Ya tienes un hogar activo");
+
+    // Verificar usuario destino
+    const partner = await User.findById(partnerId);
+    if (!partner) throw new HttpError(404, "Usuario no encontrado");
+
+    // Verificar si ya existe solicitud
+    const existingReq = await HomeRequest.findOne({
+      $or: [
+        { fromUser: req.user._id, toUser: partnerId, status: "pending" },
+        { fromUser: partnerId, toUser: req.user._id, status: "pending" }
+      ]
+    });
+    if (existingReq) throw new HttpError(400, "Ya existe una solicitud pendiente");
+
+    const request = await HomeRequest.create({
+      fromUser: req.user._id,
+      toUser: partnerId
+    });
+
+    res.status(201).json({ ok: true, data: request });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const respondHomeRequest = async (req, res, next) => {
+  try {
+    const { requestId, action } = req.body; // action: 'accept' | 'reject'
+    
+    const request = await HomeRequest.findById(requestId);
+    if (!request) throw new HttpError(404, "Solicitud no encontrada");
+    
+    if (request.toUser.toString() !== req.user._id.toString()) {
+      throw new HttpError(403, "No autorizado");
+    }
+
+    if (action === "reject") {
+      request.status = "rejected";
+      await request.save();
+      return res.json({ ok: true, message: "Solicitud rechazada" });
+    }
+
+    if (action === "accept") {
+      // Crear hogar
+      const home = await Home.create({
+        members: [request.fromUser, request.toUser],
+        createdBy: request.fromUser
+      });
+      
+      request.status = "accepted";
+      await request.save();
+      
+      return res.json({ ok: true, data: home });
+    }
+
+    throw new HttpError(400, "Acción inválida");
+  } catch (error) {
+    next(error);
+  }
+};
+
+// === INVENTARIO ===
+
+export const getInventory = async (req, res, next) => {
+  try {
+    const home = await Home.findOne({ members: req.user._id });
+    if (!home) throw new HttpError(404, "No tienes un hogar vinculado");
+
+    const products = await HomeProduct.find({ home: home._id }).sort({ name: 1 });
+    res.json({ ok: true, data: products });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addProduct = async (req, res, next) => {
+  try {
+    const home = await Home.findOne({ members: req.user._id });
+    if (!home) throw new HttpError(404, "No tienes un hogar vinculado");
+
+    const product = await HomeProduct.create({ ...req.body, home: home._id });
+    res.status(201).json({ ok: true, data: product });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const home = await Home.findOne({ members: req.user._id });
+    if (!home) throw new HttpError(404, "No tienes un hogar vinculado");
+
+    const product = await HomeProduct.findOneAndUpdate(
+      { _id: id, home: home._id },
+      req.body,
+      { new: true }
+    );
+    if (!product) throw new HttpError(404, "Producto no encontrado");
+    res.json({ ok: true, data: product });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const home = await Home.findOne({ members: req.user._id });
+    if (!home) throw new HttpError(404, "No tienes un hogar vinculado");
+
+    await HomeProduct.findOneAndDelete({ _id: id, home: home._id });
+    res.json({ ok: true, message: "Producto eliminado" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// === LISTA DE COMPRAS ===
+
+export const getShoppingList = async (req, res, next) => {
+  try {
+    const home = await Home.findOne({ members: req.user._id });
+    if (!home) throw new HttpError(404, "No tienes un hogar vinculado");
+
+    const list = await HomeShoppingItem.find({ home: home._id, status: "pending" })
+      .populate("addedBy", "name")
+      .sort({ createdAt: -1 });
+    res.json({ ok: true, data: list });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addToShoppingList = async (req, res, next) => {
+  try {
+    const home = await Home.findOne({ members: req.user._id });
+    if (!home) throw new HttpError(404, "No tienes un hogar vinculado");
+
+    const item = await HomeShoppingItem.create({
+      ...req.body,
+      home: home._id,
+      addedBy: req.user._id,
+      status: "pending"
+    });
+    res.status(201).json({ ok: true, data: item });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const buyItem = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { price, updateInventory } = req.body; // updateInventory: boolean
+    
+    const home = await Home.findOne({ members: req.user._id });
+    if (!home) throw new HttpError(404, "No tienes un hogar vinculado");
+
+    const item = await HomeShoppingItem.findOne({ _id: id, home: home._id });
+    if (!item) throw new HttpError(404, "Item no encontrado");
+
+    // Marcar como comprado
+    item.status = "bought";
+    item.boughtBy = req.user._id;
+    item.boughtAt = new Date();
+    await item.save();
+
+    // Registrar en historial
+    await HomePurchase.create({
+      home: home._id,
+      productName: item.productName,
+      quantity: item.quantity,
+      unit: item.unit,
+      price: price || 0,
+      buyer: req.user._id
+    });
+
+    // Actualizar inventario si se solicita
+    if (updateInventory) {
+      // Buscar producto por nombre (aproximado)
+      const product = await HomeProduct.findOne({ 
+        home: home._id, 
+        name: { $regex: new RegExp(`^${item.productName}$`, 'i') } 
+      });
+
+      if (product) {
+        product.stock += item.quantity;
+        await product.save();
+      }
+    }
+
+    res.json({ ok: true, data: item });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteShoppingItem = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const home = await Home.findOne({ members: req.user._id });
+    
+    await HomeShoppingItem.findOneAndDelete({ _id: id, home: home._id });
+    res.json({ ok: true, message: "Item eliminado" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// === HISTORIAL ===
+
+export const getHistory = async (req, res, next) => {
+  try {
+    const home = await Home.findOne({ members: req.user._id });
+    if (!home) throw new HttpError(404, "No tienes un hogar vinculado");
+
+    const history = await HomePurchase.find({ home: home._id })
+      .populate("buyer", "name")
+      .sort({ date: -1 })
+      .limit(50); // Últimos 50
+      
+    res.json({ ok: true, data: history });
+  } catch (error) {
+    next(error);
+  }
+};
