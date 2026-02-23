@@ -73,26 +73,14 @@ debtSchema.virtual("totalPaid").get(function() {
 });
 
 debtSchema.virtual("remaining").get(function() {
-  return Math.max(0, this.totalAmount - this.totalPaid);
+  const totalPaid = this.payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
+  return Math.max(0, this.totalAmount - totalPaid);
 });
 
 debtSchema.virtual("progress").get(function() {
   if (this.totalAmount === 0) return 100;
-  return Math.min(100, (this.totalPaid / this.totalAmount) * 100);
-});
-
-// Middleware para actualizar estado automáticamente
-debtSchema.pre("save", function(next) {
-  // Solo si se han modificado los pagos o el totalAmount
-  if (this.isModified("payments") || this.isModified("totalAmount")) {
-    const paid = this.payments.reduce((sum, p) => sum + p.amount, 0);
-    if (paid >= this.totalAmount) {
-      this.status = "paid";
-    } else {
-      this.status = "active";
-    }
-  }
-  next();
+  const totalPaid = this.payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
+  return Math.min(100, (totalPaid / this.totalAmount) * 100);
 });
 
 export const Debt = mongoose.model("Debt", debtSchema);

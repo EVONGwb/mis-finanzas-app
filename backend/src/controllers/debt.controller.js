@@ -46,7 +46,7 @@ export const createDebt = async (req, res, next) => {
   try {
     const { name, creditor, totalAmount, startDate, dueDate, description } = req.body;
 
-    if (!name || !totalAmount) {
+    if (!name || totalAmount === undefined) {
       throw new HttpError(400, "Nombre e importe total son obligatorios");
     }
 
@@ -54,7 +54,7 @@ export const createDebt = async (req, res, next) => {
       user: req.user._id,
       name,
       creditor,
-      totalAmount,
+      totalAmount: Number(totalAmount),
       startDate: startDate || new Date(),
       dueDate,
       description
@@ -121,8 +121,16 @@ export const addPayment = async (req, res, next) => {
       date: date || new Date(),
       note
     });
+    
+    // Recalcular estado manualmente
+    const totalPaid = debt.payments.reduce((sum, p) => sum + p.amount, 0);
+    if (totalPaid >= debt.totalAmount) {
+      debt.status = "paid";
+    } else {
+      debt.status = "active";
+    }
 
-    await debt.save(); // El pre-save hook actualizará el estado si se completa
+    await debt.save(); 
     res.status(201).json({ ok: true, data: debt });
   } catch (error) {
     next(error);
