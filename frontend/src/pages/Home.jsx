@@ -428,7 +428,7 @@ export default function Home() {
                             method: "POST", token: getToken(),
                             body: { productName: prod.name, quantity: prod.targetStock - prod.stock, unit: prod.unit }
                           });
-                          alert("Añadido a lista de compra");
+                          // alert("Añadido a lista de compra");
                           setActiveTab("list");
                         } catch (e) { alert(e.message); }
                       }}
