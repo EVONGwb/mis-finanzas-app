@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 import { Layout } from "./components/layout/Layout";
 import { getToken, clearToken } from "./lib/auth";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 
 function AppLayout({ children }) {
   const navigate = useNavigate();
@@ -77,6 +78,7 @@ function RegisterRoute() {
 export default function App() {
   return (
     <AuthProvider>
+      <PWAInstallPrompt />
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginRoute />} />
