@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Incomes from "./pages/Incomes";
 import Expenses from "./pages/Expenses";
+import Debts from "./pages/Debts";
 import Closing from "./pages/Closing";
 import DeliveriesDashboard from "./pages/deliveries/DeliveriesDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -105,6 +106,14 @@ export default function App() {
           element={
             <Protected>
               <Expenses />
+            </Protected>
+          }
+        />
+        <Route
+          path="/debts"
+          element={
+            <Protected>
+              <Debts />
             </Protected>
           }
         />

@@ -1,11 +1,12 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, TrendingUp, TrendingDown, FileText, LogOut, X, Shield, Briefcase } from "lucide-react";
+import { LayoutDashboard, TrendingUp, TrendingDown, FileText, LogOut, X, Shield, Briefcase, CreditCard } from "lucide-react";
 
 export function Sidebar({ isOpen, onClose, onLogout, user }) {
   const links = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/incomes", label: "Ingresos", icon: TrendingUp },
     { to: "/expenses", label: "Gastos", icon: TrendingDown },
+    { to: "/debts", label: "Deudas", icon: CreditCard },
     { to: "/deliveries", label: "Registro de Horas", icon: Briefcase },
     { to: "/closing", label: "Cierre Mensual", icon: FileText },
   ];
