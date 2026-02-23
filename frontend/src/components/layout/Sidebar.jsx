@@ -85,7 +85,11 @@ export function Sidebar({ isOpen, onClose, onLogout, user }) {
               key={link.to}
               to={link.to}
               onClick={() => {
-                if (window.innerWidth < 768) onClose();
+                // Cerrar siempre el sidebar al hacer clic en un enlace (móvil y tablet)
+                // Se asume que en desktop el sidebar no es "overlay" por lo que onClose no molestará, 
+                // pero si queremos que sea solo en móvil, podemos mantener la condición.
+                // Sin embargo, para asegurar que se cierre en modo "drawer" (overlay), llamamos a onClose.
+                onClose();
               }}
               style={({ isActive }) => ({
                 display: "flex",
