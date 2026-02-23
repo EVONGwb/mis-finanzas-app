@@ -110,13 +110,24 @@ export const createWorkEntry = async (req, res, next) => {
     const company = await Company.findOne({ _id: companyId, user: req.user._id });
     if (!company) throw new HttpError(404, "Empresa no encontrada");
 
+    const calculatedTotal = parseFloat((Number(hours) * Number(hourlyRate)).toFixed(2));
+    
+    console.log("[DEBUG] Creating WorkEntry:", {
+      user: req.user._id,
+      company: companyId,
+      date,
+      hours: Number(hours),
+      hourlyRate: Number(hourlyRate),
+      total: calculatedTotal
+    });
+
     const entry = await WorkEntry.create({
       user: req.user._id,
       company: companyId,
       date,
-      hours,
-      hourlyRate,
-      total: (hours * hourlyRate).toFixed(2), // Calcular total explícitamente si el pre-save falla o para asegurar
+      hours: Number(hours),
+      hourlyRate: Number(hourlyRate),
+      total: calculatedTotal,
       notes
     });
 
