@@ -6,7 +6,7 @@ export function Sidebar({ isOpen, onClose, onLogout, user }) {
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/incomes", label: "Ingresos", icon: TrendingUp },
     { to: "/expenses", label: "Gastos", icon: TrendingDown },
-    { to: "/deliveries", label: "Entregas", icon: Briefcase },
+    { to: "/deliveries", label: "Registro de Horas", icon: Briefcase },
     { to: "/closing", label: "Cierre Mensual", icon: FileText },
   ];
 

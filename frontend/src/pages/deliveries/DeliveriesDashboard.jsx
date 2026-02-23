@@ -203,7 +203,7 @@ export default function DeliveriesDashboard() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Briefcase className="text-primary" /> Entregas
+              <Briefcase className="text-primary" /> Registro de Horas
             </h1>
             <p style={{ color: "var(--color-text-secondary)" }}>Gestiona tus horas y ganancias por empresa</p>
           </div>
