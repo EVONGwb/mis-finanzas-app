@@ -21,6 +21,17 @@ const companySchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  deductions: {
+    commonContingencies: { type: Number, default: 4.85, min: 0, max: 100 },
+    unemploymentAccident: { type: Number, default: 1.65, min: 0, max: 100 },
+    irpf: { type: Number, default: 20.0, min: 0, max: 100 },
+    other: { type: Number, default: 0, min: 0, max: 100 },
+    otherConcept: { type: String, default: "", trim: true }
+  },
+  limitRule: {
+    enabled: { type: Boolean, default: false },
+    amount: { type: Number, default: 1600, min: 0 }
+  },
   description: {
     type: String,
     trim: true,

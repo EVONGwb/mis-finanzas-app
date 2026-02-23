@@ -49,9 +49,22 @@ export default function DeliveriesDashboard() {
   });
 
   const [companyForm, setCompanyForm] = useState({
+    id: null, // Para edición
     name: "",
     hourlyRateDefault: "",
-    description: ""
+    description: "",
+    // Deducciones por defecto
+    deductions: {
+      commonContingencies: 4.85,
+      unemploymentAccident: 1.65,
+      irpf: 20.0,
+      other: 0,
+      otherConcept: ""
+    },
+    limitRule: {
+      enabled: false,
+      amount: 1600
+    }
   });
 
   // Cargar datos iniciales (empresas)
@@ -139,20 +152,74 @@ export default function DeliveriesDashboard() {
     }
   };
 
-  const handleCreateCompany = async (e) => {
+  const handleSaveCompany = async (e) => {
     e.preventDefault();
     try {
-      await apiFetch("/companies", {
-        method: "POST",
+      const isEdit = !!companyForm.id;
+      const url = isEdit ? `/companies/${companyForm.id}` : "/companies";
+      const method = isEdit ? "PATCH" : "POST";
+
+      const payload = {
+        name: companyForm.name,
+        hourlyRateDefault: companyForm.hourlyRateDefault,
+        description: companyForm.description,
+        deductions: companyForm.deductions,
+        limitRule: companyForm.limitRule
+      };
+
+      await apiFetch(url, {
+        method,
         token: getToken(),
-        body: companyForm
+        body: payload
       });
+
       setIsCompanyModalOpen(false);
-      setCompanyForm({ name: "", hourlyRateDefault: "", description: "" });
+      resetCompanyForm();
       fetchCompanies();
     } catch (error) {
       alert(error.message);
     }
+  };
+
+  const resetCompanyForm = () => {
+    setCompanyForm({
+      id: null,
+      name: "",
+      hourlyRateDefault: "",
+      description: "",
+      deductions: {
+        commonContingencies: 4.85,
+        unemploymentAccident: 1.65,
+        irpf: 20.0,
+        other: 0,
+        otherConcept: ""
+      },
+      limitRule: {
+        enabled: false,
+        amount: 1600
+      }
+    });
+  };
+
+  const handleEditCompany = (company) => {
+    setCompanyForm({
+      id: company._id,
+      name: company.name,
+      hourlyRateDefault: company.hourlyRateDefault,
+      description: company.description || "",
+      deductions: {
+        commonContingencies: company.deductions?.commonContingencies ?? 4.85,
+        unemploymentAccident: company.deductions?.unemploymentAccident ?? 1.65,
+        irpf: company.deductions?.irpf ?? 20.0,
+        other: company.deductions?.other ?? 0,
+        otherConcept: company.deductions?.otherConcept || ""
+      },
+      limitRule: {
+        enabled: company.limitRule?.enabled ?? false,
+        amount: company.limitRule?.amount ?? 1600
+      }
+    });
+    setIsCompanyModalOpen(true);
   };
 
   const handleDeleteEntry = async (id) => {
@@ -190,6 +257,58 @@ export default function DeliveriesDashboard() {
       alert(error.message);
     }
   };
+
+  const getPayrollSummary = (company, totalEarnings) => {
+    if (!company) return null;
+
+    const limitEnabled = company.limitRule?.enabled || false;
+    const limitAmount = company.limitRule?.amount || 0;
+    
+    // 1. Calcular tramos
+    let tramoDeducible = totalEarnings;
+    let excedenteLibre = 0;
+
+    if (limitEnabled) {
+      if (totalEarnings > limitAmount) {
+        tramoDeducible = limitAmount;
+        excedenteLibre = totalEarnings - limitAmount;
+      } else {
+        tramoDeducible = totalEarnings;
+        excedenteLibre = 0;
+      }
+    }
+
+    // 2. Calcular deducciones
+    const ded = company.deductions || {};
+    const dCC = (tramoDeducible * (ded.commonContingencies || 0)) / 100;
+    const dDA = (tramoDeducible * (ded.unemploymentAccident || 0)) / 100;
+    const dIRPF = (tramoDeducible * (ded.irpf || 0)) / 100;
+    const dOther = (tramoDeducible * (ded.other || 0)) / 100;
+
+    const totalDeducciones = dCC + dDA + dIRPF + dOther;
+    
+    // 3. Neto
+    const netoNomina = tramoDeducible - totalDeducciones;
+    const totalRealCobrado = netoNomina + excedenteLibre;
+
+    return {
+      tramoDeducible,
+      excedenteLibre,
+      deductions: {
+        cc: dCC,
+        da: dDA,
+        irpf: dIRPF,
+        other: dOther,
+        total: totalDeducciones
+      },
+      netoNomina,
+      totalRealCobrado
+    };
+  };
+
+  const selectedCompanyStats = stats?.byCompany?.length === 1 ? stats.byCompany[0] : null;
+  const companyForPayroll = selectedCompanyStats ? companies.find(c => c.name === selectedCompanyStats.companyName) : null;
+  const payroll = companyForPayroll ? getPayrollSummary(companyForPayroll, selectedCompanyStats.totalEarnings) : null;
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "5rem" }}>
@@ -293,7 +412,7 @@ export default function DeliveriesDashboard() {
       ) : (
         <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginBottom: "2rem" }}>
           <StatsCard 
-            title="Ganancias Totales" 
+            title="Ganancias Brutas" 
             value={`$${stats?.totalEarnings?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`} 
             icon={DollarSign} 
             color="success" 
@@ -304,12 +423,23 @@ export default function DeliveriesDashboard() {
             icon={Clock} 
             color="info" 
           />
-          <StatsCard 
-            title="Promedio Diario" 
-            value={`$${stats?.dailyAverage?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`} 
-            icon={TrendingUp} 
-            color="warning" 
-          />
+          {payroll ? (
+             <StatsCard 
+              title="Neto Estimado" 
+              value={`$${payroll.totalRealCobrado.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+              subtext={`Excedente: ${payroll.excedenteLibre.toFixed(2)}€`}
+              icon={TrendingUp} 
+              color="primary" 
+            />
+          ) : (
+             <StatsCard 
+              title="Promedio Diario" 
+              value={`$${stats?.dailyAverage?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`} 
+              icon={TrendingUp} 
+              color="warning" 
+            />
+          )}
+         
           <StatsCard 
             title="Top Empresa" 
             value={stats?.topCompany?.companyName || "-"} 
@@ -317,6 +447,84 @@ export default function DeliveriesDashboard() {
             icon={Briefcase} 
             color="primary" 
           />
+        </div>
+      )}
+
+      {/* Nómina Detallada (Solo si hay una empresa seleccionada o dominante y datos de nómina) */}
+      {payroll && companyForPayroll && (
+        <div style={{ marginBottom: "2rem" }}>
+          <Card title={`Resumen de Nómina: ${companyForPayroll.name}`}>
+             <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))" }}>
+               {/* Columna Izquierda: Datos Base */}
+               <div style={{ padding: "1rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)" }}>
+                 <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "1rem", textTransform: "uppercase" }}>Base de Cálculo</h4>
+                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                   <span>Bruto Total:</span>
+                   <span style={{ fontWeight: 600 }}>{selectedCompanyStats.totalEarnings.toLocaleString()} €</span>
+                 </div>
+                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                   <span>Límite Aplicado:</span>
+                   <span>{companyForPayroll.limitRule?.enabled ? `${companyForPayroll.limitRule.amount} €` : "No activo"}</span>
+                 </div>
+                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", color: "var(--color-text-secondary)" }}>
+                   <span>Tramo Sujeto a Deducción:</span>
+                   <span>{payroll.tramoDeducible.toLocaleString()} €</span>
+                 </div>
+                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: "1rem", color: "var(--color-success)", fontWeight: 700 }}>
+                   <span>Excedente Libre (Limpio):</span>
+                   <span>{payroll.excedenteLibre.toLocaleString()} €</span>
+                 </div>
+               </div>
+
+               {/* Columna Centro: Deducciones */}
+               <div style={{ padding: "1rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)" }}>
+                 <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-danger)", marginBottom: "1rem", textTransform: "uppercase" }}>Deducciones</h4>
+                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                   <span>Contingencias Comunes ({companyForPayroll.deductions?.commonContingencies}%):</span>
+                   <span style={{ color: "var(--color-danger)" }}>-{payroll.deductions.cc.toFixed(2)} €</span>
+                 </div>
+                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                   <span>Desempleo / Acc. ({companyForPayroll.deductions?.unemploymentAccident}%):</span>
+                   <span style={{ color: "var(--color-danger)" }}>-{payroll.deductions.da.toFixed(2)} €</span>
+                 </div>
+                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                   <span>IRPF ({companyForPayroll.deductions?.irpf}%):</span>
+                   <span style={{ color: "var(--color-danger)" }}>-{payroll.deductions.irpf.toFixed(2)} €</span>
+                 </div>
+                 {payroll.deductions.other > 0 && (
+                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                     <span>Otras ({companyForPayroll.deductions?.other}%):</span>
+                     <span style={{ color: "var(--color-danger)" }}>-{payroll.deductions.other.toFixed(2)} €</span>
+                   </div>
+                 )}
+                 <div style={{ borderTop: "1px dashed var(--color-border)", margin: "0.5rem 0" }} />
+                 <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}>
+                   <span>Total Deducciones:</span>
+                   <span style={{ color: "var(--color-danger)" }}>-{payroll.deductions.total.toFixed(2)} €</span>
+                 </div>
+               </div>
+
+               {/* Columna Derecha: Resultado */}
+               <div style={{ padding: "1rem", backgroundColor: "var(--color-success-bg)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-success)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                 <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-success)", marginBottom: "1rem", textTransform: "uppercase", textAlign: "center" }}>A Percibir</h4>
+                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                   <span>Neto de Nómina:</span>
+                   <span>{payroll.netoNomina.toLocaleString()} €</span>
+                 </div>
+                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                   <span>+ Excedente Libre:</span>
+                   <span>{payroll.excedenteLibre.toLocaleString()} €</span>
+                 </div>
+                 <div style={{ borderTop: "2px solid var(--color-success)", margin: "1rem 0" }} />
+                 <div style={{ textAlign: "center" }}>
+                   <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>TOTAL REAL A COBRAR</div>
+                   <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--color-success)" }}>
+                     {payroll.totalRealCobrado.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                   </div>
+                 </div>
+               </div>
+             </div>
+          </Card>
         </div>
       )}
 
@@ -478,13 +686,16 @@ export default function DeliveriesDashboard() {
         </form>
       </Modal>
 
-      {/* Modal: Create Company */}
+      {/* Modal: Create/Edit Company */}
       <Modal 
         isOpen={isCompanyModalOpen} 
-        onClose={() => setIsCompanyModalOpen(false)} 
-        title="Nueva Empresa"
+        onClose={() => {
+          setIsCompanyModalOpen(false);
+          resetCompanyForm();
+        }} 
+        title={companyForm.id ? "Editar Empresa" : "Nueva Empresa"}
       >
-        <form onSubmit={handleCreateCompany} style={{ display: "grid", gap: "1rem" }}>
+        <form onSubmit={handleSaveCompany} style={{ display: "grid", gap: "1rem" }}>
           <Input 
             label="Nombre de la Empresa" 
             required 
@@ -507,19 +718,101 @@ export default function DeliveriesDashboard() {
             value={companyForm.description}
             onChange={(e) => setCompanyForm({...companyForm, description: e.target.value})}
           />
+
+          <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
+
+          {/* Sección de Deducciones */}
+          <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "var(--color-text)" }}>Deducciones de Nómina (%)</h3>
+          <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>
+            Configura los porcentajes que se descontarán de tu salario bruto.
+          </p>
           
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <Input 
+              label="Contingencias Comunes (%)" 
+              type="number" step="0.01" min="0" max="100"
+              value={companyForm.deductions?.commonContingencies || 0}
+              onChange={(e) => setCompanyForm({
+                ...companyForm, 
+                deductions: { ...companyForm.deductions, commonContingencies: parseFloat(e.target.value) || 0 }
+              })}
+            />
+            <Input 
+              label="Desempleo / Accidentes (%)" 
+              type="number" step="0.01" min="0" max="100"
+              value={companyForm.deductions?.unemploymentAccident || 0}
+              onChange={(e) => setCompanyForm({
+                ...companyForm, 
+                deductions: { ...companyForm.deductions, unemploymentAccident: parseFloat(e.target.value) || 0 }
+              })}
+            />
+            <Input 
+              label="IRPF (%)" 
+              type="number" step="0.01" min="0" max="100"
+              value={companyForm.deductions?.irpf || 0}
+              onChange={(e) => setCompanyForm({
+                ...companyForm, 
+                deductions: { ...companyForm.deductions, irpf: parseFloat(e.target.value) || 0 }
+              })}
+            />
+             <Input 
+              label="Otras Deducciones (%)" 
+              type="number" step="0.01" min="0" max="100"
+              value={companyForm.deductions?.other || 0}
+              onChange={(e) => setCompanyForm({
+                ...companyForm, 
+                deductions: { ...companyForm.deductions, other: parseFloat(e.target.value) || 0 }
+              })}
+            />
+          </div>
+
+          <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
+
+          {/* Sección de Límite / Excedente */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "var(--color-text)" }}>Regla del Límite</h3>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.875rem" }}>
+              <input 
+                type="checkbox"
+                checked={companyForm.limitRule?.enabled || false}
+                onChange={(e) => setCompanyForm({
+                  ...companyForm,
+                  limitRule: { ...companyForm.limitRule, enabled: e.target.checked }
+                })}
+              />
+              Activar Límite
+            </label>
+          </div>
+          
+          {companyForm.limitRule?.enabled && (
+            <div style={{ backgroundColor: "var(--color-surface-hover)", padding: "1rem", borderRadius: "var(--radius-sm)" }}>
+               <Input 
+                label="Límite Bruto Sujeto a Deducción (€)" 
+                type="number" step="0.01"
+                value={companyForm.limitRule?.amount || 1600}
+                onChange={(e) => setCompanyForm({
+                  ...companyForm,
+                  limitRule: { ...companyForm.limitRule, amount: parseFloat(e.target.value) || 0 }
+                })}
+              />
+              <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "0.5rem" }}>
+                Todo lo que ganes por encima de {companyForm.limitRule?.amount || 0}€ será considerado excedente libre (dinero limpio sin deducciones).
+              </p>
+            </div>
+          )}
+
           <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-            <Button type="button" variant="ghost" onClick={() => setIsCompanyModalOpen(false)} style={{ flex: 1 }}>
+            <Button type="button" variant="ghost" onClick={() => { setIsCompanyModalOpen(false); resetCompanyForm(); }} style={{ flex: 1 }}>
               Cancelar
             </Button>
             <Button type="submit" style={{ flex: 1 }}>
-              Crear Empresa
+              {companyForm.id ? "Guardar Cambios" : "Crear Empresa"}
             </Button>
           </div>
         </form>
         
         {/* Lista rápida de empresas existentes para editar/borrar */}
-        {companies.length > 0 && (
+        {companies.length > 0 && !companyForm.id && (
           <div style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid var(--color-border)" }}>
             <h4 style={{ fontSize: "0.875rem", fontWeight: 600, marginBottom: "1rem" }}>Empresas Existentes</h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -528,21 +821,40 @@ export default function DeliveriesDashboard() {
                   display: "flex", justifyContent: "space-between", alignItems: "center",
                   padding: "0.75rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)"
                 }}>
-                  <div>
-                    <span style={{ fontWeight: 500 }}>{c.name}</span>
-                    <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginLeft: "0.5rem" }}>
-                      ${c.hourlyRateDefault}/h
+                  <div style={{ cursor: "pointer", flex: 1 }} onClick={() => handleEditCompany(c)}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <span style={{ fontWeight: 500 }}>{c.name}</span>
+                      {c.limitRule?.enabled && (
+                        <Badge variant="success" style={{ fontSize: "0.6rem", padding: "2px 6px" }}>Límite {c.limitRule.amount}€</Badge>
+                      )}
+                    </div>
+                    <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
+                      ${c.hourlyRateDefault}/h • Deducciones: {
+                        (c.deductions?.commonContingencies || 0) + 
+                        (c.deductions?.unemploymentAccident || 0) + 
+                        (c.deductions?.irpf || 0)
+                      }%
                     </span>
                   </div>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    style={{ color: "var(--color-danger)" }}
-                    onClick={() => handleDeleteCompany(c._id)}
-                    title="Eliminar empresa"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                     <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={() => handleEditCompany(c)}
+                      title="Editar empresa"
+                    >
+                      <Edit2 size={16} />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      style={{ color: "var(--color-danger)" }}
+                      onClick={() => handleDeleteCompany(c._id)}
+                      title="Eliminar empresa"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

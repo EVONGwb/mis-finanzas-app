@@ -15,7 +15,7 @@ export const getCompanies = async (req, res, next) => {
 // POST /api/companies
 export const createCompany = async (req, res, next) => {
   try {
-    const { name, hourlyRateDefault, description } = req.body;
+    const { name, hourlyRateDefault, description, deductions, limitRule } = req.body;
     
     // Validación básica
     if (!name || hourlyRateDefault === undefined) {
@@ -26,7 +26,9 @@ export const createCompany = async (req, res, next) => {
       user: req.user._id,
       name,
       hourlyRateDefault,
-      description
+      description,
+      deductions,
+      limitRule
     });
 
     res.status(201).json({ ok: true, data: company });
@@ -42,7 +44,7 @@ export const createCompany = async (req, res, next) => {
 export const updateCompany = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, hourlyRateDefault, isActive, description } = req.body;
+    const { name, hourlyRateDefault, isActive, description, deductions, limitRule } = req.body;
 
     const company = await Company.findOne({ _id: id, user: req.user._id });
     if (!company) throw new HttpError(404, "Empresa no encontrada");
@@ -51,6 +53,14 @@ export const updateCompany = async (req, res, next) => {
     if (hourlyRateDefault !== undefined) company.hourlyRateDefault = hourlyRateDefault;
     if (isActive !== undefined) company.isActive = isActive;
     if (description !== undefined) company.description = description;
+    
+    if (deductions) {
+      company.deductions = { ...company.deductions.toObject(), ...deductions };
+    }
+    
+    if (limitRule) {
+      company.limitRule = { ...company.limitRule.toObject(), ...limitRule };
+    }
 
     await company.save();
     res.json({ ok: true, data: company });
