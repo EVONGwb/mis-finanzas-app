@@ -29,8 +29,7 @@ const workEntrySchema = new mongoose.Schema({
   },
   total: {
     type: Number,
-    // required: true, // Eliminamos required explícito para que el pre-save funcione si no se pasa
-    min: [0, "El total no puede ser negativo"]
+    default: 0
   },
   notes: {
     type: String,

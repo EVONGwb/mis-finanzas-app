@@ -127,7 +127,7 @@ export const createWorkEntry = async (req, res, next) => {
       date,
       hours: Number(hours),
       hourlyRate: Number(hourlyRate),
-      total: calculatedTotal,
+      // total: calculatedTotal, // Removemos el total explícito para dejar que el pre-save o default lo maneje si es necesario, pero mejor enviarlo si ya lo calculamos
       notes
     });
 
