@@ -36,6 +36,11 @@ export default function Home() {
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 
+  const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
+  const [selectedItemToBuy, setSelectedItemToBuy] = useState(null);
+  const [buyPrice, setBuyPrice] = useState("");
+  const [isBuying, setIsBuying] = useState(false);
+
   // Forms
   const [productForm, setProductForm] = useState({
     name: "", category: "General", unit: "ud", stock: 0, targetStock: 1, minStock: 1, note: ""
@@ -150,22 +155,33 @@ export default function Home() {
     }
   };
 
-  const handleBuyItem = async (item) => {
-    const price = prompt("Precio (opcional):", "0");
-    if (price === null) return;
+  const openBuyModal = (item) => {
+    setSelectedItemToBuy(item);
+    setBuyPrice("");
+    setIsBuyModalOpen(true);
+  };
+
+  const handleConfirmBuy = async (e) => {
+    e.preventDefault();
+    if (!selectedItemToBuy) return;
     
+    setIsBuying(true);
     try {
-      await apiFetch(`/home/shopping-list/${item._id}/buy`, {
+      await apiFetch(`/home/shopping-list/${selectedItemToBuy._id}/buy`, {
         method: "POST",
         token: getToken(),
         body: { 
-          price: parseFloat(price), 
-          updateInventory: true // Por defecto actualizamos stock
+          price: parseFloat(buyPrice) || 0, 
+          updateInventory: true 
         }
       });
+      setIsBuyModalOpen(false);
+      setSelectedItemToBuy(null);
       fetchShoppingList();
     } catch (error) {
       alert(error.message);
+    } finally {
+      setIsBuying(false);
     }
   };
 
@@ -310,7 +326,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <Button size="sm" variant="outline" style={{ color: "var(--color-success)", borderColor: "var(--color-success)" }} onClick={() => handleBuyItem(item)}>
+                    <Button size="sm" variant="outline" style={{ color: "var(--color-success)", borderColor: "var(--color-success)" }} onClick={() => openBuyModal(item)}>
                       <Check size={16} />
                     </Button>
                     <Button size="sm" variant="ghost" style={{ color: "var(--color-danger)" }} onClick={() => handleDeleteItem(item._id)}>
@@ -419,6 +435,26 @@ export default function Home() {
             <Input label="Stock Objetivo" type="number" required value={productForm.targetStock} onChange={e => setProductForm({...productForm, targetStock: e.target.value})} />
           </div>
           <Button type="submit">Guardar Producto</Button>
+        </form>
+      </Modal>
+
+      <Modal isOpen={isBuyModalOpen} onClose={() => setIsBuyModalOpen(false)} title="Confirmar Compra">
+        <form onSubmit={handleConfirmBuy} style={{ display: "grid", gap: "1rem" }}>
+          <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
+            Estás marcando como comprado: <strong>{selectedItemToBuy?.productName}</strong> ({selectedItemToBuy?.quantity} {selectedItemToBuy?.unit})
+          </p>
+          <Input 
+            label="Precio Total (Opcional)" 
+            type="number" 
+            step="0.01" 
+            placeholder="0.00"
+            value={buyPrice} 
+            onChange={e => setBuyPrice(e.target.value)} 
+          />
+          <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
+            <Button type="button" variant="ghost" onClick={() => setIsBuyModalOpen(false)} style={{ flex: 1 }}>Cancelar</Button>
+            <Button type="submit" style={{ flex: 1 }} isLoading={isBuying}>Confirmar</Button>
+          </div>
         </form>
       </Modal>
     </div>
