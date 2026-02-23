@@ -219,7 +219,7 @@ export default function Home() {
   };
 
   const handleDeleteItem = async (id) => {
-    if (!confirm("¿Borrar?")) return;
+    // if (!confirm("¿Borrar?")) return;
     try {
       await apiFetch(`/home/shopping-list/${id}`, { method: "DELETE", token: getToken() });
       fetchShoppingList();
