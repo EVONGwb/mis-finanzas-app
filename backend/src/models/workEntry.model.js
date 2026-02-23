@@ -29,7 +29,7 @@ const workEntrySchema = new mongoose.Schema({
   },
   total: {
     type: Number,
-    required: true,
+    // required: true, // Eliminamos required explícito para que el pre-save funcione si no se pasa
     min: [0, "El total no puede ser negativo"]
   },
   notes: {
@@ -42,15 +42,13 @@ const workEntrySchema = new mongoose.Schema({
   versionKey: false
 });
 
-// Índice compuesto para facilitar consultas por fecha y usuario
-workEntrySchema.index({ user: 1, date: -1 });
-workEntrySchema.index({ user: 1, company: 1 });
-
 // Middleware pre-save para asegurar el cálculo del total
 workEntrySchema.pre("save", function(next) {
-  if (this.isModified("hours") || this.isModified("hourlyRate")) {
-    this.total = parseFloat((this.hours * this.hourlyRate).toFixed(2));
-  }
+  // Aseguramos que existan valores numéricos
+  const h = this.hours || 0;
+  const r = this.hourlyRate || 0;
+  
+  this.total = parseFloat((h * r).toFixed(2));
   next();
 });
 

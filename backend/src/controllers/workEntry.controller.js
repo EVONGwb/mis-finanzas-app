@@ -116,6 +116,7 @@ export const createWorkEntry = async (req, res, next) => {
       date,
       hours,
       hourlyRate,
+      total: (hours * hourlyRate).toFixed(2), // Calcular total explícitamente si el pre-save falla o para asegurar
       notes
     });
 
