@@ -173,6 +173,25 @@ export const addToShoppingList = async (req, res, next) => {
     const home = await Home.findOne({ members: req.user._id });
     if (!home) throw new HttpError(404, "No tienes un hogar vinculado");
 
+    const { productName, quantity, unit } = req.body;
+    
+    // Buscar si ya existe el item pendiente
+    const existingItem = await HomeShoppingItem.findOne({ 
+      home: home._id, 
+      status: "pending",
+      productName: { $regex: new RegExp(`^${productName}$`, 'i') } 
+    });
+
+    if (existingItem) {
+      existingItem.quantity += Number(quantity) || 1;
+      // Actualizar unidad si es diferente y la nueva no es genérica
+      if (unit && unit !== existingItem.unit) {
+        existingItem.unit = unit; 
+      }
+      await existingItem.save();
+      return res.status(200).json({ ok: true, data: existingItem, message: "Cantidad actualizada" });
+    }
+
     const item = await HomeShoppingItem.create({
       ...req.body,
       home: home._id,
