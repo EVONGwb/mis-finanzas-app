@@ -41,14 +41,4 @@ const workEntrySchema = new mongoose.Schema({
   versionKey: false
 });
 
-// Middleware pre-save para asegurar el cálculo del total
-workEntrySchema.pre("save", function(next) {
-  // Aseguramos que existan valores numéricos
-  const h = this.hours || 0;
-  const r = this.hourlyRate || 0;
-  
-  this.total = parseFloat((h * r).toFixed(2));
-  next();
-});
-
 export const WorkEntry = mongoose.model("WorkEntry", workEntrySchema);

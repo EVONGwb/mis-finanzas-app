@@ -127,7 +127,7 @@ export const createWorkEntry = async (req, res, next) => {
       date,
       hours: Number(hours),
       hourlyRate: Number(hourlyRate),
-      // total: calculatedTotal, // Removemos el total explícito para dejar que el pre-save o default lo maneje si es necesario, pero mejor enviarlo si ya lo calculamos
+      total: calculatedTotal,
       notes
     });
 
@@ -147,11 +147,15 @@ export const updateWorkEntry = async (req, res, next) => {
     if (!entry) throw new HttpError(404, "Registro no encontrado");
 
     if (date) entry.date = date;
-    if (hours) entry.hours = hours;
-    if (hourlyRate !== undefined) entry.hourlyRate = hourlyRate;
+    if (hours) entry.hours = Number(hours);
+    if (hourlyRate !== undefined) entry.hourlyRate = Number(hourlyRate);
     if (notes !== undefined) entry.notes = notes;
 
-    // Recalcular total se hace en el pre-save del modelo
+    // Recalcular total manualmente ya que quitamos el pre-save
+    if (entry.hours !== undefined && entry.hourlyRate !== undefined) {
+      entry.total = parseFloat((entry.hours * entry.hourlyRate).toFixed(2));
+    }
+
     await entry.save();
 
     res.json({ ok: true, data: entry });
