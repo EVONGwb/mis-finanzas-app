@@ -139,10 +139,10 @@ export function Layout({ children, onLogout, user }) {
                  transition: "all 0.2s"
                }}>
                  <Briefcase size={20} strokeWidth={isActive ? 2.5 : 2} />
-               </div>
-               <span>Entregas</span>
-             </>
-          )}
+             </div>
+             <span>Horas</span>
+           </>
+        )}
         </NavLink>
 
         {/* New Menu Button (More/Others) */}
