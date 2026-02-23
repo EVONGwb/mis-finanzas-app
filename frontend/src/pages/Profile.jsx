@@ -4,7 +4,7 @@ import { apiFetch } from "../lib/api";
 import { getToken } from "../lib/auth";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
-import { User, Lock, Mail, Save, LogOut } from "lucide-react";
+import { User, Lock, Mail, Save, LogOut, Copy, Check } from "lucide-react";
 import { Card } from "../components/ui/Card";
 
 export default function Profile() {
@@ -108,6 +108,16 @@ export default function Profile() {
     navigate("/login");
   };
 
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyId = () => {
+    if (user?._id) {
+      navigator.clipboard.writeText(user._id);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   if (loading) return <div className="p-6">Cargando perfil...</div>;
 
   return (
@@ -160,6 +170,17 @@ export default function Profile() {
           <div>
             <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-text)" }}>{user?.name}</h2>
             <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>{user?.email}</p>
+            
+            <div style={{ 
+              display: "flex", alignItems: "center", gap: "0.5rem", 
+              marginTop: "0.5rem", padding: "0.5rem 1rem", 
+              backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-sm)",
+              border: "1px dashed var(--color-border)", cursor: "pointer"
+            }} onClick={handleCopyId}>
+              <span style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "var(--color-text-secondary)" }}>ID: {user?._id}</span>
+              {copied ? <Check size={14} color="var(--color-success)" /> : <Copy size={14} color="var(--color-text-secondary)" />}
+            </div>
+            {copied && <span style={{ fontSize: "0.7rem", color: "var(--color-success)", marginTop: "0.25rem", display: "block" }}>¡Copiado!</span>}
           </div>
         </div>
 
