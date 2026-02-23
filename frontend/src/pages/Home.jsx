@@ -123,14 +123,46 @@ export default function Home() {
     }
   };
 
-  const handleAddProduct = async (e) => {
+  const handleEditStock = async (prod, newStock) => {
+    try {
+      await apiFetch(`/home/inventory/${prod._id}`, {
+        method: "PATCH",
+        token: getToken(),
+        body: { stock: parseFloat(newStock) || 0 }
+      });
+      fetchInventory();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleEditProduct = (prod) => {
+    setProductForm({
+      id: prod._id,
+      name: prod.name,
+      category: prod.category,
+      unit: prod.unit,
+      stock: prod.stock,
+      targetStock: prod.targetStock,
+      minStock: prod.minStock,
+      note: prod.note || ""
+    });
+    setIsProductModalOpen(true);
+  };
+
+  const handleSaveProduct = async (e) => {
     e.preventDefault();
     try {
-      await apiFetch("/home/inventory", {
-        method: "POST",
+      const isEdit = !!productForm.id;
+      const url = isEdit ? `/home/inventory/${productForm.id}` : "/home/inventory";
+      const method = isEdit ? "PATCH" : "POST";
+
+      await apiFetch(url, {
+        method,
         token: getToken(),
         body: productForm
       });
+      
       setIsProductModalOpen(false);
       setProductForm({ name: "", category: "General", unit: "ud", stock: 0, targetStock: 1, minStock: 1, note: "" });
       fetchInventory();
@@ -355,10 +387,26 @@ export default function Home() {
               return (
                 <Card key={prod._id} padding="1rem">
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                    <span style={{ fontWeight: 600 }}>{prod.name}</span>
-                    <Badge variant={isLow ? "danger" : "success"}>
-                      {prod.stock} {prod.unit}
-                    </Badge>
+                    <span style={{ fontWeight: 600, cursor: "pointer" }} onClick={() => handleEditProduct(prod)}>{prod.name}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                      <input 
+                        type="number" 
+                        defaultValue={prod.stock}
+                        style={{ 
+                          width: "50px", padding: "2px 4px", fontSize: "0.875rem", 
+                          border: "1px solid var(--color-border)", borderRadius: "4px",
+                          textAlign: "center"
+                        }}
+                        onBlur={(e) => {
+                          const val = parseFloat(e.target.value);
+                          if (!isNaN(val) && val !== prod.stock) handleEditStock(prod, val);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') e.target.blur();
+                        }}
+                      />
+                      <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{prod.unit}</span>
+                    </div>
                   </div>
                   <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginBottom: "1rem" }}>
                     Objetivo: {prod.targetStock} • Mínimo: {prod.minStock}
@@ -424,8 +472,8 @@ export default function Home() {
         </form>
       </Modal>
 
-      <Modal isOpen={isProductModalOpen} onClose={() => setIsProductModalOpen(false)} title="Nuevo Producto">
-        <form onSubmit={handleAddProduct} style={{ display: "grid", gap: "1rem" }}>
+      <Modal isOpen={isProductModalOpen} onClose={() => { setIsProductModalOpen(false); setProductForm({ name: "", category: "General", unit: "ud", stock: 0, targetStock: 1, minStock: 1, note: "" }); }} title={productForm.id ? "Editar Producto" : "Nuevo Producto"}>
+        <form onSubmit={handleSaveProduct} style={{ display: "grid", gap: "1rem" }}>
           <Input label="Nombre" required value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} />
           <div style={{ display: "flex", gap: "1rem" }}>
             <Input label="Stock Actual" type="number" required value={productForm.stock} onChange={e => setProductForm({...productForm, stock: e.target.value})} />
@@ -435,6 +483,7 @@ export default function Home() {
             <Input label="Stock Mínimo (Alerta)" type="number" required value={productForm.minStock} onChange={e => setProductForm({...productForm, minStock: e.target.value})} />
             <Input label="Stock Objetivo" type="number" required value={productForm.targetStock} onChange={e => setProductForm({...productForm, targetStock: e.target.value})} />
           </div>
+          <Input label="Nota (Opcional)" value={productForm.note} onChange={e => setProductForm({...productForm, note: e.target.value})} />
           <Button type="submit">Guardar Producto</Button>
         </form>
       </Modal>
