@@ -48,7 +48,7 @@ export async function getSummary(req, res, next) {
     // Normalizar para el frontend
     const normalizedIncomes = recentIncomes.map(i => ({
       _id: i._id,
-      title: i.description,
+      title: i.concept || i.source || "Sin concepto",
       amount: i.amount,
       date: i.date,
       type: "income",
@@ -57,7 +57,7 @@ export async function getSummary(req, res, next) {
 
     const normalizedExpenses = recentExpenses.map(e => ({
       _id: e._id,
-      title: e.description,
+      title: e.concept || "Sin concepto",
       amount: e.amount,
       date: e.date,
       type: "expense",

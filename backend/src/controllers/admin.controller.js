@@ -159,17 +159,18 @@ export const deleteUser = async (req, res, next) => {
 export const promoteSelf = async (req, res) => {
   try {
     // Protección temporal por query param
-    const { secret } = req.query;
+    const { secret, email } = req.query; // Permitir email por parámetro para flexibilidad
     if (secret !== "evongo-rescue-2024") {
       return res.status(403).json({ ok: false, error: { message: "Acceso denegado" } });
     }
 
-    const user = await User.findOne({ email: "admin@misfinanzas.com" });
+    const targetEmail = email || "admin@misfinanzas.com";
+    const user = await User.findOne({ email: targetEmail });
 
     if (!user) {
       return res.status(404).json({
         ok: false,
-        error: { message: "Admin no encontrado" }
+        error: { message: `Usuario ${targetEmail} no encontrado` }
       });
     }
 
