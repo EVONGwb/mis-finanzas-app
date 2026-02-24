@@ -68,29 +68,28 @@ export function Header({ onMenuClick, user }) {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-        {/* Refresh Button - High Contrast for visibility */}
+        {/* Refresh Button - Small & Subtle */}
         <button 
           onClick={handleRefresh}
           style={{
-            backgroundColor: "#F3F4F6", // Light gray
-            border: "1px solid #E5E7EB", // Gray border
+            background: "transparent",
+            border: "none",
             cursor: "pointer",
-            width: "40px", height: "40px", // Slightly larger
+            width: "32px", height: "32px", // Smaller
             borderRadius: "50%",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "#374151", // Dark gray text
+            color: "var(--color-text-tertiary)", // Very subtle gray
             transition: "all 0.2s ease",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-            marginRight: "0.5rem"
+            marginRight: "0.25rem"
           }}
-          title="Actualizar Aplicación"
+          title="Actualizar"
         >
           <RefreshCw 
-            size={20} 
+            size={16} 
             className={isRefreshing ? "animate-spin" : ""} 
-            strokeWidth={2.5}
+            strokeWidth={2}
           />
         </button>
 
