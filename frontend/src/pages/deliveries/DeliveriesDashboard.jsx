@@ -1,25 +1,17 @@
 import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../../lib/api";
 import { getToken } from "../../lib/auth";
-import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
 import { Input } from "../../components/ui/Input";
-import { Table, TableRow, TableCell } from "../../components/ui/Table";
-import { Badge } from "../../components/ui/Badge";
-import { Skeleton } from "../../components/ui/Skeleton";
 import { 
-  Clock, 
-  DollarSign, 
   Briefcase, 
   Calendar as CalendarIcon, 
   Plus, 
   Trash2, 
   Edit2, 
-  TrendingUp, 
   ChevronLeft,
-  ChevronRight,
-  CheckCircle
+  ChevronRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -34,8 +26,9 @@ export default function DeliveriesDashboard() {
   const [currentDate, setCurrentDate] = useState(new Date()); // For month navigation
   const [selectedDate, setSelectedDate] = useState(new Date()); // Selected specific day
 
-  // Modal State (Only for Companies now, Entry form is inline)
+  // Modal State
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   
   // Form State
   const [entryForm, setEntryForm] = useState({
@@ -387,23 +380,18 @@ export default function DeliveriesDashboard() {
         )}
       </div>
 
-      {/* 3. Main Content Grid: Calendar + Details */}
+      {/* 3. Main Content Grid: Calendar Only */}
       <div style={{ 
-        display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", 
-        gap: "1.5rem", // Reduced gap
-        paddingBottom: "2rem",
-        alignItems: "start" // Align top
+        paddingBottom: "2rem"
       }}>
         
-        {/* Left: Interactive Calendar (Prioritized) */}
+        {/* Interactive Calendar (Full Width) */}
         <div style={{ 
           backgroundColor: "var(--color-surface)", 
-          padding: "0.75rem", // More compact padding
+          padding: "0.75rem", 
           borderRadius: "var(--radius-lg)", 
           border: "1px solid var(--color-border)", 
-          boxShadow: "var(--shadow-sm)",
-          order: 1 // Calendar first on mobile
+          boxShadow: "var(--shadow-sm)"
         }}>
           <h3 style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <CalendarIcon size={16} /> Calendario
@@ -427,10 +415,13 @@ export default function DeliveriesDashboard() {
               return (
                 <button
                   key={idx}
-                  onClick={() => setSelectedDate(day)}
+                  onClick={() => {
+                    setSelectedDate(day);
+                    setIsDetailsModalOpen(true);
+                  }}
                   style={{
                     aspectRatio: "1",
-                    borderRadius: "var(--radius-sm)", // Smaller radius
+                    borderRadius: "var(--radius-sm)",
                     border: isSelected ? "1.5px solid var(--color-primary)" : "1px solid transparent",
                     backgroundColor: isSelected ? "var(--color-primary-light)" : "var(--color-background)",
                     color: isSelected ? "var(--color-primary)" : "var(--color-text)",
@@ -460,17 +451,16 @@ export default function DeliveriesDashboard() {
             })}
           </div>
         </div>
+      </div>
 
-        {/* Right: Details & Form (Order 2 on mobile) */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", order: 2 }}>
+      {/* Details Modal */}
+      <Modal 
+        isOpen={isDetailsModalOpen} 
+        onClose={() => setIsDetailsModalOpen(false)} 
+        title={selectedDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           
-          {/* Selected Date Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h3 style={{ fontSize: "1.25rem", fontWeight: 600 }}>
-              {selectedDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </h3>
-          </div>
-
           {/* List of Entries for Selected Date */}
           {selectedDateEntries.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -504,7 +494,14 @@ export default function DeliveriesDashboard() {
           )}
 
           {/* Add Entry Form */}
-          <Card title={selectedDateEntries.length > 0 ? "Añadir otro registro" : "Registrar actividad"}>
+          <div style={{ 
+            backgroundColor: "var(--color-surface)", 
+            borderRadius: "var(--radius-md)", 
+            padding: "0", 
+          }}>
+             <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>
+               {selectedDateEntries.length > 0 ? "Añadir otro registro" : "Registrar actividad"}
+             </h3>
              <form onSubmit={handleCreateEntry} style={{ display: "grid", gap: "1rem" }}>
                 <div>
                   <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>EMPRESA</label>
@@ -560,10 +557,9 @@ export default function DeliveriesDashboard() {
                   Guardar
                 </Button>
              </form>
-          </Card>
-
+          </div>
         </div>
-      </div>
+      </Modal>
 
       {/* Modal: Create/Edit Company (Same as before) */}
       <Modal 
