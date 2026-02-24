@@ -421,6 +421,18 @@ export default function DeliveriesDashboard() {
                 ${payroll.totalRealCobrado.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </span>
             </div>
+            
+            {payroll.excedenteLibre > 0 && (
+              <>
+                <div style={{ width: "1px", height: "24px", backgroundColor: "var(--color-border)" }}></div>
+                <div style={{ textAlign: "center", flex: 1 }}>
+                  <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)", display: "block", textTransform: "uppercase" }}>Excedente</span>
+                  <span style={{ fontSize: "1rem", fontWeight: "bold", color: "var(--color-success)" }}>
+                    ${payroll.excedenteLibre.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
