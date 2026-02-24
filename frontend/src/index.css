@@ -50,6 +50,12 @@
 
 * {
   box-sizing: border-box;
+  /* Prevent elastic scrolling and selection on mobile for native feel */
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 body {
@@ -60,6 +66,23 @@ body {
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
   line-height: 1.6;
+  overflow: hidden; /* Prevent body scroll */
+  position: fixed; /* Lock body */
+  width: 100%;
+  height: 100%;
+}
+
+/* Allow scrolling ONLY inside main content areas */
+main, .scrollable-content {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Input fields should allow selection */
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 h1, h2, h3, h4, h5, h6 {
