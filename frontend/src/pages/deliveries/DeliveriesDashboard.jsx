@@ -505,27 +505,38 @@ export default function DeliveriesDashboard() {
              <form onSubmit={handleCreateEntry} style={{ display: "grid", gap: "1rem" }}>
                 <div>
                   <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>EMPRESA</label>
-                  <select
-                    required
-                    value={entryForm.companyId}
-                    onChange={(e) => {
-                      const company = companies.find(c => c._id === e.target.value);
-                      setEntryForm({
-                        ...entryForm,
-                        companyId: e.target.value,
-                        hourlyRate: company ? company.hourlyRateDefault : ""
-                      });
-                    }}
-                    style={{
-                      width: "100%", padding: "0.75rem", borderRadius: "var(--radius-sm)",
-                      border: "1px solid var(--color-border)", backgroundColor: "var(--color-background)", color: "var(--color-text)"
-                    }}
-                  >
-                    <option value="">Seleccionar...</option>
-                    {companies.map(c => (
-                      <option key={c._id} value={c._id}>{c.name}</option>
-                    ))}
-                  </select>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "0.5rem" }}>
+                    {companies.map(c => {
+                      const isSelected = entryForm.companyId === c._id;
+                      return (
+                        <div 
+                          key={c._id}
+                          onClick={() => {
+                            setEntryForm({
+                              ...entryForm,
+                              companyId: c._id,
+                              hourlyRate: c.hourlyRateDefault
+                            });
+                          }}
+                          style={{
+                            padding: "0.75rem",
+                            borderRadius: "var(--radius-md)",
+                            border: isSelected ? "2px solid var(--color-primary)" : "1px solid var(--color-border)",
+                            backgroundColor: isSelected ? "var(--color-primary-light)" : "var(--color-surface)",
+                            color: isSelected ? "var(--color-primary)" : "var(--color-text)",
+                            cursor: "pointer",
+                            textAlign: "center",
+                            fontSize: "0.875rem",
+                            fontWeight: isSelected ? 600 : 400,
+                            transition: "all 0.2s"
+                          }}
+                        >
+                          {c.name}
+                        </div>
+                      );
+                    })}
+                    {companies.length === 0 && <p style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>No hay empresas. Añade una arriba.</p>}
+                  </div>
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
