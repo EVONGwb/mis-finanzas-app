@@ -1,7 +1,10 @@
 import { NavLink } from "react-router-dom";
+import { useState } from "react";
 import { LayoutDashboard, TrendingUp, TrendingDown, FileText, LogOut, X, Shield, Briefcase, CreditCard, Home, HandCoins } from "lucide-react";
 
 export function Sidebar({ isOpen, onClose, onLogout, user }) {
+  const [logoError, setLogoError] = useState(false);
+
   const links = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/incomes", label: "Ingresos", icon: TrendingUp },
@@ -51,16 +54,30 @@ export function Sidebar({ isOpen, onClose, onLogout, user }) {
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "3rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <div style={{ 
-              width: "40px", height: "40px", 
-              borderRadius: "12px", 
-              background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "white", fontWeight: "bold",
-              boxShadow: "var(--shadow-md)"
-            }}>
-              M
-            </div>
+            {!logoError ? (
+              <img 
+                src="/logo.png" 
+                alt="M" 
+                style={{ 
+                  width: "40px", height: "40px", 
+                  borderRadius: "12px", 
+                  objectFit: "contain",
+                  boxShadow: "var(--shadow-md)" 
+                }}
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+              <div style={{ 
+                width: "40px", height: "40px", 
+                borderRadius: "12px", 
+                background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "white", fontWeight: "bold",
+                boxShadow: "var(--shadow-md)"
+              }}>
+                M
+              </div>
+            )}
             <span style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-text)", letterSpacing: "-0.5px" }}>
               Mis Finanzas
             </span>
