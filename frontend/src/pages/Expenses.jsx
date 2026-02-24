@@ -313,7 +313,10 @@ export default function Expenses() {
               <option value="transfer">Transferencia</option>
             </select>
           </div>
-          <Button type="button" variant="danger" onClick={handleSubmit} style={{ marginTop: "1rem" }}>Guardar Gasto</Button>
+          <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+            <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} style={{ flex: 1 }}>Cancelar</Button>
+            <Button type="submit" variant="danger" style={{ flex: 1 }}>Guardar Gasto</Button>
+          </div>
         </form>
       </Modal>
     </div>
