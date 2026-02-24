@@ -115,7 +115,7 @@ export default function DeliveriesDashboard() {
         token: getToken(),
         body: {
           ...entryForm,
-          date: selectedDate.toISOString().split("T")[0] // Use selectedDate
+          date: selectedDate.toLocaleDateString('en-CA') // Force YYYY-MM-DD local
         }
       });
       
@@ -289,48 +289,59 @@ export default function DeliveriesDashboard() {
   const companyForPayroll = selectedCompanyStats ? companies.find(c => c.name === selectedCompanyStats.companyName) : null;
   const payroll = companyForPayroll ? getPayrollSummary(companyForPayroll, selectedCompanyStats.totalEarnings) : null;
 
-  // Filter entries for the selected date
-  const selectedDateEntries = useMemo(() => {
-    const dateStr = selectedDate.toISOString().split("T")[0];
-    return entries.filter(e => e.date.startsWith(dateStr));
-  }, [entries, selectedDate]);
+    // Filter entries for the selected date
+    const selectedDateEntries = useMemo(() => {
+      // Ajustar la fecha seleccionada a la zona horaria local para comparar con strings YYYY-MM-DD
+      const localDate = new Date(selectedDate.getTime() - (selectedDate.getTimezoneOffset() * 60000));
+      const dateStr = localDate.toISOString().split("T")[0];
+      return entries.filter(e => e.date.startsWith(dateStr));
+    }, [entries, selectedDate]);
 
-  // Calendar Generation
-  const calendarDays = useMemo(() => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    
-    const days = [];
-    
-    // Fill previous month days
-    const startPadding = (firstDay.getDay() + 6) % 7; // Mon=0
-    for (let i = 0; i < startPadding; i++) {
-      days.push(null);
-    }
-    
-    // Fill current month days
-    for (let i = 1; i <= lastDay.getDate(); i++) {
-      days.push(new Date(year, month, i));
-    }
-    
-    return days;
-  }, [currentDate]);
+    // Calendar Generation
+    const calendarDays = useMemo(() => {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      
+      const days = [];
+      
+      // Fill previous month days (Lunes = 1, Domingo = 0 en getDay())
+      // Queremos que la semana empiece en Lunes
+      // getDay(): Dom=0, Lun=1, Mar=2...
+      // Si es Lunes(1), padding=0. Si es Domingo(0), padding=6.
+      let startPadding = firstDay.getDay() - 1;
+      if (startPadding === -1) startPadding = 6;
+      
+      for (let i = 0; i < startPadding; i++) {
+        days.push(null);
+      }
+      
+      // Fill current month days
+      for (let i = 1; i <= lastDay.getDate(); i++) {
+        days.push(new Date(year, month, i));
+      }
+      
+      return days;
+    }, [currentDate]);
 
-  const hasEntryOnDate = (date) => {
-    if (!date) return false;
-    const dateStr = date.toISOString().split("T")[0];
-    return entries.some(e => e.date.startsWith(dateStr));
-  };
+    const hasEntryOnDate = (date) => {
+      if (!date) return false;
+      // Ajustar fecha para comparación local
+      const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+      const dateStr = localDate.toISOString().split("T")[0];
+      return entries.some(e => e.date.startsWith(dateStr));
+    };
 
-  const getDayTotal = (date) => {
-    if (!date) return 0;
-    const dateStr = date.toISOString().split("T")[0];
-    return entries
-      .filter(e => e.date.startsWith(dateStr))
-      .reduce((sum, e) => sum + (e.total || 0), 0);
-  };
+    const getDayTotal = (date) => {
+      if (!date) return 0;
+      // Ajustar fecha para comparación local
+      const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+      const dateStr = localDate.toISOString().split("T")[0];
+      return entries
+        .filter(e => e.date.startsWith(dateStr))
+        .reduce((sum, e) => sum + (e.total || 0), 0);
+    };
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "5rem", maxWidth: "1200px", margin: "0 auto" }}>
