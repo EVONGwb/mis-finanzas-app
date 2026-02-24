@@ -15,7 +15,7 @@ export const getCompanies = async (req, res, next) => {
 // POST /api/companies
 export const createCompany = async (req, res, next) => {
   try {
-    const { name, hourlyRateDefault, description, deductions, limitRule } = req.body;
+    const { name, hourlyRateDefault, description, deductions, supplements, limitRule } = req.body;
     
     // Validación básica
     if (!name || hourlyRateDefault === undefined) {
@@ -28,6 +28,7 @@ export const createCompany = async (req, res, next) => {
       hourlyRateDefault,
       description,
       deductions,
+      supplements,
       limitRule
     });
 
@@ -44,7 +45,7 @@ export const createCompany = async (req, res, next) => {
 export const updateCompany = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, hourlyRateDefault, isActive, description, deductions, limitRule } = req.body;
+    const { name, hourlyRateDefault, isActive, description, deductions, supplements, limitRule } = req.body;
 
     const company = await Company.findOne({ _id: id, user: req.user._id });
     if (!company) throw new HttpError(404, "Empresa no encontrada");
@@ -56,6 +57,10 @@ export const updateCompany = async (req, res, next) => {
     
     if (deductions) {
       company.deductions = { ...company.deductions.toObject(), ...deductions };
+    }
+
+    if (supplements) {
+      company.supplements = { ...company.supplements.toObject(), ...supplements };
     }
     
     if (limitRule) {
