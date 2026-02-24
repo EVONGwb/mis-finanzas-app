@@ -103,7 +103,8 @@ export default function Dashboard() {
                 textDecoration: "none",
                 color: "white",
                 position: "relative",
-                overflow: "hidden"
+                overflow: "hidden",
+                gridColumn: (index === menuItems.length - 1 && menuItems.length % 2 !== 0) ? "span 2" : "span 1"
               }}
             >
               <div style={{
