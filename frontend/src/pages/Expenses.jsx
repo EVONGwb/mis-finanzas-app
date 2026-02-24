@@ -15,13 +15,15 @@ export default function Expenses() {
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [viewType, setViewType] = useState("monthly"); // "monthly" or "daily"
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     amount: "",
     category: "general",
     concept: "",
-    paymentMethod: "cash"
+    paymentMethod: "cash",
+    type: "monthly" // Default to monthly on create, but user can change
   });
 
   // Filter state
@@ -81,7 +83,11 @@ export default function Expenses() {
 
   const filteredItems = items.filter(item => {
     const d = new Date(item.date);
-    return d.getMonth() + 1 === parseInt(month) && d.getFullYear() === parseInt(year);
+    const matchesDate = d.getMonth() + 1 === parseInt(month) && d.getFullYear() === parseInt(year);
+    // If item.type is missing, treat as "daily" for backward compatibility or "monthly" depending on your preference.
+    // Let's assume default is "daily" if undefined, or check if it matches viewType.
+    const itemType = item.type || "daily"; 
+    return matchesDate && itemType === viewType;
   });
 
   return (
@@ -94,6 +100,52 @@ export default function Expenses() {
         <Button onClick={() => setIsModalOpen(true)} variant="danger">
           <Plus size={18} /> Nuevo Gasto
         </Button>
+      </div>
+
+      {/* View Type Toggles */}
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
+        <button
+          onClick={() => setViewType("monthly")}
+          style={{
+            flex: 1,
+            padding: "1rem",
+            backgroundColor: viewType === "monthly" ? "var(--color-danger)" : "var(--color-surface)",
+            color: viewType === "monthly" ? "white" : "var(--color-text)",
+            border: viewType === "monthly" ? "none" : "1px solid var(--color-border)",
+            borderRadius: "var(--radius-md)",
+            fontWeight: 600,
+            cursor: "pointer",
+            transition: "all 0.2s",
+            textAlign: "center",
+            boxShadow: viewType === "monthly" ? "var(--shadow-md)" : "none"
+          }}
+        >
+          Gastos Mensuales
+          <span style={{ display: "block", fontSize: "0.75rem", fontWeight: 400, opacity: 0.9, marginTop: "0.25rem" }}>
+            Fijos (Alquiler, Luz, Internet...)
+          </span>
+        </button>
+        <button
+          onClick={() => setViewType("daily")}
+          style={{
+            flex: 1,
+            padding: "1rem",
+            backgroundColor: viewType === "daily" ? "var(--color-warning)" : "var(--color-surface)",
+            color: viewType === "daily" ? "white" : "var(--color-text)",
+            border: viewType === "daily" ? "none" : "1px solid var(--color-border)",
+            borderRadius: "var(--radius-md)",
+            fontWeight: 600,
+            cursor: "pointer",
+            transition: "all 0.2s",
+            textAlign: "center",
+            boxShadow: viewType === "daily" ? "var(--shadow-md)" : "none"
+          }}
+        >
+          Gastos Diarios
+          <span style={{ display: "block", fontSize: "0.75rem", fontWeight: 400, opacity: 0.9, marginTop: "0.25rem" }}>
+            Variables (Café, Cine, Compras...)
+          </span>
+        </button>
       </div>
 
       {error && (
@@ -196,6 +248,45 @@ export default function Expenses() {
             onChange={(e) => setFormData({...formData, concept: e.target.value})}
             placeholder="Ej. Compras supermercado"
           />
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>Tipo de Gasto</label>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, type: "monthly" })}
+                style={{
+                  flex: 1,
+                  padding: "0.75rem",
+                  borderRadius: "var(--radius-sm)",
+                  border: formData.type === "monthly" ? "2px solid var(--color-danger)" : "1px solid var(--color-border)",
+                  backgroundColor: formData.type === "monthly" ? "var(--color-danger-bg)" : "var(--color-surface)",
+                  color: formData.type === "monthly" ? "var(--color-danger)" : "var(--color-text)",
+                  fontWeight: 600,
+                  cursor: "pointer"
+                }}
+              >
+                Mensual (Fijo)
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, type: "daily" })}
+                style={{
+                  flex: 1,
+                  padding: "0.75rem",
+                  borderRadius: "var(--radius-sm)",
+                  border: formData.type === "daily" ? "2px solid var(--color-warning)" : "1px solid var(--color-border)",
+                  backgroundColor: formData.type === "daily" ? "var(--color-warning-bg)" : "var(--color-surface)",
+                  color: formData.type === "daily" ? "var(--color-warning)" : "var(--color-text)",
+                  fontWeight: 600,
+                  cursor: "pointer"
+                }}
+              >
+                Diario (Variable)
+              </button>
+            </div>
+          </div>
+
           <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
             <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>Categoría</label>
             <select 
