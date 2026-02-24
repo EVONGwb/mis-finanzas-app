@@ -11,7 +11,8 @@ import {
   Trash2, 
   Edit2, 
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CheckCircle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -373,6 +374,30 @@ export default function DeliveriesDashboard() {
             </button>
           </div>
         </div>
+
+        {/* Excedente (Tax Free) Banner */}
+        {payroll && payroll.excedenteLibre > 0 && (
+          <div style={{
+            marginTop: "1rem",
+            padding: "0.75rem",
+            backgroundColor: "var(--color-success-bg)",
+            borderRadius: "var(--radius-md)",
+            border: "1px solid var(--color-success)",
+            color: "var(--color-success)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            boxShadow: "var(--shadow-sm)"
+          }}>
+             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <CheckCircle size={20} />
+                <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>Excedente Libre de Impuestos</span>
+             </div>
+             <span style={{ fontSize: "1.25rem", fontWeight: "bold" }}>
+                ${payroll.excedenteLibre.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+             </span>
+          </div>
+        )}
       </div>
 
       {/* 2. Minimal Summary Row (Space Saving) */}
@@ -421,18 +446,6 @@ export default function DeliveriesDashboard() {
                 ${payroll.totalRealCobrado.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </span>
             </div>
-            
-            {payroll.excedenteLibre > 0 && (
-              <>
-                <div style={{ width: "1px", height: "24px", backgroundColor: "var(--color-border)" }}></div>
-                <div style={{ textAlign: "center", flex: 1 }}>
-                  <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)", display: "block", textTransform: "uppercase" }}>Excedente</span>
-                  <span style={{ fontSize: "1rem", fontWeight: "bold", color: "var(--color-success)" }}>
-                    ${payroll.excedenteLibre.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                  </span>
-                </div>
-              </>
-            )}
           </>
         )}
       </div>
