@@ -1,20 +1,43 @@
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import Incomes from "./pages/Incomes";
-import Expenses from "./pages/Expenses";
-import Debts from "./pages/Debts";
-import Credits from "./pages/Credits";
-import Home from "./pages/Home";
-import Closing from "./pages/Closing";
-import DeliveriesDashboard from "./pages/deliveries/DeliveriesDashboard";
-import AdminUsers from "./pages/admin/AdminUsers";
-import Profile from "./pages/Profile";
+import { lazy, Suspense } from "react";
 import { Layout } from "./components/layout/Layout";
 import { getToken, clearToken } from "./lib/auth";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
+
+// Lazy loading components
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Incomes = lazy(() => import("./pages/Incomes"));
+const Expenses = lazy(() => import("./pages/Expenses"));
+const Debts = lazy(() => import("./pages/Debts"));
+const Credits = lazy(() => import("./pages/Credits"));
+const Home = lazy(() => import("./pages/Home"));
+const Closing = lazy(() => import("./pages/Closing"));
+const DeliveriesDashboard = lazy(() => import("./pages/deliveries/DeliveriesDashboard"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const Profile = lazy(() => import("./pages/Profile"));
+
+// Loading Component
+const LoadingFallback = () => (
+  <div style={{ 
+    display: "flex", 
+    justifyContent: "center", 
+    alignItems: "center", 
+    height: "100vh", 
+    width: "100%",
+    backgroundColor: "var(--color-background)"
+  }}>
+    <div className="animate-spin" style={{ 
+      width: "40px", 
+      height: "40px", 
+      border: "3px solid var(--color-border)", 
+      borderTopColor: "var(--color-primary)", 
+      borderRadius: "50%" 
+    }} />
+  </div>
+);
 
 function AppLayout({ children }) {
   const navigate = useNavigate();
@@ -33,7 +56,7 @@ function Protected({ children }) {
   const token = getToken();
   
   if (!token) return <Navigate to="/login" replace />;
-  if (loading) return <div>Cargando...</div>;
+  if (loading) return <LoadingFallback />;
   
   return <AppLayout>{children}</AppLayout>;
 }
@@ -41,7 +64,7 @@ function Protected({ children }) {
 function AdminRoute({ children }) {
   const { user, loading } = useAuth();
 
-  if (loading) return <div>Cargando...</div>;
+  if (loading) return <LoadingFallback />;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== "admin") return <Navigate to="/dashboard" replace />;
 
@@ -82,100 +105,102 @@ export default function App() {
   return (
     <AuthProvider>
       <PWAInstallPrompt />
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<LoginRoute />} />
-        <Route path="/register" element={<RegisterRoute />} />
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<LoginRoute />} />
+          <Route path="/register" element={<RegisterRoute />} />
 
-        <Route
-          path="/dashboard"
-          element={
-            <Protected>
-              <Dashboard />
-            </Protected>
-          }
-        />
-        <Route
-          path="/incomes"
-          element={
-            <Protected>
-              <Incomes />
-            </Protected>
-          }
-        />
-        <Route
-          path="/expenses"
-          element={
-            <Protected>
-              <Expenses />
-            </Protected>
-          }
-        />
-        <Route
-          path="/debts"
-          element={
-            <Protected>
-              <Debts />
-            </Protected>
-          }
-        />
-        <Route
-          path="/credits"
-          element={
-            <Protected>
-              <Credits />
-            </Protected>
-          }
-        />
-        <Route
-          path="/home"
-          element={
-            <Protected>
-              <Home />
-            </Protected>
-          }
-        />
-        <Route
-          path="/closing"
-          element={
-            <Protected>
-              <Closing />
-            </Protected>
-          }
-        />
-        <Route
-          path="/deliveries"
-          element={
-            <Protected>
-              <DeliveriesDashboard />
-            </Protected>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <Protected>
-              <Profile />
-            </Protected>
-          }
-        />
+          <Route
+            path="/dashboard"
+            element={
+              <Protected>
+                <Dashboard />
+              </Protected>
+            }
+          />
+          <Route
+            path="/incomes"
+            element={
+              <Protected>
+                <Incomes />
+              </Protected>
+            }
+          />
+          <Route
+            path="/expenses"
+            element={
+              <Protected>
+                <Expenses />
+              </Protected>
+            }
+          />
+          <Route
+            path="/debts"
+            element={
+              <Protected>
+                <Debts />
+              </Protected>
+            }
+          />
+          <Route
+            path="/credits"
+            element={
+              <Protected>
+                <Credits />
+              </Protected>
+            }
+          />
+          <Route
+            path="/home"
+            element={
+              <Protected>
+                <Home />
+              </Protected>
+            }
+          />
+          <Route
+            path="/closing"
+            element={
+              <Protected>
+                <Closing />
+              </Protected>
+            }
+          />
+          <Route
+            path="/deliveries"
+            element={
+              <Protected>
+                <DeliveriesDashboard />
+              </Protected>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <Protected>
+                <Profile />
+              </Protected>
+            }
+          />
 
-        {/* Admin Routes */}
-        <Route 
-          path="/admin" 
-          element={<Navigate to="/admin/users" replace />} 
-        />
-        <Route
-          path="/admin/users"
-          element={
-            <AdminRoute>
-              <AdminUsers />
-            </AdminRoute>
-          }
-        />
+          {/* Admin Routes */}
+          <Route 
+            path="/admin" 
+            element={<Navigate to="/admin/users" replace />} 
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute>
+                <AdminUsers />
+              </AdminRoute>
+            }
+          />
 
-        <Route path="*" element={<div style={{ padding: 20 }}>Página no encontrada</div>} />
-      </Routes>
+          <Route path="*" element={<div style={{ padding: 20 }}>Página no encontrada</div>} />
+        </Routes>
+      </Suspense>
     </AuthProvider>
   );
 }

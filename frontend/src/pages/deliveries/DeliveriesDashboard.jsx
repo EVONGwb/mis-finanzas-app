@@ -337,58 +337,85 @@ export default function DeliveriesDashboard() {
         </div>
       </div>
 
-      {/* 2. Compact Summary Cards (Responsive: 2x2 on mobile, 4x1 on desktop) */}
+      {/* 2. Minimal Summary Row (Space Saving) */}
       <div style={{ 
-        display: "grid", 
-        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", 
-        gap: "0.75rem", 
-        marginBottom: "1.5rem" 
+        display: "flex", 
+        justifyContent: "space-between", 
+        alignItems: "center", 
+        padding: "0.75rem 0.5rem", 
+        marginBottom: "1rem",
+        backgroundColor: "var(--color-surface)",
+        borderBottom: "1px solid var(--color-border)",
+        borderRadius: "var(--radius-md)",
+        gap: "0.5rem"
       }}>
-        <CompactCard 
-          label="Ganancias" 
-          value={`$${stats?.totalEarnings?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}`}
-          icon={DollarSign}
-          color="success"
-        />
-        <CompactCard 
-          label="Horas" 
-          value={`${stats?.totalHours || 0}h`}
-          icon={Clock}
-          color="info"
-        />
-        <CompactCard 
-          label="Promedio" 
-          value={`$${stats?.dailyAverage?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}`}
-          icon={TrendingUp}
-          color="warning"
-        />
+        <div style={{ textAlign: "center", flex: 1 }}>
+          <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)", display: "block", textTransform: "uppercase" }}>Ganancias</span>
+          <span style={{ fontSize: "1rem", fontWeight: "bold", color: "var(--color-success)" }}>
+            ${stats?.totalEarnings?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}
+          </span>
+        </div>
+        
+        <div style={{ width: "1px", height: "24px", backgroundColor: "var(--color-border)" }}></div>
+
+        <div style={{ textAlign: "center", flex: 1 }}>
+          <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)", display: "block", textTransform: "uppercase" }}>Horas</span>
+          <span style={{ fontSize: "1rem", fontWeight: "bold", color: "var(--color-info)" }}>
+            {stats?.totalHours || 0}h
+          </span>
+        </div>
+
+        <div style={{ width: "1px", height: "24px", backgroundColor: "var(--color-border)" }}></div>
+
+        <div style={{ textAlign: "center", flex: 1 }}>
+          <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)", display: "block", textTransform: "uppercase" }}>Promedio</span>
+          <span style={{ fontSize: "1rem", fontWeight: "bold", color: "var(--color-warning)" }}>
+            ${stats?.dailyAverage?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}
+          </span>
+        </div>
+
         {payroll && (
-           <CompactCard 
-            label="Neto" 
-            value={`$${payroll.totalRealCobrado.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
-            subtext={`Excedente: ${payroll.excedenteLibre.toFixed(0)}€`}
-            icon={CheckCircle}
-            color="primary"
-          />
+          <>
+            <div style={{ width: "1px", height: "24px", backgroundColor: "var(--color-border)" }}></div>
+            <div style={{ textAlign: "center", flex: 1 }}>
+              <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)", display: "block", textTransform: "uppercase" }}>Neto</span>
+              <span style={{ fontSize: "1rem", fontWeight: "bold", color: "var(--color-primary)" }}>
+                ${payroll.totalRealCobrado.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </span>
+            </div>
+          </>
         )}
       </div>
 
       {/* 3. Main Content Grid: Calendar + Details */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem", paddingBottom: "2rem" }}>
+      <div style={{ 
+        display: "grid", 
+        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", 
+        gap: "1.5rem", // Reduced gap
+        paddingBottom: "2rem",
+        alignItems: "start" // Align top
+      }}>
         
-        {/* Left: Interactive Calendar */}
-        <div style={{ backgroundColor: "var(--color-surface)", padding: "1rem", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-border)", boxShadow: "var(--shadow-sm)" }}>
-          <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <CalendarIcon size={18} /> Calendario
+        {/* Left: Interactive Calendar (Prioritized) */}
+        <div style={{ 
+          backgroundColor: "var(--color-surface)", 
+          padding: "0.75rem", // More compact padding
+          borderRadius: "var(--radius-lg)", 
+          border: "1px solid var(--color-border)", 
+          boxShadow: "var(--shadow-sm)",
+          order: 1 // Calendar first on mobile
+        }}>
+          <h3 style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <CalendarIcon size={16} /> Calendario
           </h3>
           
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "0.25rem", textAlign: "center", marginBottom: "0.5rem" }}>
-            {["L", "M", "M", "J", "V", "S", "D"].map(d => (
-              <div key={d} style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>{d}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", textAlign: "center", marginBottom: "0.25rem" }}>
+            {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
+              <div key={i} style={{ fontSize: "0.65rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>{d}</div>
             ))}
           </div>
           
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "0.25rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px" }}>
             {calendarDays.map((day, idx) => {
               if (!day) return <div key={idx} />;
               
@@ -403,8 +430,8 @@ export default function DeliveriesDashboard() {
                   onClick={() => setSelectedDate(day)}
                   style={{
                     aspectRatio: "1",
-                    borderRadius: "var(--radius-md)",
-                    border: isSelected ? "2px solid var(--color-primary)" : "1px solid transparent",
+                    borderRadius: "var(--radius-sm)", // Smaller radius
+                    border: isSelected ? "1.5px solid var(--color-primary)" : "1px solid transparent",
                     backgroundColor: isSelected ? "var(--color-primary-light)" : "var(--color-background)",
                     color: isSelected ? "var(--color-primary)" : "var(--color-text)",
                     display: "flex",
@@ -413,20 +440,20 @@ export default function DeliveriesDashboard() {
                     justifyContent: "center",
                     cursor: "pointer",
                     position: "relative",
-                    transition: "all 0.2s",
-                    padding: "0.25rem"
+                    transition: "all 0.1s",
+                    padding: "0.1rem"
                   }}
                 >
-                  <span style={{ fontSize: "0.8rem", fontWeight: isToday ? "bold" : "normal" }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: isToday ? "bold" : "normal" }}>
                     {day.getDate()}
                   </span>
                   {hasData && (
-                    <div style={{ marginTop: "1px", fontSize: "0.55rem", fontWeight: 600, color: "var(--color-success)" }}>
+                    <div style={{ marginTop: "0px", fontSize: "0.5rem", fontWeight: 600, color: "var(--color-success)", lineHeight: 1 }}>
                       ${Math.round(dayTotal)}
                     </div>
                   )}
                   {isToday && !isSelected && (
-                    <div style={{ position: "absolute", bottom: "3px", width: "3px", height: "3px", borderRadius: "50%", backgroundColor: "var(--color-primary)" }} />
+                    <div style={{ position: "absolute", bottom: "2px", width: "3px", height: "3px", borderRadius: "50%", backgroundColor: "var(--color-primary)" }} />
                   )}
                 </button>
               );
@@ -434,8 +461,8 @@ export default function DeliveriesDashboard() {
           </div>
         </div>
 
-        {/* Right: Details & Form */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+        {/* Right: Details & Form (Order 2 on mobile) */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", order: 2 }}>
           
           {/* Selected Date Header */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -602,43 +629,4 @@ export default function DeliveriesDashboard() {
   );
 }
 
-// Compact Card Component
-function CompactCard({ label, value, subtext, icon: Icon, color }) {
-  const colors = {
-    success: "var(--color-success)",
-    info: "var(--color-info)",
-    warning: "var(--color-warning)",
-    primary: "var(--color-primary)",
-  };
-  
-  const iconColor = colors[color] || colors.primary;
-  
-  return (
-    <div style={{ 
-      backgroundColor: "var(--color-surface)", 
-      padding: "1rem", 
-      borderRadius: "var(--radius-md)", 
-      border: "1px solid var(--color-border)",
-      display: "flex",
-      alignItems: "center",
-      gap: "1rem",
-      boxShadow: "var(--shadow-sm)"
-    }}>
-      <div style={{ 
-        width: "40px", height: "40px", 
-        borderRadius: "50%", 
-        backgroundColor: `color-mix(in srgb, ${iconColor}, transparent 90%)`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: iconColor
-      }}>
-        <Icon size={20} />
-      </div>
-      <div>
-        <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", fontWeight: 500, textTransform: "uppercase" }}>{label}</p>
-        <p style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--color-text)" }}>{value}</p>
-        {subtext && <p style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)" }}>{subtext}</p>}
-      </div>
-    </div>
-  );
-}
 
