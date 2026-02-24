@@ -43,64 +43,76 @@ export function Layout({ children, onLogout, user }) {
       {/* Mobile Bottom Navigation - SOLO 3 ICONOS */}
       <div style={{
         position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: "rgba(255, 255, 255, 0.9)", // Translucid
-        backdropFilter: "blur(10px)",
-        borderTop: "1px solid var(--color-border)", 
+        bottom: "1rem", // Floating
+        left: "1rem",
+        right: "1rem",
+        backgroundColor: "rgba(255, 255, 255, 0.95)", // More solid
+        backdropFilter: "blur(16px)",
+        borderRadius: "24px", // Rounded pill
         display: "flex",
-        justifyContent: "space-around", // Even spacing
+        justifyContent: "space-between", // Space between items
         alignItems: "center",
-        padding: "1rem 2rem", 
-        paddingBottom: "2rem", // Safe area
+        padding: "0.75rem 2rem", 
         zIndex: 50,
-        boxShadow: "0 -4px 20px rgba(0,0,0,0.05)",
+        boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)",
+        maxWidth: "400px", // Limit width on large screens
+        margin: "0 auto" // Center
       }}>
         {/* 1. INICIO */}
         <NavLink to="/dashboard" style={({ isActive }) => ({
-          display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
-          color: isActive ? "var(--color-primary)" : "#9CA3AF",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
+          color: isActive ? "#10B981" : "#9CA3AF",
           fontSize: "0.75rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
-          transform: isActive ? "scale(1.1)" : "scale(1)",
-          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
         })}>
           {({ isActive }) => (
             <>
-              <LayoutDashboard size={24} strokeWidth={isActive ? 2.5 : 2} />
-              <span>Inicio</span>
+               <div style={{
+                 backgroundColor: isActive ? "#D1FAE5" : "transparent",
+                 color: isActive ? "#059669" : "inherit",
+                 padding: "8px",
+                 borderRadius: "12px",
+                 display: "flex", alignItems: "center", justifyContent: "center",
+                 transition: "all 0.2s ease"
+               }}>
+                 {isActive ? (
+                    <LayoutDashboard size={24} strokeWidth={2.5} fill="#059669" fillOpacity={0.2} />
+                 ) : (
+                    <LayoutDashboard size={24} strokeWidth={2} />
+                 )}
+               </div>
+              <span style={{ fontSize: "0.7rem" }}>Inicio</span>
             </>
           )}
         </NavLink>
 
         {/* 2. HORAS (Deliveries) */}
         <NavLink to="/deliveries" style={({ isActive }) => ({
-          display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
-          color: isActive ? "var(--color-primary)" : "#9CA3AF",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
+          color: isActive ? "#374151" : "#9CA3AF",
           fontSize: "0.75rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
-          transform: isActive ? "scale(1.1)" : "scale(1)",
-          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
         })}>
           {({ isActive }) => (
              <>
-               <Briefcase size={24} strokeWidth={isActive ? 2.5 : 2} />
-               <span>Horas</span>
+                <div style={{ padding: "8px" }}>
+                   <Briefcase size={24} strokeWidth={isActive ? 2.5 : 2} />
+                </div>
+               <span style={{ fontSize: "0.7rem" }}>Horas</span>
              </>
           )}
         </NavLink>
 
         {/* 3. GASTOS */}
         <NavLink to="/expenses" style={({ isActive }) => ({
-          display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
-          color: isActive ? "var(--color-primary)" : "#9CA3AF",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
+          color: isActive ? "#EF4444" : "#9CA3AF",
           fontSize: "0.75rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
-          transform: isActive ? "scale(1.1)" : "scale(1)",
-          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
         })}>
           {({ isActive }) => (
              <>
-               <TrendingDown size={24} strokeWidth={isActive ? 2.5 : 2} />
-               <span>Gastos</span>
+                <div style={{ padding: "8px" }}>
+                   <TrendingDown size={24} strokeWidth={isActive ? 2.5 : 2} />
+                </div>
+               <span style={{ fontSize: "0.7rem" }}>Gastos</span>
              </>
           )}
         </NavLink>

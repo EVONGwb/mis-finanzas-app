@@ -34,16 +34,16 @@ export function Header({ onMenuClick, user }) {
             alt="M" 
             style={{ 
               width: "40px", height: "40px", 
-              borderRadius: "50%", 
+              borderRadius: "12px", // Squircle as per design
               objectFit: "contain",
-              boxShadow: "0 4px 10px rgba(16, 185, 129, 0.3)" 
+              // boxShadow: "0 4px 10px rgba(16, 185, 129, 0.3)" 
             }}
             onError={() => setLogoError(true)}
           />
         ) : (
           <div style={{ 
             width: "40px", height: "40px", 
-            borderRadius: "50%", 
+            borderRadius: "12px", 
             background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
             display: "flex", alignItems: "center", justifyContent: "center",
             color: "white", fontWeight: "bold",
@@ -54,7 +54,7 @@ export function Header({ onMenuClick, user }) {
           </div>
         )}
         <div>
-          <h1 style={{ fontSize: "1.125rem", fontWeight: 800, color: "#1F2937", lineHeight: 1.1 }}>Mis Finanzas</h1>
+          <h1 style={{ fontSize: "1.25rem", fontWeight: 900, color: "#111827", lineHeight: 1.1, letterSpacing: "-0.5px" }}>Mis Finanzas</h1>
         </div>
       </div>
 
@@ -66,21 +66,20 @@ export function Header({ onMenuClick, user }) {
             display: "flex", 
             alignItems: "center", 
             gap: "0.75rem", 
-            cursor: "pointer"
+            cursor: "pointer",
+            backgroundColor: "#F3F4F6", // Light grey circle background
+            borderRadius: "50%",
+            padding: "2px",
+            border: "1px solid #E5E7EB"
           }}
         >
-          <img 
-            src={`https://ui-avatars.com/api/?name=${user?.name || "User"}&background=E5E7EB&color=374151`} 
-            alt="Profile" 
-            style={{ 
-              width: "40px", 
-              height: "40px", 
-              borderRadius: "50%", 
-              objectFit: "cover",
-              border: "2px solid white",
-              boxShadow: "0 2px 5px rgba(0,0,0,0.1)"
-            }} 
-          />
+          <div style={{
+            width: "36px", height: "36px", borderRadius: "50%",
+            backgroundColor: "#E5E7EB", display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#374151", fontWeight: "bold", fontSize: "0.9rem"
+          }}>
+             {user?.name ? user.name.substring(0, 2).toUpperCase() : "PM"}
+          </div>
         </div>
       </div>
     </header>
