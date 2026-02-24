@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, TrendingUp, TrendingDown, Briefcase, FileText, CreditCard } from "lucide-react";
+import { LayoutGrid, Clock, Wallet } from "lucide-react";
 
 export function Layout({ children, onLogout, user }) {
   // Always hidden by default, acts as a Drawer
@@ -52,7 +52,7 @@ export function Layout({ children, onLogout, user }) {
         display: "flex",
         justifyContent: "space-between", // Space between items
         alignItems: "center",
-        padding: "0.75rem 2rem", 
+        padding: "0.5rem 2.5rem", // Adjusted padding
         zIndex: 50,
         boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)",
         maxWidth: "400px", // Limit width on large screens
@@ -60,27 +60,41 @@ export function Layout({ children, onLogout, user }) {
       }}>
         {/* 1. INICIO */}
         <NavLink to="/dashboard" style={({ isActive }) => ({
-          display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-          color: isActive ? "#10B981" : "#9CA3AF",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "2px",
+          color: isActive ? "#10B981" : "#1F2937",
           fontSize: "0.75rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
+          position: "relative"
         })}>
           {({ isActive }) => (
             <>
                <div style={{
-                 backgroundColor: isActive ? "#D1FAE5" : "transparent",
-                 color: isActive ? "#059669" : "inherit",
-                 padding: "8px",
+                 backgroundColor: isActive ? "rgba(16, 185, 129, 0.1)" : "transparent", // Subtle green background
                  borderRadius: "12px",
+                 padding: "6px",
                  display: "flex", alignItems: "center", justifyContent: "center",
                  transition: "all 0.2s ease"
                }}>
                  {isActive ? (
-                    <LayoutDashboard size={24} strokeWidth={2.5} fill="#059669" fillOpacity={0.2} />
+                    // Green filled-ish grid
+                    <LayoutGrid size={26} strokeWidth={2.5} color="#10B981" />
                  ) : (
-                    <LayoutDashboard size={24} strokeWidth={2} />
+                    // Default grid
+                    <LayoutGrid size={26} strokeWidth={2} color="#1F2937" />
                  )}
                </div>
-              <span style={{ fontSize: "0.7rem" }}>Inicio</span>
+               <span style={{ fontSize: "0.85rem", marginTop: "2px" }}>Inicio</span>
+               
+               {/* Green Bottom Bar Indicator */}
+               {isActive && (
+                 <div style={{
+                   position: "absolute",
+                   bottom: "-8px", // Push it down
+                   width: "30px",
+                   height: "3px",
+                   backgroundColor: "#10B981",
+                   borderRadius: "2px"
+                 }} />
+               )}
             </>
           )}
         </NavLink>
@@ -88,15 +102,15 @@ export function Layout({ children, onLogout, user }) {
         {/* 2. HORAS (Deliveries) */}
         <NavLink to="/deliveries" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-          color: isActive ? "#374151" : "#9CA3AF",
+          color: isActive ? "#374151" : "#374151", // Always dark
           fontSize: "0.75rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
         })}>
           {({ isActive }) => (
              <>
                 <div style={{ padding: "8px" }}>
-                   <Briefcase size={24} strokeWidth={isActive ? 2.5 : 2} />
+                   <Clock size={28} strokeWidth={2} color="#374151" />
                 </div>
-               <span style={{ fontSize: "0.7rem" }}>Horas</span>
+               <span style={{ fontSize: "0.85rem" }}>Horas</span>
              </>
           )}
         </NavLink>
@@ -104,15 +118,23 @@ export function Layout({ children, onLogout, user }) {
         {/* 3. GASTOS */}
         <NavLink to="/expenses" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-          color: isActive ? "#EF4444" : "#9CA3AF",
+          color: isActive ? "#EF4444" : "#374151",
           fontSize: "0.75rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
         })}>
           {({ isActive }) => (
              <>
-                <div style={{ padding: "8px" }}>
-                   <TrendingDown size={24} strokeWidth={isActive ? 2.5 : 2} />
+                {/* Red Gradient Icon Container */}
+                <div style={{ 
+                   padding: "6px 10px",
+                   background: "linear-gradient(135deg, #EF4444 0%, #DC2626 100%)",
+                   borderRadius: "8px",
+                   boxShadow: "0 2px 5px rgba(239, 68, 68, 0.3)",
+                   display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                   {/* Dollar Sign or Wallet Icon in White */}
+                   <span style={{ color: "white", fontWeight: "bold", fontSize: "1.2rem", lineHeight: 1 }}>$</span>
                 </div>
-               <span style={{ fontSize: "0.7rem" }}>Gastos</span>
+               <span style={{ fontSize: "0.85rem", marginTop: "4px" }}>Gastos</span>
              </>
           )}
         </NavLink>
