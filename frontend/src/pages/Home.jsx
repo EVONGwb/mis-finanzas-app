@@ -242,78 +242,50 @@ export default function Home() {
 
   if (loading) return <div className="p-4"><Skeleton height="300px" /></div>;
 
-  // 1. SIN HOGAR: PANTALLA DE VINCULACIÓN
-  if (!homeData?.home) {
-    return (
-      <div className="animate-fade-in" style={{ padding: "2rem", maxWidth: "600px", margin: "0 auto", textAlign: "center" }}>
-        <div style={{ backgroundColor: "var(--color-surface)", padding: "3rem", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-border)" }}>
-          <div style={{ 
-            width: "80px", height: "80px", backgroundColor: "var(--color-primary-bg)", 
-            borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-            margin: "0 auto 1.5rem auto", color: "var(--color-primary)"
-          }}>
-            <HomeIcon size={40} />
-          </div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: "bold", marginBottom: "1rem" }}>Hogar Compartido</h1>
-          <p style={{ color: "var(--color-text-secondary)", marginBottom: "2rem", lineHeight: "1.6" }}>
-            Vincula tu cuenta con tu pareja para gestionar juntos la lista de la compra, 
-            el inventario de casa y los gastos comunes.
-          </p>
-
-          {homeData?.pendingRequest ? (
-            <div style={{ backgroundColor: "var(--color-warning-bg)", padding: "1.5rem", borderRadius: "var(--radius-md)", marginBottom: "1.5rem" }}>
-              <h3 style={{ fontWeight: "bold", color: "var(--color-warning-text)", marginBottom: "0.5rem" }}>Solicitud Pendiente</h3>
-              {homeData.pendingRequest.toUser._id === JSON.parse(localStorage.getItem("user"))._id ? (
-                <div>
-                  <p style={{ marginBottom: "1rem" }}>
-                    <strong>{homeData.pendingRequest.fromUser.name}</strong> quiere compartir hogar contigo.
-                  </p>
-                  <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
-                    <Button onClick={() => handleRespondRequest(homeData.pendingRequest._id, "accept")}>Aceptar</Button>
-                    <Button variant="ghost" onClick={() => handleRespondRequest(homeData.pendingRequest._id, "reject")}>Rechazar</Button>
-                  </div>
-                </div>
-              ) : (
-                <p>Esperando respuesta de <strong>{homeData.pendingRequest.toUser.name}</strong>...</p>
-              )}
-            </div>
-          ) : (
-            <Button onClick={() => setIsLinkModalOpen(true)}>
-              <UserPlus size={18} style={{ marginRight: "0.5rem" }} /> Vincular con Pareja
-            </Button>
-          )}
-        </div>
-
-        <Modal isOpen={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)} title="Vincular Pareja">
-          <form onSubmit={handleSendRequest} style={{ display: "grid", gap: "1rem" }}>
-            <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
-              Pide a tu pareja su ID de usuario (lo puede ver en su Perfil).
-            </p>
-            <Input 
-              label="ID de Usuario de tu Pareja" 
-              required 
-              value={linkForm.partnerId}
-              onChange={(e) => setLinkForm({ partnerId: e.target.value })}
-            />
-            <Button type="submit">Enviar Solicitud</Button>
-          </form>
-        </Modal>
-      </div>
-    );
-  }
+  // 1. SIN HOGAR: PANTALLA DE VINCULACIÓN (Eliminada - Ahora siempre hay hogar)
+  if (!homeData?.home) return null;
 
   // 2. CON HOGAR: DASHBOARD
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "5rem" }}>
       {/* Header */}
-      <div style={{ marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <HomeIcon className="text-primary" /> {homeData.home.name}
-        </h1>
-        <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
-          Miembros: {homeData.home.members.map(m => m.name).join(", ")}
-        </p>
+      <div style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <HomeIcon className="text-primary" /> {homeData.home.name}
+          </h1>
+          <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
+            Miembros: {homeData.home.members.map(m => m.name).join(", ")}
+          </p>
+        </div>
+        
+        {/* Botón de vincular si solo hay 1 miembro */}
+        {homeData.home.members.length === 1 && !homeData.pendingRequest && (
+          <Button size="sm" variant="outline" onClick={() => setIsLinkModalOpen(true)}>
+            <UserPlus size={16} style={{ marginRight: "0.5rem" }} /> Invitar Pareja
+          </Button>
+        )}
       </div>
+
+      {/* Notificación de solicitud pendiente */}
+      {homeData.pendingRequest && (
+        <div style={{ backgroundColor: "var(--color-warning-bg)", padding: "1rem", borderRadius: "var(--radius-md)", marginBottom: "1.5rem", border: "1px solid var(--color-warning-border)" }}>
+          <h3 style={{ fontWeight: "bold", color: "var(--color-warning-text)", marginBottom: "0.5rem", fontSize: "0.875rem" }}>Solicitud de Vinculación</h3>
+          {homeData.pendingRequest.toUser._id === JSON.parse(localStorage.getItem("user"))._id ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <p style={{ fontSize: "0.875rem" }}>
+                <strong>{homeData.pendingRequest.fromUser.name}</strong> quiere compartir hogar contigo. Al aceptar, tus datos se fusionarán con los suyos.
+              </p>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <Button size="sm" onClick={() => handleRespondRequest(homeData.pendingRequest._id, "accept")}>Aceptar y Fusionar</Button>
+                <Button size="sm" variant="ghost" onClick={() => handleRespondRequest(homeData.pendingRequest._id, "reject")}>Rechazar</Button>
+              </div>
+            </div>
+          ) : (
+            <p style={{ fontSize: "0.875rem" }}>Esperando respuesta de <strong>{homeData.pendingRequest.toUser.name}</strong>...</p>
+          )}
+        </div>
+      )}
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", overflowX: "auto", paddingBottom: "0.5rem" }}>
@@ -524,6 +496,21 @@ export default function Home() {
             <Button type="button" variant="ghost" onClick={() => setIsBuyModalOpen(false)} style={{ flex: 1 }}>Cancelar</Button>
             <Button type="submit" style={{ flex: 1 }} isLoading={isBuying}>Confirmar</Button>
           </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)} title="Vincular Pareja">
+        <form onSubmit={handleSendRequest} style={{ display: "grid", gap: "1rem" }}>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
+            Pide a tu pareja su ID de usuario (lo puede ver en su Perfil). Al enviar la solicitud, tu hogar actual se fusionará con el de tu pareja.
+          </p>
+          <Input 
+            label="ID de Usuario de tu Pareja" 
+            required 
+            value={linkForm.partnerId}
+            onChange={(e) => setLinkForm({ partnerId: e.target.value })}
+          />
+          <Button type="submit">Enviar Solicitud</Button>
         </form>
       </Modal>
     </div>

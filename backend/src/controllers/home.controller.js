@@ -7,16 +7,25 @@ import { HttpError } from "../utils/httpError.js";
 export const getHome = async (req, res, next) => {
   try {
     // Buscar hogar donde el usuario sea miembro
-    const home = await Home.findOne({ members: req.user._id }).populate("members", "name email");
+    let home = await Home.findOne({ members: req.user._id }).populate("members", "name email");
     
-    // Si no tiene hogar, buscar si tiene solicitudes pendientes (recibidas o enviadas)
-    let pendingRequest = null;
+    // Si no tiene hogar, LO CREAMOS automáticamente (Modo Single)
     if (!home) {
-      pendingRequest = await HomeRequest.findOne({ 
-        $or: [{ fromUser: req.user._id }, { toUser: req.user._id }],
-        status: "pending"
-      }).populate("fromUser", "name email").populate("toUser", "name email");
+      home = await Home.create({
+        members: [req.user._id],
+        name: "Mi Hogar",
+        createdBy: req.user._id
+      });
+      // Re-populate para devolver formato consistente
+      home = await Home.findById(home._id).populate("members", "name email");
     }
+
+    // Buscar solicitudes pendientes (recibidas o enviadas)
+    let pendingRequest = null;
+    pendingRequest = await HomeRequest.findOne({ 
+      $or: [{ fromUser: req.user._id }, { toUser: req.user._id }],
+      status: "pending"
+    }).populate("fromUser", "name email").populate("toUser", "name email");
 
     res.json({ ok: true, data: { home, pendingRequest } });
   } catch (error) {
@@ -31,9 +40,11 @@ export const sendHomeRequest = async (req, res, next) => {
     if (!partnerId) throw new HttpError(400, "ID de pareja obligatorio");
     if (partnerId === req.user._id.toString()) throw new HttpError(400, "No puedes vincularte contigo mismo");
 
-    // Verificar si ya tiene hogar
+    // Verificar si ya tiene hogar con pareja (más de 1 miembro)
     const existingHome = await Home.findOne({ members: req.user._id });
-    if (existingHome) throw new HttpError(400, "Ya tienes un hogar activo");
+    if (existingHome && existingHome.members.length > 1) {
+      throw new HttpError(400, "Ya tienes un hogar compartido activo");
+    }
 
     // Verificar usuario destino
     const partner = await User.findById(partnerId);
@@ -77,16 +88,45 @@ export const respondHomeRequest = async (req, res, next) => {
     }
 
     if (action === "accept") {
-      // Crear hogar
-      const home = await Home.create({
-        members: [request.fromUser, request.toUser],
-        createdBy: request.fromUser
-      });
+      // 1. Identificar el Hogar Destino (del que invitó)
+      let targetHome = await Home.findOne({ members: request.fromUser });
+      
+      // Si el que invitó no tiene hogar (raro por getHome, pero posible si es user nuevo), crearlo
+      if (!targetHome) {
+        targetHome = await Home.create({
+          members: [request.fromUser],
+          name: "Nuevo Hogar Compartido",
+          createdBy: request.fromUser
+        });
+      }
+
+      // 2. Identificar el Hogar Origen (del que acepta, si tiene uno 'single')
+      const sourceHome = await Home.findOne({ members: req.user._id });
+
+      // 3. FUSIONAR DATOS (Migrar de Source a Target)
+      if (sourceHome && sourceHome._id.toString() !== targetHome._id.toString()) {
+        // Mover Productos
+        await HomeProduct.updateMany({ home: sourceHome._id }, { home: targetHome._id });
+        // Mover Items de Lista
+        await HomeShoppingItem.updateMany({ home: sourceHome._id }, { home: targetHome._id });
+        // Mover Historial
+        await HomePurchase.updateMany({ home: sourceHome._id }, { home: targetHome._id });
+
+        // Eliminar el hogar antiguo
+        await Home.findByIdAndDelete(sourceHome._id);
+      }
+
+      // 4. Añadir usuario al hogar destino (si no estaba ya)
+      if (!targetHome.members.includes(req.user._id)) {
+        targetHome.members.push(req.user._id);
+        targetHome.name = "Hogar Compartido"; // Renombrar opcionalmente
+        await targetHome.save();
+      }
       
       request.status = "accepted";
       await request.save();
       
-      return res.json({ ok: true, data: home });
+      return res.json({ ok: true, data: targetHome });
     }
 
     throw new HttpError(400, "Acción inválida");
