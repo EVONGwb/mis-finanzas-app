@@ -27,7 +27,13 @@ export const getHome = async (req, res, next) => {
       status: "pending"
     }).populate("fromUser", "name email").populate("toUser", "name email");
 
-    res.json({ ok: true, data: { home, pendingRequest } });
+    // Buscar items pendientes de la lista de compra
+    const shoppingList = await HomeShoppingItem.find({ 
+      home: home._id, 
+      status: "pending" 
+    });
+
+    res.json({ ok: true, data: { home: { ...home.toObject(), shoppingList }, pendingRequest } });
   } catch (error) {
     next(error);
   }
