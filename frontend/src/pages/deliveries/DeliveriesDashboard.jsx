@@ -12,7 +12,8 @@ import {
   Edit2, 
   ChevronLeft,
   ChevronRight,
-  CheckCircle
+  CheckCircle,
+  FileText
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -30,6 +31,7 @@ export default function DeliveriesDashboard() {
   // Modal State
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   
   // Form State
   const [entryForm, setEntryForm] = useState({
@@ -362,6 +364,9 @@ export default function DeliveriesDashboard() {
           <Button variant="outline" size="sm" onClick={() => setIsCompanyModalOpen(true)}>
             Empresas
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setIsSummaryModalOpen(true)}>
+            <FileText size={16} />
+          </Button>
           <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", padding: "0.25rem", border: "1px solid var(--color-border)" }}>
              <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)", padding: "0.25rem" }}>
               <ChevronLeft size={18} />
@@ -522,6 +527,81 @@ export default function DeliveriesDashboard() {
           )}
         </div>
       </div>
+
+      {/* Summary Modal */}
+      <Modal
+        isOpen={isSummaryModalOpen}
+        onClose={() => setIsSummaryModalOpen(false)}
+        title="Resumen Detallado"
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{ padding: "1rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
+            <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "0.5rem" }}>INGRESOS BRUTOS</h4>
+            <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "var(--color-text)" }}>
+              ${stats?.totalEarnings?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+            </div>
+            <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
+              {stats?.totalHours || 0} horas trabajadas
+            </div>
+          </div>
+
+          {payroll && (
+            <>
+              <div style={{ padding: "1rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
+                <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "0.5rem" }}>DEDUCCIONES</h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
+                    <span>Contingencias Comunes</span>
+                    <span style={{ color: "var(--color-danger)" }}>-${payroll.deductions.cc.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
+                    <span>Desempleo / FP</span>
+                    <span style={{ color: "var(--color-danger)" }}>-${payroll.deductions.da.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
+                    <span>IRPF</span>
+                    <span style={{ color: "var(--color-danger)" }}>-${payroll.deductions.irpf.toFixed(2)}</span>
+                  </div>
+                  {payroll.deductions.other > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
+                      <span>Otras</span>
+                      <span style={{ color: "var(--color-danger)" }}>-${payroll.deductions.other.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "0.5rem", display: "flex", justifyContent: "space-between", fontWeight: 600 }}>
+                    <span>Total Deducciones</span>
+                    <span style={{ color: "var(--color-danger)" }}>-${payroll.deductions.total.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ padding: "1rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
+                <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "0.5rem" }}>RESULTADO FINAL</h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>Tramo Deducible (Base)</span>
+                    <span style={{ fontWeight: 600 }}>${payroll.tramoDeducible.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>Neto de Nómina</span>
+                    <span style={{ fontWeight: 600, color: "var(--color-primary)" }}>${payroll.netoNomina.toFixed(2)}</span>
+                  </div>
+                  {payroll.excedenteLibre > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "var(--color-success)", fontWeight: 600 }}>
+                      <span>+ Excedente Libre</span>
+                      <span>${payroll.excedenteLibre.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div style={{ borderTop: "2px solid var(--color-border)", paddingTop: "0.5rem", marginTop: "0.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "1.125rem", fontWeight: "bold" }}>TOTAL A PERCIBIR</span>
+                    <span style={{ fontSize: "1.25rem", fontWeight: "bold", color: "var(--color-primary)" }}>${payroll.totalRealCobrado.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </Modal>
 
       {/* Details Modal */}
       <Modal 
