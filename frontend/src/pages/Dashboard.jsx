@@ -20,6 +20,7 @@ import { Skeleton } from "../components/ui/Skeleton";
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [homeBadge, setHomeBadge] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -35,6 +36,14 @@ export default function Dashboard() {
              localStorage.setItem("user", JSON.stringify(resUser.data));
            }
         }
+
+        // Fetch pending shopping items count for badge
+        const resHome = await apiFetch("/home", { token });
+        if (resHome.data?.home?.shoppingList) {
+          const pendingCount = resHome.data.home.shoppingList.filter(i => !i.isBought).length;
+          setHomeBadge(pendingCount);
+        }
+
       } catch (e) {
         console.error(e);
       } finally {
@@ -49,7 +58,7 @@ export default function Dashboard() {
     { title: "Beneficio", icon: Wallet, bg: "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)", link: "/closing", desc: "Tus ganancias" },
     { title: "Banco", icon: Landmark, bg: "linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%)", link: "/credits", desc: "Cuentas y movimientos" }, 
     { title: "Deudas", icon: CreditCard, bg: "linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)", link: "/debts", desc: "Control de deudas" },
-    { title: "Hogar", icon: Home, bg: "linear-gradient(135deg, #D97706 0%, #F59E0B 100%)", link: "/home", desc: "Compras en pareja", badge: 3 },
+    { title: "Hogar", icon: Home, bg: "linear-gradient(135deg, #D97706 0%, #F59E0B 100%)", link: "/home", desc: "Compras en pareja", badge: homeBadge > 0 ? homeBadge : null },
     { title: "Objetivos", icon: Target, bg: "linear-gradient(135deg, #059669 0%, #34D399 100%)", link: "#", desc: "Metas de ahorro" },
     { title: "Reportes", icon: FileText, bg: "linear-gradient(135deg, #475569 0%, #64748B 100%)", link: "/closing", desc: "Estadísticas" },
     { title: "Ajustes", icon: Settings, bg: "linear-gradient(135deg, #1F2937 0%, #374151 100%)", link: "/profile", desc: "Configuración" },
