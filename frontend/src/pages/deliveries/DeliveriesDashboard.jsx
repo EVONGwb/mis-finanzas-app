@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../../lib/api";
 import { getToken } from "../../lib/auth";
-import { Card, StatsCard } from "../../components/ui/Card";
+import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
 import { Input } from "../../components/ui/Input";
@@ -12,14 +12,14 @@ import {
   Clock, 
   DollarSign, 
   Briefcase, 
-  Calendar, 
+  Calendar as CalendarIcon, 
   Plus, 
   Trash2, 
   Edit2, 
   TrendingUp, 
-  BarChart2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CheckCircle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -29,19 +29,16 @@ export default function DeliveriesDashboard() {
   const [entries, setEntries] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingEntries, setLoadingEntries] = useState(true);
   
-  // Filtros de fecha
-  const [dateRange, setDateRange] = useState("month"); // 'today', 'week', 'month'
-  const [customDate, setCustomDate] = useState(new Date());
+  // Calendar State
+  const [currentDate, setCurrentDate] = useState(new Date()); // For month navigation
+  const [selectedDate, setSelectedDate] = useState(new Date()); // Selected specific day
 
-  // Modal State
-  const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
+  // Modal State (Only for Companies now, Entry form is inline)
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
   
   // Form State
   const [entryForm, setEntryForm] = useState({
-    date: new Date().toISOString().split("T")[0],
     companyId: "",
     hours: "",
     hourlyRate: "",
@@ -49,11 +46,10 @@ export default function DeliveriesDashboard() {
   });
 
   const [companyForm, setCompanyForm] = useState({
-    id: null, // Para edición
+    id: null,
     name: "",
     hourlyRateDefault: "",
     description: "",
-    // Deducciones por defecto
     deductions: {
       commonContingencies: 4.85,
       unemploymentAccident: 1.65,
@@ -67,45 +63,27 @@ export default function DeliveriesDashboard() {
     }
   });
 
-  // Cargar datos iniciales (empresas)
+  // Initial Load
   useEffect(() => {
     fetchCompanies();
   }, []);
 
-  // Cargar estadísticas y entradas cuando cambian los filtros
+  // Fetch Data when Month Changes
   useEffect(() => {
     fetchData();
-  }, [dateRange, customDate]);
-
-  const getDateFilter = () => {
-    const now = new Date(customDate);
-    let from, to;
-
-    if (dateRange === "today") {
-      from = new Date(now.setHours(0,0,0,0)).toISOString();
-      to = new Date(now.setHours(23,59,59,999)).toISOString();
-    } else if (dateRange === "week") {
-      const day = now.getDay() || 7; // 1 (Mon) - 7 (Sun)
-      if (day !== 1) now.setHours(-24 * (day - 1));
-      from = new Date(now.setHours(0,0,0,0)).toISOString();
-      const endOfWeek = new Date(now);
-      endOfWeek.setDate(now.getDate() + 6);
-      to = new Date(endOfWeek.setHours(23,59,59,999)).toISOString();
-    } else { // month
-      from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      to = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
-    }
-    return { from, to };
-  };
+  }, [currentDate]);
 
   const fetchData = async () => {
     setLoading(true);
-    setLoadingEntries(true);
     try {
-      const { from, to } = getDateFilter();
+      // Always fetch for the full month of currentDate
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const from = new Date(year, month, 1).toISOString();
+      const to = new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString();
+      
       const token = getToken();
 
-      // Parallel fetch
       const [statsRes, entriesRes] = await Promise.all([
         apiFetch(`/work-entries/stats?from=${from}&to=${to}`, { token }),
         apiFetch(`/work-entries?from=${from}&to=${to}`, { token })
@@ -117,7 +95,6 @@ export default function DeliveriesDashboard() {
       console.error("Error loading data:", error);
     } finally {
       setLoading(false);
-      setLoadingEntries(false);
     }
   };
 
@@ -136,22 +113,37 @@ export default function DeliveriesDashboard() {
       await apiFetch("/work-entries", {
         method: "POST",
         token: getToken(),
-        body: entryForm
+        body: {
+          ...entryForm,
+          date: selectedDate.toISOString().split("T")[0] // Use selectedDate
+        }
       });
-      setIsEntryModalOpen(false);
+      
+      // Reset form but keep company if desired? For now reset all
       setEntryForm({
-        date: new Date().toISOString().split("T")[0],
         companyId: "",
         hours: "",
         hourlyRate: "",
         notes: ""
       });
+      
       fetchData();
     } catch (error) {
       alert(error.message);
     }
   };
 
+  const handleDeleteEntry = async (id) => {
+    if (!window.confirm("¿Eliminar registro?")) return;
+    try {
+      await apiFetch(`/work-entries/${id}`, { method: "DELETE", token: getToken() });
+      fetchData();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  // --- Company Management Handlers (Same as before) ---
   const handleSaveCompany = async (e) => {
     e.preventDefault();
     try {
@@ -167,11 +159,7 @@ export default function DeliveriesDashboard() {
         limitRule: companyForm.limitRule
       };
 
-      await apiFetch(url, {
-        method,
-        token: getToken(),
-        body: payload
-      });
+      await apiFetch(url, { method, token: getToken(), body: payload });
 
       setIsCompanyModalOpen(false);
       resetCompanyForm();
@@ -222,34 +210,8 @@ export default function DeliveriesDashboard() {
     setIsCompanyModalOpen(true);
   };
 
-  const handleDeleteEntry = async (id) => {
-    if (!window.confirm("¿Eliminar registro?")) return;
-    try {
-      await apiFetch(`/work-entries/${id}`, { method: "DELETE", token: getToken() });
-      fetchData();
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-
-  // Helpers UI
-  const formatDateLabel = () => {
-    const d = new Date(customDate);
-    if (dateRange === "today") return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-    if (dateRange === "month") return d.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-    return "Esta Semana";
-  };
-
-  const changeDate = (direction) => {
-    const newDate = new Date(customDate);
-    if (dateRange === "today") newDate.setDate(newDate.getDate() + direction);
-    else if (dateRange === "week") newDate.setDate(newDate.getDate() + (direction * 7));
-    else newDate.setMonth(newDate.getMonth() + direction);
-    setCustomDate(newDate);
-  };
-
   const handleDeleteCompany = async (id) => {
-    if (!window.confirm("¿Eliminar empresa? Se perderán las estadísticas asociadas si no están guardadas.")) return;
+    if (!window.confirm("¿Eliminar empresa?")) return;
     try {
       await apiFetch(`/companies/${id}`, { method: "DELETE", token: getToken() });
       fetchCompanies();
@@ -258,13 +220,12 @@ export default function DeliveriesDashboard() {
     }
   };
 
+  // --- Payroll Helper (Same as before) ---
   const getPayrollSummary = (company, totalEarnings) => {
     if (!company) return null;
-
     const limitEnabled = company.limitRule?.enabled || false;
     const limitAmount = company.limitRule?.amount || 0;
     
-    // 1. Calcular tramos
     let tramoDeducible = totalEarnings;
     let excedenteLibre = 0;
 
@@ -278,582 +239,352 @@ export default function DeliveriesDashboard() {
       }
     }
 
-    // 2. Calcular deducciones
     const ded = company.deductions || {};
     const dCC = (tramoDeducible * (ded.commonContingencies || 0)) / 100;
     const dDA = (tramoDeducible * (ded.unemploymentAccident || 0)) / 100;
     const dIRPF = (tramoDeducible * (ded.irpf || 0)) / 100;
     const dOther = (tramoDeducible * (ded.other || 0)) / 100;
-
     const totalDeducciones = dCC + dDA + dIRPF + dOther;
-    
-    // 3. Neto
     const netoNomina = tramoDeducible - totalDeducciones;
     const totalRealCobrado = netoNomina + excedenteLibre;
 
     return {
       tramoDeducible,
       excedenteLibre,
-      deductions: {
-        cc: dCC,
-        da: dDA,
-        irpf: dIRPF,
-        other: dOther,
-        total: totalDeducciones
-      },
+      deductions: { cc: dCC, da: dDA, irpf: dIRPF, other: dOther, total: totalDeducciones },
       netoNomina,
       totalRealCobrado
     };
   };
 
+  // --- Derived Data for UI ---
   const selectedCompanyStats = stats?.byCompany?.length === 1 ? stats.byCompany[0] : null;
   const companyForPayroll = selectedCompanyStats ? companies.find(c => c.name === selectedCompanyStats.companyName) : null;
   const payroll = companyForPayroll ? getPayrollSummary(companyForPayroll, selectedCompanyStats.totalEarnings) : null;
 
+  // Filter entries for the selected date
+  const selectedDateEntries = useMemo(() => {
+    const dateStr = selectedDate.toISOString().split("T")[0];
+    return entries.filter(e => e.date.startsWith(dateStr));
+  }, [entries, selectedDate]);
+
+  // Calendar Generation
+  const calendarDays = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    const days = [];
+    
+    // Fill previous month days
+    const startPadding = (firstDay.getDay() + 6) % 7; // Mon=0
+    for (let i = 0; i < startPadding; i++) {
+      days.push(null);
+    }
+    
+    // Fill current month days
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+      days.push(new Date(year, month, i));
+    }
+    
+    return days;
+  }, [currentDate]);
+
+  const hasEntryOnDate = (date) => {
+    if (!date) return false;
+    const dateStr = date.toISOString().split("T")[0];
+    return entries.some(e => e.date.startsWith(dateStr));
+  };
+
+  const getDayTotal = (date) => {
+    if (!date) return 0;
+    const dateStr = date.toISOString().split("T")[0];
+    return entries
+      .filter(e => e.date.startsWith(dateStr))
+      .reduce((sum, e) => sum + (e.total || 0), 0);
+  };
+
   return (
-    <div className="animate-fade-in" style={{ paddingBottom: "5rem" }}>
-      {/* Header & Filters */}
-      <div style={{ 
-        display: "flex", 
-        flexDirection: "column", 
-        gap: "1.5rem", 
-        marginBottom: "2rem" 
-      }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
-          <div>
-            <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Briefcase className="text-primary" /> Registro de Horas
-            </h1>
-            <p style={{ color: "var(--color-text-secondary)" }}>Gestiona tus horas y ganancias por empresa</p>
-          </div>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <Button variant="outline" onClick={() => setIsCompanyModalOpen(true)}>
-              Gestionar Empresas
-            </Button>
-            <Button onClick={() => setIsEntryModalOpen(true)}>
-              <Plus size={18} style={{ marginRight: "0.5rem" }} /> Añadir Horas
-            </Button>
+    <div className="animate-fade-in" style={{ paddingBottom: "5rem", maxWidth: "1200px", margin: "0 auto" }}>
+      
+      {/* 1. Header & Controls */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
+        <div>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <Briefcase className="text-primary" size={24} /> 
+            Ingresos & Horas
+          </h1>
+          <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
+            {currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase()}
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <Button variant="outline" size="sm" onClick={() => setIsCompanyModalOpen(true)}>
+            Empresas
+          </Button>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", padding: "0.25rem", border: "1px solid var(--color-border)" }}>
+             <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)", padding: "0.25rem" }}>
+              <ChevronLeft size={18} />
+            </button>
+            <span style={{ fontSize: "0.875rem", fontWeight: 600, minWidth: "80px", textAlign: "center" }}>
+              {currentDate.toLocaleDateString('es-ES', { month: 'short' })}
+            </span>
+            <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)", padding: "0.25rem" }}>
+              <ChevronRight size={18} />
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Date Controls */}
-        <div style={{ 
-          display: "flex", 
-          alignItems: "center", 
-          justifyContent: "space-between", 
-          backgroundColor: "var(--color-surface)", 
-          padding: "0.5rem", 
-          borderRadius: "var(--radius-md)",
-          border: "1px solid var(--color-border)",
-          overflowX: "auto", // Allow scrolling if needed on very small screens
-          flexWrap: "wrap",  // Wrap content on small screens
-          gap: "0.5rem"
-        }}>
-          <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
-            {["today", "week", "month"].map(range => (
-              <button
-                key={range}
-                onClick={() => setDateRange(range)}
-                style={{
-                  padding: "0.5rem 1rem",
-                  borderRadius: "var(--radius-sm)",
-                  border: "none",
-                  backgroundColor: dateRange === range ? "var(--color-primary)" : "transparent",
-                  color: dateRange === range ? "white" : "var(--color-text-secondary)",
-                  cursor: "pointer",
-                  fontWeight: 500,
-                  fontSize: "0.875rem",
-                  transition: "all 0.2s",
-                  whiteSpace: "nowrap"
-                }}
-              >
-                {range === "today" ? "Día" : range === "week" ? "Semana" : "Mes"}
-              </button>
+      {/* 2. Compact Summary Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+        <CompactCard 
+          label="Ganancias Mes" 
+          value={`$${stats?.totalEarnings?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`}
+          icon={DollarSign}
+          color="success"
+        />
+        <CompactCard 
+          label="Horas Mes" 
+          value={`${stats?.totalHours || 0} h`}
+          icon={Clock}
+          color="info"
+        />
+        <CompactCard 
+          label="Promedio Diario" 
+          value={`$${stats?.dailyAverage?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`}
+          icon={TrendingUp}
+          color="warning"
+        />
+        {payroll && (
+           <CompactCard 
+            label="Neto Estimado" 
+            value={`$${payroll.totalRealCobrado.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+            subtext={`Excedente: ${payroll.excedenteLibre.toFixed(0)}€`}
+            icon={CheckCircle}
+            color="primary"
+          />
+        )}
+      </div>
+
+      {/* 3. Main Content Grid: Calendar + Details */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
+        
+        {/* Left: Interactive Calendar */}
+        <div style={{ backgroundColor: "var(--color-surface)", padding: "1.5rem", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-border)", boxShadow: "var(--shadow-sm)" }}>
+          <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <CalendarIcon size={18} /> Calendario
+          </h3>
+          
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "0.5rem", textAlign: "center", marginBottom: "0.5rem" }}>
+            {["L", "M", "M", "J", "V", "S", "D"].map(d => (
+              <div key={d} style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>{d}</div>
             ))}
           </div>
+          
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "0.5rem" }}>
+            {calendarDays.map((day, idx) => {
+              if (!day) return <div key={idx} />;
+              
+              const isSelected = day.toDateString() === selectedDate.toDateString();
+              const isToday = day.toDateString() === new Date().toDateString();
+              const hasData = hasEntryOnDate(day);
+              const dayTotal = getDayTotal(day);
 
-          <div style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            gap: "0.5rem", 
-            flexGrow: 1, 
-            justifyContent: "flex-end", // Align to right on larger screens
-            minWidth: "200px" // Ensure date has space
-          }}>
-            <button onClick={() => changeDate(-1)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)", padding: "0.25rem" }}>
-              <ChevronLeft size={20} />
-            </button>
-            <span style={{ 
-              fontWeight: 600, 
-              textAlign: "center", 
-              textTransform: "capitalize",
-              flexGrow: 1, // Let text take available space
-              whiteSpace: "nowrap", // Prevent date wrapping awkwardly
-              overflow: "hidden",
-              textOverflow: "ellipsis"
-            }}>
-              {formatDateLabel()}
-            </span>
-            <button onClick={() => changeDate(1)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)", padding: "0.25rem" }}>
-              <ChevronRight size={20} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* KPIs */}
-      {loading ? (
-        <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginBottom: "2rem" }}>
-          <Skeleton height="120px" />
-          <Skeleton height="120px" />
-          <Skeleton height="120px" />
-          <Skeleton height="120px" />
-        </div>
-      ) : (
-        <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginBottom: "2rem" }}>
-          <StatsCard 
-            title="Ganancias Brutas" 
-            value={`$${stats?.totalEarnings?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`} 
-            icon={DollarSign} 
-            color="success" 
-          />
-          <StatsCard 
-            title="Horas Trabajadas" 
-            value={`${stats?.totalHours || 0} h`} 
-            icon={Clock} 
-            color="info" 
-          />
-          {payroll ? (
-             <StatsCard 
-              title="Neto Estimado" 
-              value={`$${payroll.totalRealCobrado.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
-              subtext={`Excedente: ${payroll.excedenteLibre.toFixed(2)}€`}
-              icon={TrendingUp} 
-              color="primary" 
-            />
-          ) : (
-             <StatsCard 
-              title="Promedio Diario" 
-              value={`$${stats?.dailyAverage?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`} 
-              icon={TrendingUp} 
-              color="warning" 
-            />
-          )}
-         
-          <StatsCard 
-            title="Top Empresa" 
-            value={stats?.topCompany?.companyName || "-"} 
-            subtext={stats?.topCompany ? `$${stats.topCompany.totalEarnings.toLocaleString()}` : "Sin datos"}
-            icon={Briefcase} 
-            color="primary" 
-          />
-        </div>
-      )}
-
-      {/* Nómina Detallada (Solo si hay una empresa seleccionada o dominante y datos de nómina) */}
-      {payroll && companyForPayroll && (
-        <div style={{ marginBottom: "2rem" }}>
-          <Card title={`Resumen de Nómina: ${companyForPayroll.name}`}>
-             <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))" }}>
-               {/* Columna Izquierda: Datos Base */}
-               <div style={{ padding: "1rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)" }}>
-                 <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "1rem", textTransform: "uppercase" }}>Base de Cálculo</h4>
-                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                   <span>Bruto Total:</span>
-                   <span style={{ fontWeight: 600 }}>{selectedCompanyStats.totalEarnings.toLocaleString()} €</span>
-                 </div>
-                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                   <span>Límite Aplicado:</span>
-                   <span>{companyForPayroll.limitRule?.enabled ? `${companyForPayroll.limitRule.amount} €` : "No activo"}</span>
-                 </div>
-                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", color: "var(--color-text-secondary)" }}>
-                   <span>Tramo Sujeto a Deducción:</span>
-                   <span>{payroll.tramoDeducible.toLocaleString()} €</span>
-                 </div>
-                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: "1rem", color: "var(--color-success)", fontWeight: 700 }}>
-                   <span>Excedente Libre (Limpio):</span>
-                   <span>{payroll.excedenteLibre.toLocaleString()} €</span>
-                 </div>
-               </div>
-
-               {/* Columna Centro: Deducciones */}
-               <div style={{ padding: "1rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)" }}>
-                 <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-danger)", marginBottom: "1rem", textTransform: "uppercase" }}>Deducciones</h4>
-                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                   <span>Contingencias Comunes ({companyForPayroll.deductions?.commonContingencies}%):</span>
-                   <span style={{ color: "var(--color-danger)" }}>-{payroll.deductions.cc.toFixed(2)} €</span>
-                 </div>
-                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                   <span>Desempleo / Acc. ({companyForPayroll.deductions?.unemploymentAccident}%):</span>
-                   <span style={{ color: "var(--color-danger)" }}>-{payroll.deductions.da.toFixed(2)} €</span>
-                 </div>
-                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                   <span>IRPF ({companyForPayroll.deductions?.irpf}%):</span>
-                   <span style={{ color: "var(--color-danger)" }}>-{payroll.deductions.irpf.toFixed(2)} €</span>
-                 </div>
-                 {payroll.deductions.other > 0 && (
-                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                     <span>Otras ({companyForPayroll.deductions?.other}%):</span>
-                     <span style={{ color: "var(--color-danger)" }}>-{payroll.deductions.other.toFixed(2)} €</span>
-                   </div>
-                 )}
-                 <div style={{ borderTop: "1px dashed var(--color-border)", margin: "0.5rem 0" }} />
-                 <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}>
-                   <span>Total Deducciones:</span>
-                   <span style={{ color: "var(--color-danger)" }}>-{payroll.deductions.total.toFixed(2)} €</span>
-                 </div>
-               </div>
-
-               {/* Columna Derecha: Resultado */}
-               <div style={{ padding: "1rem", backgroundColor: "var(--color-success-bg)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-success)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                 <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-success)", marginBottom: "1rem", textTransform: "uppercase", textAlign: "center" }}>A Percibir</h4>
-                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                   <span>Neto de Nómina:</span>
-                   <span>{payroll.netoNomina.toLocaleString()} €</span>
-                 </div>
-                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                   <span>+ Excedente Libre:</span>
-                   <span>{payroll.excedenteLibre.toLocaleString()} €</span>
-                 </div>
-                 <div style={{ borderTop: "2px solid var(--color-success)", margin: "1rem 0" }} />
-                 <div style={{ textAlign: "center" }}>
-                   <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>TOTAL REAL A COBRAR</div>
-                   <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--color-success)" }}>
-                     {payroll.totalRealCobrado.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
-                   </div>
-                 </div>
-               </div>
-             </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Main Content: List & Chart placeholder */}
-      <div style={{ display: "grid", gap: "2rem", gridTemplateColumns: "1fr" }}>
-        <Card title="Historial de Entregas">
-          {loadingEntries ? (
-            <p style={{ padding: "1rem", color: "var(--color-text-secondary)" }}>Cargando registros...</p>
-          ) : entries.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "3rem 1rem" }}>
-              <div style={{ 
-                backgroundColor: "var(--color-surface-hover)", 
-                width: "64px", height: "64px", borderRadius: "50%", 
-                display: "flex", alignItems: "center", justifyContent: "center", 
-                margin: "0 auto 1rem auto", color: "var(--color-text-secondary)"
-              }}>
-                <Briefcase size={32} />
-              </div>
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.5rem" }}>No hay registros</h3>
-              <p style={{ color: "var(--color-text-secondary)", marginBottom: "1.5rem" }}>
-                Añade tus horas trabajadas para ver estadísticas.
-              </p>
-              <Button onClick={() => setIsEntryModalOpen(true)}>Comenzar</Button>
-            </div>
-          ) : (
-            <Table headers={["Fecha", "Empresa", "Horas", "Precio/h", "Total", "Acciones"]}>
-              {entries.map(entry => (
-                <TableRow key={entry._id}>
-                  <TableCell>
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                      <span style={{ fontWeight: 500 }}>
-                        {new Date(entry.date).toLocaleDateString()}
-                      </span>
-                      {entry.notes && (
-                        <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                          {entry.notes}
-                        </span>
-                      )}
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedDate(day)}
+                  style={{
+                    aspectRatio: "1",
+                    borderRadius: "var(--radius-md)",
+                    border: isSelected ? "2px solid var(--color-primary)" : "1px solid transparent",
+                    backgroundColor: isSelected ? "var(--color-primary-light)" : "var(--color-background)",
+                    color: isSelected ? "var(--color-primary)" : "var(--color-text)",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    position: "relative",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <span style={{ fontSize: "0.875rem", fontWeight: isToday ? "bold" : "normal" }}>
+                    {day.getDate()}
+                  </span>
+                  {hasData && (
+                    <div style={{ marginTop: "2px", fontSize: "0.6rem", fontWeight: 600, color: "var(--color-success)" }}>
+                      ${Math.round(dayTotal)}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="neutral">{entry.company?.name || "Eliminada"}</Badge>
-                  </TableCell>
-                  <TableCell>{entry.hours} h</TableCell>
-                  <TableCell>${entry.hourlyRate}</TableCell>
-                  <TableCell>
-                    <span style={{ fontWeight: "bold", color: "var(--color-success)" }}>
-                      ${entry.total.toLocaleString()}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      style={{ color: "var(--color-danger)" }}
-                      onClick={() => handleDeleteEntry(entry._id)}
-                    >
-                      <Trash2 size={16} />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </Table>
+                  )}
+                  {isToday && !isSelected && (
+                    <div style={{ position: "absolute", bottom: "4px", width: "4px", height: "4px", borderRadius: "50%", backgroundColor: "var(--color-primary)" }} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right: Details & Form */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          
+          {/* Selected Date Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: 600 }}>
+              {selectedDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </h3>
+          </div>
+
+          {/* List of Entries for Selected Date */}
+          {selectedDateEntries.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+               {selectedDateEntries.map(entry => (
+                 <div key={entry._id} style={{ 
+                   display: "flex", justifyContent: "space-between", alignItems: "center", 
+                   padding: "1rem", backgroundColor: "var(--color-surface)", 
+                   borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)"
+                 }}>
+                    <div>
+                      <div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>{entry.company?.name || "Empresa"}</div>
+                      <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
+                        {entry.hours}h × ${entry.hourlyRate}/h
+                      </div>
+                      {entry.notes && <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "0.25rem" }}>"{entry.notes}"</div>}
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontWeight: "bold", color: "var(--color-success)", fontSize: "1.125rem" }}>
+                        ${entry.total.toLocaleString()}
+                      </div>
+                      <button 
+                        onClick={() => handleDeleteEntry(entry._id)}
+                        style={{ background: "none", border: "none", color: "var(--color-danger)", cursor: "pointer", fontSize: "0.75rem", marginTop: "0.25rem", textDecoration: "underline" }}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                 </div>
+               ))}
+            </div>
           )}
-        </Card>
+
+          {/* Add Entry Form */}
+          <Card title={selectedDateEntries.length > 0 ? "Añadir otro registro" : "Registrar actividad"}>
+             <form onSubmit={handleCreateEntry} style={{ display: "grid", gap: "1rem" }}>
+                <div>
+                  <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>EMPRESA</label>
+                  <select
+                    required
+                    value={entryForm.companyId}
+                    onChange={(e) => {
+                      const company = companies.find(c => c._id === e.target.value);
+                      setEntryForm({
+                        ...entryForm,
+                        companyId: e.target.value,
+                        hourlyRate: company ? company.hourlyRateDefault : ""
+                      });
+                    }}
+                    style={{
+                      width: "100%", padding: "0.75rem", borderRadius: "var(--radius-sm)",
+                      border: "1px solid var(--color-border)", backgroundColor: "var(--color-background)", color: "var(--color-text)"
+                    }}
+                  >
+                    <option value="">Seleccionar...</option>
+                    {companies.map(c => (
+                      <option key={c._id} value={c._id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  <Input 
+                    label="HORAS" 
+                    type="number" step="0.1" required 
+                    placeholder="0.0"
+                    value={entryForm.hours}
+                    onChange={(e) => setEntryForm({...entryForm, hours: e.target.value})}
+                  />
+                  <Input 
+                    label="PRECIO/H" 
+                    type="number" step="0.01" required 
+                    placeholder="0.00"
+                    value={entryForm.hourlyRate}
+                    onChange={(e) => setEntryForm({...entryForm, hourlyRate: e.target.value})}
+                  />
+                </div>
+
+                <Input 
+                  label="NOTAS" 
+                  placeholder="Opcional..."
+                  value={entryForm.notes}
+                  onChange={(e) => setEntryForm({...entryForm, notes: e.target.value})}
+                />
+
+                <Button type="submit" disabled={companies.length === 0 || !entryForm.companyId || !entryForm.hours} style={{ width: "100%" }}>
+                  <Plus size={16} style={{ marginRight: "0.5rem" }} /> 
+                  Guardar
+                </Button>
+             </form>
+          </Card>
+
+        </div>
       </div>
 
-      {/* Modal: Add Work Entry */}
-      <Modal 
-        isOpen={isEntryModalOpen} 
-        onClose={() => setIsEntryModalOpen(false)} 
-        title="Registrar Horas"
-      >
-        <form onSubmit={handleCreateEntry} style={{ display: "grid", gap: "1rem" }}>
-          <div>
-            <label style={{ display: "block", marginBottom: "0.5rem", fontSize: "0.875rem", fontWeight: 500 }}>Empresa</label>
-            <select
-              required
-              value={entryForm.companyId}
-              onChange={(e) => {
-                const company = companies.find(c => c._id === e.target.value);
-                setEntryForm({
-                  ...entryForm,
-                  companyId: e.target.value,
-                  hourlyRate: company ? company.hourlyRateDefault : ""
-                });
-              }}
-              style={{
-                width: "100%",
-                padding: "0.75rem",
-                borderRadius: "var(--radius-sm)",
-                border: "1px solid var(--color-border)",
-                backgroundColor: "var(--color-surface)",
-                color: "var(--color-text)"
-              }}
-            >
-              <option value="">Selecciona una empresa...</option>
-              {companies.map(c => (
-                <option key={c._id} value={c._id}>{c.name}</option>
-              ))}
-            </select>
-            {companies.length === 0 && (
-              <p style={{ fontSize: "0.75rem", color: "var(--color-warning)", marginTop: "0.25rem" }}>
-                Primero debes crear una empresa.
-              </p>
-            )}
-          </div>
-
-          <Input 
-            label="Fecha" 
-            type="date" 
-            required 
-            value={entryForm.date}
-            onChange={(e) => setEntryForm({...entryForm, date: e.target.value})}
-          />
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <Input 
-              label="Horas" 
-              type="number" 
-              step="0.1" 
-              required 
-              placeholder="Ej: 7.5"
-              value={entryForm.hours}
-              onChange={(e) => setEntryForm({...entryForm, hours: e.target.value})}
-            />
-            <Input 
-              label="Precio / Hora" 
-              type="number" 
-              step="0.01" 
-              required 
-              value={entryForm.hourlyRate}
-              onChange={(e) => setEntryForm({...entryForm, hourlyRate: e.target.value})}
-            />
-          </div>
-
-          <Input 
-            label="Notas (Opcional)" 
-            placeholder="Turno extra, festivo..."
-            value={entryForm.notes}
-            onChange={(e) => setEntryForm({...entryForm, notes: e.target.value})}
-          />
-
-          <div style={{ marginTop: "1rem", padding: "1rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
-            <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Total Estimado</p>
-            <p style={{ fontSize: "1.5rem", fontWeight: "bold", color: "var(--color-success)" }}>
-              ${((parseFloat(entryForm.hours) || 0) * (parseFloat(entryForm.hourlyRate) || 0)).toFixed(2)}
-            </p>
-          </div>
-
-          <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-            <Button type="button" variant="ghost" onClick={() => setIsEntryModalOpen(false)} style={{ flex: 1 }}>
-              Cancelar
-            </Button>
-            <Button type="submit" style={{ flex: 1 }} disabled={companies.length === 0}>
-              Guardar Registro
-            </Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Modal: Create/Edit Company */}
+      {/* Modal: Create/Edit Company (Same as before) */}
       <Modal 
         isOpen={isCompanyModalOpen} 
-        onClose={() => {
-          setIsCompanyModalOpen(false);
-          resetCompanyForm();
-        }} 
+        onClose={() => { setIsCompanyModalOpen(false); resetCompanyForm(); }} 
         title={companyForm.id ? "Editar Empresa" : "Nueva Empresa"}
       >
         <form onSubmit={handleSaveCompany} style={{ display: "grid", gap: "1rem" }}>
+          {/* ... (Existing Company Form Content) ... */}
           <Input 
-            label="Nombre de la Empresa" 
-            required 
-            placeholder="Ej: Uber, Glovo..."
-            value={companyForm.name}
-            onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})}
+            label="Nombre de la Empresa" required placeholder="Ej: Uber..."
+            value={companyForm.name} onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})}
           />
           <Input 
-            label="Precio Hora Estándar ($)" 
-            type="number" 
-            step="0.01" 
-            required 
-            placeholder="Ej: 15.50"
-            value={companyForm.hourlyRateDefault}
-            onChange={(e) => setCompanyForm({...companyForm, hourlyRateDefault: e.target.value})}
+            label="Precio Hora Estándar ($)" type="number" step="0.01" required placeholder="Ej: 15.50"
+            value={companyForm.hourlyRateDefault} onChange={(e) => setCompanyForm({...companyForm, hourlyRateDefault: e.target.value})}
           />
           <Input 
-            label="Descripción (Opcional)" 
-            placeholder="Notas sobre pagos, condiciones..."
-            value={companyForm.description}
-            onChange={(e) => setCompanyForm({...companyForm, description: e.target.value})}
+            label="Descripción (Opcional)" placeholder="Notas..."
+            value={companyForm.description} onChange={(e) => setCompanyForm({...companyForm, description: e.target.value})}
           />
-
           <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
-
-          {/* Sección de Deducciones */}
-          <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "var(--color-text)" }}>Deducciones de Nómina (%)</h3>
-          <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>
-            Configura los porcentajes que se descontarán de tu salario bruto.
-          </p>
-          
+          <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Deducciones (%)</h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <Input 
-              label="Contingencias Comunes (%)" 
-              type="number" step="0.01" min="0" max="100"
-              value={companyForm.deductions?.commonContingencies || 0}
-              onChange={(e) => setCompanyForm({
-                ...companyForm, 
-                deductions: { ...companyForm.deductions, commonContingencies: parseFloat(e.target.value) || 0 }
-              })}
-            />
-            <Input 
-              label="Desempleo / Accidentes (%)" 
-              type="number" step="0.01" min="0" max="100"
-              value={companyForm.deductions?.unemploymentAccident || 0}
-              onChange={(e) => setCompanyForm({
-                ...companyForm, 
-                deductions: { ...companyForm.deductions, unemploymentAccident: parseFloat(e.target.value) || 0 }
-              })}
-            />
-            <Input 
-              label="IRPF (%)" 
-              type="number" step="0.01" min="0" max="100"
-              value={companyForm.deductions?.irpf || 0}
-              onChange={(e) => setCompanyForm({
-                ...companyForm, 
-                deductions: { ...companyForm.deductions, irpf: parseFloat(e.target.value) || 0 }
-              })}
-            />
-             <Input 
-              label="Otras Deducciones (%)" 
-              type="number" step="0.01" min="0" max="100"
-              value={companyForm.deductions?.other || 0}
-              onChange={(e) => setCompanyForm({
-                ...companyForm, 
-                deductions: { ...companyForm.deductions, other: parseFloat(e.target.value) || 0 }
-              })}
-            />
+            <Input label="Contingencias" type="number" step="0.01" value={companyForm.deductions?.commonContingencies || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, commonContingencies: parseFloat(e.target.value) || 0 }})} />
+            <Input label="Desempleo" type="number" step="0.01" value={companyForm.deductions?.unemploymentAccident || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, unemploymentAccident: parseFloat(e.target.value) || 0 }})} />
+            <Input label="IRPF" type="number" step="0.01" value={companyForm.deductions?.irpf || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, irpf: parseFloat(e.target.value) || 0 }})} />
+            <Input label="Otras" type="number" step="0.01" value={companyForm.deductions?.other || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, other: parseFloat(e.target.value) || 0 }})} />
           </div>
-
           <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
-
-          {/* Sección de Límite / Excedente */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "var(--color-text)" }}>Regla del Límite</h3>
-            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.875rem" }}>
-              <input 
-                type="checkbox"
-                checked={companyForm.limitRule?.enabled || false}
-                onChange={(e) => setCompanyForm({
-                  ...companyForm,
-                  limitRule: { ...companyForm.limitRule, enabled: e.target.checked }
-                })}
-              />
-              Activar Límite
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Límite Salarial</h3>
+            <label style={{ display: "flex", gap: "0.5rem", fontSize: "0.875rem" }}>
+              <input type="checkbox" checked={companyForm.limitRule?.enabled || false} onChange={(e) => setCompanyForm({...companyForm, limitRule: { ...companyForm.limitRule, enabled: e.target.checked }})} /> Activar
             </label>
           </div>
-          
           {companyForm.limitRule?.enabled && (
-            <div style={{ backgroundColor: "var(--color-surface-hover)", padding: "1rem", borderRadius: "var(--radius-sm)" }}>
-               <Input 
-                label="Límite Bruto Sujeto a Deducción (€)" 
-                type="number" step="0.01"
-                value={companyForm.limitRule?.amount || 1600}
-                onChange={(e) => setCompanyForm({
-                  ...companyForm,
-                  limitRule: { ...companyForm.limitRule, amount: parseFloat(e.target.value) || 0 }
-                })}
-              />
-              <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "0.5rem" }}>
-                Todo lo que ganes por encima de {companyForm.limitRule?.amount || 0}€ será considerado excedente libre (dinero limpio sin deducciones).
-              </p>
-            </div>
+             <Input label="Límite (€)" type="number" step="0.01" value={companyForm.limitRule?.amount || 1600} onChange={(e) => setCompanyForm({...companyForm, limitRule: { ...companyForm.limitRule, amount: parseFloat(e.target.value) || 0 }})} />
           )}
-
           <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-            <Button type="button" variant="ghost" onClick={() => { setIsCompanyModalOpen(false); resetCompanyForm(); }} style={{ flex: 1 }}>
-              Cancelar
-            </Button>
-            <Button type="submit" style={{ flex: 1 }}>
-              {companyForm.id ? "Guardar Cambios" : "Crear Empresa"}
-            </Button>
+            <Button type="button" variant="ghost" onClick={() => { setIsCompanyModalOpen(false); resetCompanyForm(); }} style={{ flex: 1 }}>Cancelar</Button>
+            <Button type="submit" style={{ flex: 1 }}>Guardar</Button>
           </div>
         </form>
-        
-        {/* Lista rápida de empresas existentes para editar/borrar */}
         {companies.length > 0 && !companyForm.id && (
           <div style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid var(--color-border)" }}>
             <h4 style={{ fontSize: "0.875rem", fontWeight: 600, marginBottom: "1rem" }}>Empresas Existentes</h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               {companies.map(c => (
-                <div key={c._id} style={{ 
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "0.75rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)"
-                }}>
-                  <div style={{ cursor: "pointer", flex: 1 }} onClick={() => handleEditCompany(c)}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <span style={{ fontWeight: 500 }}>{c.name}</span>
-                      {c.limitRule?.enabled && (
-                        <Badge variant="success" style={{ fontSize: "0.6rem", padding: "2px 6px" }}>Límite {c.limitRule.amount}€</Badge>
-                      )}
-                    </div>
-                    <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                      ${c.hourlyRateDefault}/h • Deducciones: {
-                        (c.deductions?.commonContingencies || 0) + 
-                        (c.deductions?.unemploymentAccident || 0) + 
-                        (c.deductions?.irpf || 0)
-                      }%
-                    </span>
-                  </div>
+                <div key={c._id} style={{ display: "flex", justifyContent: "space-between", padding: "0.5rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)" }}>
+                  <span onClick={() => handleEditCompany(c)} style={{ cursor: "pointer", flex: 1 }}>{c.name}</span>
                   <div style={{ display: "flex", gap: "0.5rem" }}>
-                     <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => handleEditCompany(c)}
-                      title="Editar empresa"
-                    >
-                      <Edit2 size={16} />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      style={{ color: "var(--color-danger)" }}
-                      onClick={() => handleDeleteCompany(c._id)}
-                      title="Eliminar empresa"
-                    >
-                      <Trash2 size={16} />
-                    </Button>
+                    <Edit2 size={16} onClick={() => handleEditCompany(c)} style={{ cursor: "pointer" }} />
+                    <Trash2 size={16} color="var(--color-danger)" onClick={() => handleDeleteCompany(c._id)} style={{ cursor: "pointer" }} />
                   </div>
                 </div>
               ))}
@@ -864,3 +595,44 @@ export default function DeliveriesDashboard() {
     </div>
   );
 }
+
+// Compact Card Component
+function CompactCard({ label, value, subtext, icon: Icon, color }) {
+  const colors = {
+    success: "var(--color-success)",
+    info: "var(--color-info)",
+    warning: "var(--color-warning)",
+    primary: "var(--color-primary)",
+  };
+  
+  const iconColor = colors[color] || colors.primary;
+  
+  return (
+    <div style={{ 
+      backgroundColor: "var(--color-surface)", 
+      padding: "1rem", 
+      borderRadius: "var(--radius-md)", 
+      border: "1px solid var(--color-border)",
+      display: "flex",
+      alignItems: "center",
+      gap: "1rem",
+      boxShadow: "var(--shadow-sm)"
+    }}>
+      <div style={{ 
+        width: "40px", height: "40px", 
+        borderRadius: "50%", 
+        backgroundColor: `color-mix(in srgb, ${iconColor}, transparent 90%)`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: iconColor
+      }}>
+        <Icon size={20} />
+      </div>
+      <div>
+        <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", fontWeight: 500, textTransform: "uppercase" }}>{label}</p>
+        <p style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--color-text)" }}>{value}</p>
+        {subtext && <p style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)" }}>{subtext}</p>}
+      </div>
+    </div>
+  );
+}
+

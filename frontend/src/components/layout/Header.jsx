@@ -1,16 +1,25 @@
-import { Menu, Bell, ChevronDown } from "lucide-react";
+import { Menu, Bell, ChevronDown, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 export function Header({ onMenuClick, user }) {
   const navigate = useNavigate();
   const [logoError, setLogoError] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Capitalize month properly
   const date = new Date();
   const monthName = date.toLocaleString('es-ES', { month: 'long' });
   const year = date.getFullYear();
   const currentMonth = `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${year}`;
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    // Small delay to show animation
+    setTimeout(() => {
+      window.location.reload();
+    }, 300);
+  };
 
   return (
     <header style={{
@@ -59,6 +68,32 @@ export function Header({ onMenuClick, user }) {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        {/* Refresh Button - High Contrast for visibility */}
+        <button 
+          onClick={handleRefresh}
+          style={{
+            backgroundColor: "#F3F4F6", // Light gray
+            border: "1px solid #E5E7EB", // Gray border
+            cursor: "pointer",
+            width: "40px", height: "40px", // Slightly larger
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#374151", // Dark gray text
+            transition: "all 0.2s ease",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+            marginRight: "0.5rem"
+          }}
+          title="Actualizar Aplicación"
+        >
+          <RefreshCw 
+            size={20} 
+            className={isRefreshing ? "animate-spin" : ""} 
+            strokeWidth={2.5}
+          />
+        </button>
+
         {/* User Avatar */}
         <div 
           onClick={() => navigate('/profile')} 
