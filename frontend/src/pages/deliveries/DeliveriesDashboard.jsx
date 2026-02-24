@@ -374,30 +374,6 @@ export default function DeliveriesDashboard() {
             </button>
           </div>
         </div>
-
-        {/* Excedente (Tax Free) Banner */}
-        {payroll && payroll.excedenteLibre > 0 && (
-          <div style={{
-            marginTop: "1rem",
-            padding: "0.75rem",
-            backgroundColor: "var(--color-success-bg)",
-            borderRadius: "var(--radius-md)",
-            border: "1px solid var(--color-success)",
-            color: "var(--color-success)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            boxShadow: "var(--shadow-sm)"
-          }}>
-             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <CheckCircle size={20} />
-                <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>Excedente Libre de Impuestos</span>
-             </div>
-             <span style={{ fontSize: "1.25rem", fontWeight: "bold" }}>
-                ${payroll.excedenteLibre.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-             </span>
-          </div>
-        )}
       </div>
 
       {/* 2. Minimal Summary Row (Space Saving) */}
@@ -520,6 +496,30 @@ export default function DeliveriesDashboard() {
               );
             })}
           </div>
+          
+          {/* Excedente (Tax Free) Banner - Inside Calendar Card, at the bottom */}
+          {payroll && payroll.excedenteLibre > 0 && (
+            <div style={{
+              marginTop: "1rem",
+              padding: "0.75rem",
+              backgroundColor: "var(--color-success-bg)",
+              borderRadius: "var(--radius-md)",
+              border: "1px solid var(--color-success)",
+              color: "var(--color-success)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              width: "100%"
+            }}>
+               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <CheckCircle size={20} />
+                  <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>Excedente Libre</span>
+               </div>
+               <span style={{ fontSize: "1.125rem", fontWeight: "bold" }}>
+                  ${payroll.excedenteLibre.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+               </span>
+            </div>
+          )}
         </div>
       </div>
 
