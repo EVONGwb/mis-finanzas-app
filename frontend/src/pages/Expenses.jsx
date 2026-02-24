@@ -7,7 +7,7 @@ import { Input } from "../components/ui/Input";
 import { Table, TableRow, TableCell } from "../components/ui/Table";
 import { Modal } from "../components/ui/Modal";
 import { Badge } from "../components/ui/Badge";
-import { Plus, Filter, Trash2 } from "lucide-react";
+import { Plus, Filter, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 
 export default function Expenses() {
   const [items, setItems] = useState([]);
@@ -227,13 +227,103 @@ export default function Expenses() {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Nuevo Gasto">
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem" }}>
-          <Input 
-            label="Fecha" 
-            type="date" 
-            value={formData.date} 
-            onChange={(e) => setFormData({...formData, date: e.target.value})}
-            required
-          />
+          
+          {/* 1. Tipo de Gasto (Arriba del todo) */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>Tipo de Gasto</label>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, type: "monthly" })}
+                style={{
+                  flex: 1,
+                  padding: "0.75rem",
+                  borderRadius: "var(--radius-sm)",
+                  border: formData.type === "monthly" ? "2px solid var(--color-danger)" : "1px solid var(--color-border)",
+                  backgroundColor: formData.type === "monthly" ? "var(--color-danger-bg)" : "var(--color-surface)",
+                  color: formData.type === "monthly" ? "var(--color-danger)" : "var(--color-text)",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
+              >
+                Mensual
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, type: "daily" })}
+                style={{
+                  flex: 1,
+                  padding: "0.75rem",
+                  borderRadius: "var(--radius-sm)",
+                  border: formData.type === "daily" ? "2px solid var(--color-warning)" : "1px solid var(--color-border)",
+                  backgroundColor: formData.type === "daily" ? "var(--color-warning-bg)" : "var(--color-surface)",
+                  color: formData.type === "daily" ? "var(--color-warning)" : "var(--color-text)",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
+              >
+                Diario
+              </button>
+            </div>
+          </div>
+
+          {/* 2. Fecha (Con flechas de control) */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>Fecha</label>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              <div style={{ position: "relative", flex: 1 }}>
+                <input 
+                  type="date" 
+                  value={formData.date}
+                  onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem",
+                    borderRadius: "var(--radius-md)",
+                    border: "1px solid var(--color-border)",
+                    fontSize: "1rem",
+                    outline: "none",
+                    backgroundColor: "var(--color-surface)"
+                  }}
+                  required
+                />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const d = new Date(formData.date);
+                    d.setDate(d.getDate() + 1);
+                    setFormData({...formData, date: d.toISOString().split('T')[0]});
+                  }}
+                  style={{ 
+                    padding: "4px", borderRadius: "4px", border: "1px solid var(--color-border)", 
+                    background: "var(--color-surface)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"
+                  }}
+                >
+                  <ChevronUp size={16} />
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const d = new Date(formData.date);
+                    d.setDate(d.getDate() - 1);
+                    setFormData({...formData, date: d.toISOString().split('T')[0]});
+                  }}
+                  style={{ 
+                    padding: "4px", borderRadius: "4px", border: "1px solid var(--color-border)", 
+                    background: "var(--color-surface)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"
+                  }}
+                >
+                  <ChevronDown size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Monto y Concepto */}
           <Input 
             label="Monto" 
             type="number" 
@@ -249,70 +339,72 @@ export default function Expenses() {
             placeholder="Ej. Compras supermercado"
           />
           
+          {/* 4. Categoría (Tarjetas seleccionables) */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>Tipo de Gasto</label>
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, type: "monthly" })}
-                style={{
-                  flex: 1,
-                  padding: "0.75rem",
-                  borderRadius: "var(--radius-sm)",
-                  border: formData.type === "monthly" ? "2px solid var(--color-danger)" : "1px solid var(--color-border)",
-                  backgroundColor: formData.type === "monthly" ? "var(--color-danger-bg)" : "var(--color-surface)",
-                  color: formData.type === "monthly" ? "var(--color-danger)" : "var(--color-text)",
-                  fontWeight: 600,
-                  cursor: "pointer"
-                }}
-              >
-                Mensual (Fijo)
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, type: "daily" })}
-                style={{
-                  flex: 1,
-                  padding: "0.75rem",
-                  borderRadius: "var(--radius-sm)",
-                  border: formData.type === "daily" ? "2px solid var(--color-warning)" : "1px solid var(--color-border)",
-                  backgroundColor: formData.type === "daily" ? "var(--color-warning-bg)" : "var(--color-surface)",
-                  color: formData.type === "daily" ? "var(--color-warning)" : "var(--color-text)",
-                  fontWeight: 600,
-                  cursor: "pointer"
-                }}
-              >
-                Diario (Variable)
-              </button>
+            <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>Categoría</label>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: "0.5rem" }}>
+              {[
+                { id: "general", label: "General" },
+                { id: "food", label: "Comida" },
+                { id: "transport", label: "Transp." },
+                { id: "health", label: "Salud" },
+                { id: "leisure", label: "Ocio" },
+                { id: "home", label: "Hogar" }
+              ].map(cat => (
+                <div
+                  key={cat.id}
+                  onClick={() => setFormData({...formData, category: cat.id})}
+                  style={{
+                    padding: "0.5rem",
+                    borderRadius: "var(--radius-sm)",
+                    border: formData.category === cat.id ? "2px solid var(--color-primary)" : "1px solid var(--color-border)",
+                    backgroundColor: formData.category === cat.id ? "var(--color-primary-light)" : "var(--color-surface)",
+                    color: formData.category === cat.id ? "var(--color-primary)" : "var(--color-text)",
+                    fontSize: "0.75rem",
+                    fontWeight: formData.category === cat.id ? 600 : 400,
+                    textAlign: "center",
+                    cursor: "pointer",
+                    transition: "all 0.1s"
+                  }}
+                >
+                  {cat.label}
+                </div>
+              ))}
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>Categoría</label>
-            <select 
-              value={formData.category} 
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
-              style={{ padding: "0.75rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)", width: "100%" }}
-            >
-              <option value="general">General</option>
-              <option value="food">Comida</option>
-              <option value="transport">Transporte</option>
-              <option value="health">Salud</option>
-              <option value="leisure">Ocio</option>
-            </select>
-          </div>
+          {/* 5. Método de Pago (Tarjetas seleccionables) */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
             <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>Método de pago</label>
-            <select 
-              value={formData.paymentMethod} 
-              onChange={(e) => setFormData({...formData, paymentMethod: e.target.value})}
-              style={{ padding: "0.75rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)", width: "100%" }}
-            >
-              <option value="cash">Efectivo</option>
-              <option value="card">Tarjeta</option>
-              <option value="transfer">Transferencia</option>
-            </select>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              {[
+                { id: "cash", label: "Efectivo" },
+                { id: "card", label: "Tarjeta" },
+                { id: "transfer", label: "Transf." }
+              ].map(method => (
+                <div
+                  key={method.id}
+                  onClick={() => setFormData({...formData, paymentMethod: method.id})}
+                  style={{
+                    flex: 1,
+                    padding: "0.75rem",
+                    borderRadius: "var(--radius-sm)",
+                    border: formData.paymentMethod === method.id ? "2px solid var(--color-secondary)" : "1px solid var(--color-border)",
+                    backgroundColor: formData.paymentMethod === method.id ? "var(--color-secondary-light)" : "var(--color-surface)",
+                    color: formData.paymentMethod === method.id ? "var(--color-secondary)" : "var(--color-text)",
+                    fontSize: "0.875rem",
+                    fontWeight: formData.paymentMethod === method.id ? 600 : 400,
+                    textAlign: "center",
+                    cursor: "pointer",
+                    transition: "all 0.1s"
+                  }}
+                >
+                  {method.label}
+                </div>
+              ))}
+            </div>
           </div>
+
           <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
             <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} style={{ flex: 1 }}>Cancelar</Button>
             <Button type="submit" variant="danger" style={{ flex: 1 }}>Guardar Gasto</Button>
