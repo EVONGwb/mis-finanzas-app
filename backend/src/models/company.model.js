@@ -28,6 +28,14 @@ const companySchema = new mongoose.Schema({
     other: { type: Number, default: 0, min: 0, max: 100 },
     otherConcept: { type: String, default: "", trim: true }
   },
+  supplements: {
+    benefits: { type: Number, default: 0, min: 0 },
+    agreementBonus: { type: Number, default: 0, min: 0 },
+    proratedPayments: { type: Number, default: 0, min: 0 },
+    voluntaryImprovement: { type: Number, default: 0, min: 0 },
+    other: { type: Number, default: 0, min: 0 },
+    otherConcept: { type: String, default: "", trim: true }
+  },
   limitRule: {
     enabled: { type: Boolean, default: false },
     amount: { type: Number, default: 1600, min: 0 }

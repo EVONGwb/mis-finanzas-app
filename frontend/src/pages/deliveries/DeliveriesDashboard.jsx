@@ -50,6 +50,13 @@ export default function DeliveriesDashboard() {
       other: 0,
       otherConcept: ""
     },
+    supplements: {
+      benefits: 0,
+      agreementBonus: 0,
+      proratedPayments: 0,
+      voluntaryImprovement: 0,
+      other: 0
+    },
     limitRule: {
       enabled: false,
       amount: 1600
@@ -149,6 +156,7 @@ export default function DeliveriesDashboard() {
         hourlyRateDefault: companyForm.hourlyRateDefault,
         description: companyForm.description,
         deductions: companyForm.deductions,
+        supplements: companyForm.supplements,
         limitRule: companyForm.limitRule
       };
 
@@ -175,6 +183,13 @@ export default function DeliveriesDashboard() {
         other: 0,
         otherConcept: ""
       },
+      supplements: {
+        benefits: 0,
+        agreementBonus: 0,
+        proratedPayments: 0,
+        voluntaryImprovement: 0,
+        other: 0
+      },
       limitRule: {
         enabled: false,
         amount: 1600
@@ -194,6 +209,13 @@ export default function DeliveriesDashboard() {
         irpf: company.deductions?.irpf ?? 20.0,
         other: company.deductions?.other ?? 0,
         otherConcept: company.deductions?.otherConcept || ""
+      },
+      supplements: {
+        benefits: company.supplements?.benefits ?? 0,
+        agreementBonus: company.supplements?.agreementBonus ?? 0,
+        proratedPayments: company.supplements?.proratedPayments ?? 0,
+        voluntaryImprovement: company.supplements?.voluntaryImprovement ?? 0,
+        other: company.supplements?.other ?? 0
       },
       limitRule: {
         enabled: company.limitRule?.enabled ?? false,
@@ -219,15 +241,27 @@ export default function DeliveriesDashboard() {
     const limitEnabled = company.limitRule?.enabled || false;
     const limitAmount = company.limitRule?.amount || 0;
     
-    let tramoDeducible = totalEarnings;
+    let totalEarningsWithSupplements = totalEarnings;
+
+    // Add Supplements
+    const supplements = company.supplements || {};
+    const supTotal = (supplements.benefits || 0) + 
+                     (supplements.agreementBonus || 0) + 
+                     (supplements.proratedPayments || 0) + 
+                     (supplements.voluntaryImprovement || 0) + 
+                     (supplements.other || 0);
+    
+    totalEarningsWithSupplements += supTotal;
+    
+    let tramoDeducible = totalEarningsWithSupplements;
     let excedenteLibre = 0;
 
     if (limitEnabled) {
-      if (totalEarnings > limitAmount) {
+      if (totalEarningsWithSupplements > limitAmount) {
         tramoDeducible = limitAmount;
-        excedenteLibre = totalEarnings - limitAmount;
+        excedenteLibre = totalEarningsWithSupplements - limitAmount;
       } else {
-        tramoDeducible = totalEarnings;
+        tramoDeducible = totalEarningsWithSupplements;
         excedenteLibre = 0;
       }
     }
@@ -599,6 +633,15 @@ export default function DeliveriesDashboard() {
             <Input label="Desempleo" type="number" step="0.01" value={companyForm.deductions?.unemploymentAccident || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, unemploymentAccident: parseFloat(e.target.value) || 0 }})} />
             <Input label="IRPF" type="number" step="0.01" value={companyForm.deductions?.irpf || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, irpf: parseFloat(e.target.value) || 0 }})} />
             <Input label="Otras" type="number" step="0.01" value={companyForm.deductions?.other || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, other: parseFloat(e.target.value) || 0 }})} />
+          </div>
+          <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
+          <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Complementos (Aumentan Nómina)</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <Input label="Beneficios (€)" type="number" step="0.01" value={companyForm.supplements?.benefits || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, benefits: parseFloat(e.target.value) || 0 }})} />
+            <Input label="Plus Convenio (€)" type="number" step="0.01" value={companyForm.supplements?.agreementBonus || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, agreementBonus: parseFloat(e.target.value) || 0 }})} />
+            <Input label="Prorrata Pagas (€)" type="number" step="0.01" value={companyForm.supplements?.proratedPayments || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, proratedPayments: parseFloat(e.target.value) || 0 }})} />
+            <Input label="Mejora Voluntaria (€)" type="number" step="0.01" value={companyForm.supplements?.voluntaryImprovement || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, voluntaryImprovement: parseFloat(e.target.value) || 0 }})} />
+            <Input label="Otros (€)" type="number" step="0.01" value={companyForm.supplements?.other || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, other: parseFloat(e.target.value) || 0 }})} />
           </div>
           <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
           <div style={{ display: "flex", justifyContent: "space-between" }}>
