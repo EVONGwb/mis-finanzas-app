@@ -58,7 +58,29 @@ export function Layout({ children, onLogout, user }) {
         maxWidth: "400px", // Limit width on large screens
         margin: "0 auto" // Center
       }}>
-        {/* 1. INICIO */}
+        {/* 1. INICIO (Now centered visually by moving it to middle position in code?) NO, user wants it CENTERED.
+            Wait, user said "inicio tiene que estar en el centro".
+            Current order: Inicio, Horas, Gastos.
+            New order: Horas, Inicio, Gastos.
+        */}
+
+        {/* 1. HORAS (Deliveries) - MOVED TO FIRST POSITION */}
+        <NavLink to="/deliveries" style={({ isActive }) => ({
+          display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
+          color: isActive ? "#374151" : "#374151", // Always dark
+          fontSize: "0.75rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
+        })}>
+          {({ isActive }) => (
+             <>
+                <div style={{ padding: "8px" }}>
+                   <Clock size={28} strokeWidth={2} color="#374151" />
+                </div>
+               <span style={{ fontSize: "0.85rem" }}>Horas</span>
+             </>
+          )}
+        </NavLink>
+
+        {/* 2. INICIO - MOVED TO CENTER POSITION */}
         <NavLink to="/dashboard" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "2px",
           color: isActive ? "#10B981" : "#1F2937",
@@ -99,23 +121,7 @@ export function Layout({ children, onLogout, user }) {
           )}
         </NavLink>
 
-        {/* 2. HORAS (Deliveries) */}
-        <NavLink to="/deliveries" style={({ isActive }) => ({
-          display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-          color: isActive ? "#374151" : "#374151", // Always dark
-          fontSize: "0.75rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
-        })}>
-          {({ isActive }) => (
-             <>
-                <div style={{ padding: "8px" }}>
-                   <Clock size={28} strokeWidth={2} color="#374151" />
-                </div>
-               <span style={{ fontSize: "0.85rem" }}>Horas</span>
-             </>
-          )}
-        </NavLink>
-
-        {/* 3. GASTOS */}
+        {/* 3. GASTOS - KEPT IN LAST POSITION */}
         <NavLink to="/expenses" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
           color: isActive ? "#EF4444" : "#374151",
