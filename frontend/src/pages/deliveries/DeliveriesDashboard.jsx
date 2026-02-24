@@ -337,29 +337,34 @@ export default function DeliveriesDashboard() {
         </div>
       </div>
 
-      {/* 2. Compact Summary Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+      {/* 2. Compact Summary Cards (Responsive: 2x2 on mobile, 4x1 on desktop) */}
+      <div style={{ 
+        display: "grid", 
+        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", 
+        gap: "0.75rem", 
+        marginBottom: "1.5rem" 
+      }}>
         <CompactCard 
-          label="Ganancias Mes" 
-          value={`$${stats?.totalEarnings?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`}
+          label="Ganancias" 
+          value={`$${stats?.totalEarnings?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}`}
           icon={DollarSign}
           color="success"
         />
         <CompactCard 
-          label="Horas Mes" 
-          value={`${stats?.totalHours || 0} h`}
+          label="Horas" 
+          value={`${stats?.totalHours || 0}h`}
           icon={Clock}
           color="info"
         />
         <CompactCard 
-          label="Promedio Diario" 
-          value={`$${stats?.dailyAverage?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`}
+          label="Promedio" 
+          value={`$${stats?.dailyAverage?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}`}
           icon={TrendingUp}
           color="warning"
         />
         {payroll && (
            <CompactCard 
-            label="Neto Estimado" 
+            label="Neto" 
             value={`$${payroll.totalRealCobrado.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
             subtext={`Excedente: ${payroll.excedenteLibre.toFixed(0)}€`}
             icon={CheckCircle}
@@ -369,21 +374,21 @@ export default function DeliveriesDashboard() {
       </div>
 
       {/* 3. Main Content Grid: Calendar + Details */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem", paddingBottom: "2rem" }}>
         
         {/* Left: Interactive Calendar */}
-        <div style={{ backgroundColor: "var(--color-surface)", padding: "1.5rem", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-border)", boxShadow: "var(--shadow-sm)" }}>
-          <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div style={{ backgroundColor: "var(--color-surface)", padding: "1rem", borderRadius: "var(--radius-lg)", border: "1px solid var(--color-border)", boxShadow: "var(--shadow-sm)" }}>
+          <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <CalendarIcon size={18} /> Calendario
           </h3>
           
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "0.5rem", textAlign: "center", marginBottom: "0.5rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "0.25rem", textAlign: "center", marginBottom: "0.5rem" }}>
             {["L", "M", "M", "J", "V", "S", "D"].map(d => (
-              <div key={d} style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>{d}</div>
+              <div key={d} style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>{d}</div>
             ))}
           </div>
           
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "0.5rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "0.25rem" }}>
             {calendarDays.map((day, idx) => {
               if (!day) return <div key={idx} />;
               
@@ -408,19 +413,20 @@ export default function DeliveriesDashboard() {
                     justifyContent: "center",
                     cursor: "pointer",
                     position: "relative",
-                    transition: "all 0.2s"
+                    transition: "all 0.2s",
+                    padding: "0.25rem"
                   }}
                 >
-                  <span style={{ fontSize: "0.875rem", fontWeight: isToday ? "bold" : "normal" }}>
+                  <span style={{ fontSize: "0.8rem", fontWeight: isToday ? "bold" : "normal" }}>
                     {day.getDate()}
                   </span>
                   {hasData && (
-                    <div style={{ marginTop: "2px", fontSize: "0.6rem", fontWeight: 600, color: "var(--color-success)" }}>
+                    <div style={{ marginTop: "1px", fontSize: "0.55rem", fontWeight: 600, color: "var(--color-success)" }}>
                       ${Math.round(dayTotal)}
                     </div>
                   )}
                   {isToday && !isSelected && (
-                    <div style={{ position: "absolute", bottom: "4px", width: "4px", height: "4px", borderRadius: "50%", backgroundColor: "var(--color-primary)" }} />
+                    <div style={{ position: "absolute", bottom: "3px", width: "3px", height: "3px", borderRadius: "50%", backgroundColor: "var(--color-primary)" }} />
                   )}
                 </button>
               );
