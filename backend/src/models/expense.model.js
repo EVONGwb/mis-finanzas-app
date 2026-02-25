@@ -7,7 +7,8 @@ const ExpenseSchema = new mongoose.Schema(
     amount: { type: Number, required: true, min: 0 },
     category: { type: String, default: "general" },
     concept: { type: String, default: "" },
-    paymentMethod: { type: String, default: "cash" }
+    paymentMethod: { type: String, default: "cash" },
+    type: { type: String, default: "daily", enum: ["daily", "monthly"] }
   },
   { timestamps: true }
 );

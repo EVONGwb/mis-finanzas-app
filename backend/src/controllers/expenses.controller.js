@@ -2,7 +2,7 @@ import { Expense } from "../models/expense.model.js";
 
 export async function listExpenses(req, res, next) {
   try {
-    const filter = { user: req.user._id };
+    const filter = req.scopeFilter || { user: req.user._id };
     const items = await Expense.find(filter).sort({ date: -1 }).limit(200);
     res.json({ ok: true, data: items });
   } catch (e) {
@@ -12,7 +12,7 @@ export async function listExpenses(req, res, next) {
 
 export async function createExpense(req, res, next) {
   try {
-    const { date, amount, category = "general", concept = "", paymentMethod = "cash" } = req.body;
+    const { date, amount, category = "general", concept = "", paymentMethod = "cash", type = "daily" } = req.body;
 
     if (!date) return res.status(400).json({ ok: false, error: { message: "Falta date" } });
     if (amount === undefined) return res.status(400).json({ ok: false, error: { message: "Falta amount" } });
@@ -23,7 +23,8 @@ export async function createExpense(req, res, next) {
       amount: Number(amount),
       category,
       concept,
-      paymentMethod
+      paymentMethod,
+      type
     });
 
     res.status(201).json({ ok: true, data: created });
@@ -34,7 +35,8 @@ export async function createExpense(req, res, next) {
 
 export async function deleteExpense(req, res, next) {
   try {
-    const deleted = await Expense.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+    const filter = req.scopeFilter || { user: req.user._id };
+    const deleted = await Expense.findOneAndDelete({ _id: req.params.id, ...filter });
     if (!deleted) return res.status(404).json({ ok: false, error: { message: "No encontrado" } });
     res.json({ ok: true, data: deleted });
   } catch (e) {
