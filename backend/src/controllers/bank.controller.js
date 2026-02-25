@@ -231,10 +231,25 @@ export async function closeMonth(req, res, next) {
   }
 }
 
+import { User } from "../models/user.model.js";
+
 export async function openMonth(req, res, next) {
   try {
     const userId = req.user._id;
-    const { month, year, password } = req.body; // Password validation skipped for now as per "Validar en backend" (can implement simple check)
+    const { month, year, password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ ok: false, error: { message: "Se requiere contraseña para desbloquear." } });
+    }
+
+    // Verify password
+    const user = await User.findById(userId).select("+password");
+    if (!user) return res.status(404).json({ ok: false, error: { message: "Usuario no encontrado" } });
+
+    const isValid = await user.comparePassword(password);
+    if (!isValid) {
+      return res.status(401).json({ ok: false, error: { message: "Contraseña incorrecta" } });
+    }
 
     // Check if closed
     const closing = await MonthlyClosing.findOne({ user: userId, month, year });

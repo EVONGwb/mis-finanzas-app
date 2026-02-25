@@ -97,6 +97,17 @@ export const getDashboardStats = async (req, res, next) => {
   }
 };
 
+import { MonthlyClosing } from "../models/monthlyClosing.model.js";
+
+// Check if month is closed helper
+async function isMonthClosed(userId, dateStr) {
+  const date = new Date(dateStr);
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+  const closing = await MonthlyClosing.findOne({ user: userId, month, year, isLocked: true });
+  return !!closing;
+}
+
 // POST /api/work-entries
 export const createWorkEntry = async (req, res, next) => {
   try {
@@ -104,6 +115,10 @@ export const createWorkEntry = async (req, res, next) => {
 
     if (!companyId || !date || !hours || hourlyRate === undefined) {
       throw new HttpError(400, "Faltan campos obligatorios");
+    }
+
+    if (await isMonthClosed(req.user._id, date)) {
+      throw new HttpError(403, "El mes está cerrado y no se puede modificar.");
     }
 
     // Verificar que la empresa existe y pertenece al usuario
@@ -146,6 +161,15 @@ export const updateWorkEntry = async (req, res, next) => {
     const entry = await WorkEntry.findOne({ _id: id, user: req.user._id });
     if (!entry) throw new HttpError(404, "Registro no encontrado");
 
+    // Check if original date's month is closed
+    if (await isMonthClosed(req.user._id, entry.date)) {
+      throw new HttpError(403, "El mes del registro está cerrado y no se puede modificar.");
+    }
+    // Check if new date's month is closed (if changing date)
+    if (date && await isMonthClosed(req.user._id, date)) {
+      throw new HttpError(403, "No se puede mover el registro a un mes cerrado.");
+    }
+
     if (date) entry.date = date;
     if (hours) entry.hours = Number(hours);
     if (hourlyRate !== undefined) entry.hourlyRate = Number(hourlyRate);
@@ -168,8 +192,14 @@ export const updateWorkEntry = async (req, res, next) => {
 export const deleteWorkEntry = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const entry = await WorkEntry.findOneAndDelete({ _id: id, user: req.user._id });
+    const entry = await WorkEntry.findOne({ _id: id, user: req.user._id });
     if (!entry) throw new HttpError(404, "Registro no encontrado");
+
+    if (await isMonthClosed(req.user._id, entry.date)) {
+      throw new HttpError(403, "El mes del registro está cerrado y no se puede eliminar.");
+    }
+
+    await entry.deleteOne();
     res.json({ ok: true, message: "Registro eliminado" });
   } catch (error) {
     next(error);

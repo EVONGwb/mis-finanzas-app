@@ -4,6 +4,7 @@ import { getToken } from "../../lib/auth";
 import { Button } from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
 import { Input } from "../../components/ui/Input";
+import { Badge } from "../../components/ui/Badge";
 import { 
   Briefcase, 
   Calendar as CalendarIcon, 
@@ -13,7 +14,10 @@ import {
   ChevronLeft,
   ChevronRight,
   CheckCircle,
-  FileText
+  FileText,
+  Lock,
+  Unlock,
+  AlertTriangle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -27,6 +31,13 @@ export default function DeliveriesDashboard() {
   // Calendar State
   const [currentDate, setCurrentDate] = useState(new Date()); // For month navigation
   const [selectedDate, setSelectedDate] = useState(new Date()); // Selected specific day
+
+  // Closing State
+  const [isMonthClosed, setIsMonthClosed] = useState(false);
+  const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
+  const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
+  const [unlockPassword, setUnlockPassword] = useState("");
+  const [confirmClose, setConfirmClose] = useState(false);
 
   // Modal State
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
@@ -87,19 +98,26 @@ export default function DeliveriesDashboard() {
       
       const token = getToken();
 
-      const [statsRes, entriesRes] = await Promise.all([
+      const [statsRes, entriesRes, bankRes] = await Promise.all([
         apiFetch(`/work-entries/stats?from=${from}&to=${to}`, { token }),
-        apiFetch(`/work-entries?from=${from}&to=${to}`, { token })
+        apiFetch(`/work-entries?from=${from}&to=${to}`, { token }),
+        apiFetch(`/bank?month=${month + 1}&year=${year}`, { token }) // Check if month is closed
       ]);
 
       setStats(statsRes.data);
       setEntries(entriesRes.data);
+      
+      // Check closing status
+      const isClosed = bankRes.data?.closings?.some(c => c.month === month + 1 && c.year === year);
+      setIsMonthClosed(!!isClosed);
+
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
       setLoading(false);
     }
   };
+
 
   const fetchCompanies = async () => {
     try {
@@ -346,6 +364,40 @@ export default function DeliveriesDashboard() {
         .reduce((sum, e) => sum + (e.total || 0), 0);
     };
 
+  const handleCloseMonth = async () => {
+    try {
+      await apiFetch("/bank/close", {
+        method: "POST",
+        token: getToken(),
+        body: { month: currentDate.getMonth() + 1, year: currentDate.getFullYear() }
+      });
+      setIsClosingModalOpen(false);
+      fetchData(); // Refresh to update lock status
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  const handleUnlockMonth = async (e) => {
+    e.preventDefault();
+    try {
+      await apiFetch("/bank/open", {
+        method: "POST",
+        token: getToken(),
+        body: { 
+          month: currentDate.getMonth() + 1, 
+          year: currentDate.getFullYear(),
+          password: unlockPassword
+        }
+      });
+      setIsUnlockModalOpen(false);
+      setUnlockPassword("");
+      fetchData(); // Refresh
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "5rem", maxWidth: "1200px", margin: "0 auto" }}>
       
@@ -361,6 +413,16 @@ export default function DeliveriesDashboard() {
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
+          {isMonthClosed ? (
+            <Button variant="outline" size="sm" onClick={() => setIsUnlockModalOpen(true)} style={{ borderColor: "var(--color-warning)", color: "var(--color-warning)" }}>
+              <Lock size={16} style={{ marginRight: "0.5rem" }} /> Mes Cerrado
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => setIsClosingModalOpen(true)}>
+              <Lock size={16} style={{ marginRight: "0.5rem" }} /> Cerrar Mes
+            </Button>
+          )}
+
           <Button variant="outline" size="sm" onClick={() => setIsCompanyModalOpen(true)}>
             Empresas
           </Button>
@@ -380,6 +442,18 @@ export default function DeliveriesDashboard() {
           </div>
         </div>
       </div>
+      
+      {isMonthClosed && (
+        <div style={{ 
+          marginBottom: "1rem", padding: "0.75rem", 
+          backgroundColor: "var(--color-warning-bg)", border: "1px solid var(--color-warning)", 
+          borderRadius: "var(--radius-md)", color: "var(--color-warning)",
+          display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem"
+        }}>
+          <Lock size={16} />
+          <span>Este mes está cerrado. Para editarlo, desbloquéalo con tu contraseña.</span>
+        </div>
+      )}
 
       {/* 2. Minimal Summary Row (Space Saving) */}
       <div style={{ 
@@ -632,8 +706,17 @@ export default function DeliveriesDashboard() {
                         ${entry.total.toLocaleString()}
                       </div>
                       <button 
-                        onClick={() => handleDeleteEntry(entry._id)}
-                        style={{ background: "none", border: "none", color: "var(--color-danger)", cursor: "pointer", fontSize: "0.75rem", marginTop: "0.25rem", textDecoration: "underline" }}
+                        onClick={() => handleDelete(entry._id)}
+                        disabled={isMonthClosed}
+                        style={{ 
+                          background: "none", 
+                          border: "none", 
+                          color: isMonthClosed ? "var(--color-text-secondary)" : "var(--color-danger)", 
+                          cursor: isMonthClosed ? "not-allowed" : "pointer", 
+                          fontSize: "0.75rem", 
+                          marginTop: "0.25rem", 
+                          textDecoration: isMonthClosed ? "none" : "underline" 
+                        }}
                       >
                         Eliminar
                       </button>
@@ -648,6 +731,8 @@ export default function DeliveriesDashboard() {
             backgroundColor: "var(--color-surface)", 
             borderRadius: "var(--radius-md)", 
             padding: "0", 
+            opacity: isMonthClosed ? 0.5 : 1,
+            pointerEvents: isMonthClosed ? "none" : "auto"
           }}>
              <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>
                {selectedDateEntries.length > 0 ? "Añadir otro registro" : "Registrar actividad"}
@@ -720,6 +805,106 @@ export default function DeliveriesDashboard() {
              </form>
           </div>
         </div>
+      </Modal>
+
+      {/* Modal: Close Month */}
+      <Modal 
+        isOpen={isClosingModalOpen} 
+        onClose={() => setIsClosingModalOpen(false)} 
+        title={`Cerrar Mes de ${currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}`}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <div style={{ padding: "1rem", backgroundColor: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)" }}>
+            <h4 style={{ fontSize: "0.875rem", fontWeight: 600, marginBottom: "1rem", color: "var(--color-text-secondary)" }}>RESUMEN DE TRANSFERENCIA</h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Neto de Nómina</span>
+                <span style={{ fontWeight: 600 }}>${payroll?.netoNomina.toFixed(2) || "0.00"}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>Excedente Libre</span>
+                <span style={{ fontWeight: 600, color: "var(--color-success)" }}>+${payroll?.excedenteLibre.toFixed(2) || "0.00"}</span>
+              </div>
+              <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "0.5rem", marginTop: "0.5rem", display: "flex", justifyContent: "space-between", fontSize: "1.1rem", fontWeight: "bold" }}>
+                <span>Total a Banco</span>
+                <span style={{ color: "var(--color-primary)" }}>${payroll?.totalRealCobrado.toFixed(2) || "0.00"}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)", lineHeight: "1.5" }}>
+            <p style={{ marginBottom: "0.5rem" }}><strong>⚠️ Atención:</strong></p>
+            <ul style={{ paddingLeft: "1.5rem", margin: 0 }}>
+              <li>El mes quedará bloqueado y no podrás editar horas ni empresas.</li>
+              <li>El saldo neto se transferirá automáticamente a tu Banco.</li>
+              <li>Para hacer cambios futuros necesitarás tu contraseña.</li>
+            </ul>
+          </div>
+
+          <label style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", fontSize: "0.9rem", cursor: "pointer" }}>
+            <input 
+              type="checkbox" 
+              checked={confirmClose} 
+              onChange={(e) => setConfirmClose(e.target.checked)} 
+              style={{ marginTop: "0.25rem" }}
+            />
+            <span>Confirmo que quiero cerrar este mes y transferir el saldo al Banco.</span>
+          </label>
+
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <Button variant="ghost" onClick={() => setIsClosingModalOpen(false)} style={{ flex: 1 }}>Cancelar</Button>
+            <Button 
+              variant="primary" 
+              disabled={!confirmClose} 
+              onClick={handleCloseMonth} 
+              style={{ flex: 1 }}
+            >
+              <Lock size={16} style={{ marginRight: "0.5rem" }} /> Cerrar y Transferir
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal: Unlock Month */}
+      <Modal 
+        isOpen={isUnlockModalOpen} 
+        onClose={() => setIsUnlockModalOpen(false)} 
+        title="Desbloquear Mes"
+      >
+        <form onSubmit={handleUnlockMonth} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <div style={{ textAlign: "center", color: "var(--color-warning)" }}>
+            <div style={{ margin: "0 auto 1rem", width: "48px", height: "48px", borderRadius: "50%", backgroundColor: "var(--color-warning-bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Lock size={24} />
+            </div>
+            <p style={{ fontWeight: 600 }}>Mes Protegido</p>
+            <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)", marginTop: "0.5rem" }}>
+              Introduce tu contraseña para desbloquear este mes.
+            </p>
+          </div>
+
+          <div style={{ padding: "1rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-warning)", fontSize: "0.875rem" }}>
+            <strong style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-warning)", marginBottom: "0.5rem" }}>
+              <AlertTriangle size={16} /> Advertencia
+            </strong>
+            Al desbloquear, el saldo transferido al Banco se revertirá. Si haces cambios en la nómina, deberás volver a cerrar el mes para actualizar el Banco.
+          </div>
+
+          <Input 
+            label="Contraseña" 
+            type="password" 
+            placeholder="Tu contraseña de acceso"
+            value={unlockPassword}
+            onChange={(e) => setUnlockPassword(e.target.value)}
+            required
+          />
+
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <Button type="button" variant="ghost" onClick={() => setIsUnlockModalOpen(false)} style={{ flex: 1 }}>Cancelar</Button>
+            <Button type="submit" variant="primary" style={{ flex: 1, backgroundColor: "var(--color-warning)", borderColor: "var(--color-warning)" }}>
+              Desbloquear
+            </Button>
+          </div>
+        </form>
       </Modal>
 
       {/* Modal: Create/Edit Company (Same as before) */}
