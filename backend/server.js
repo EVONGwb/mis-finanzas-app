@@ -28,12 +28,18 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "https://traec4kjypht.vercel.app",
-  "https://mis-finanzas-app-nine.vercel.app"
+  "https://mis-finanzas-app-nine.vercel.app",
+  "https://misfinanzas.es",
+  "https://www.misfinanzas.es",
+  "https://mis-finanzas-app.vercel.app",
+  "https://mis-finanzas-app.onrender.com"
 ];
 
 app.use(cors({
   origin: function(origin, cb) {
     if (!origin) return cb(null, true);
+    // Permitir subdominios de vercel.app automáticamente
+    if (origin.endsWith(".vercel.app") || origin.endsWith(".onrender.com")) return cb(null, true);
     if (allowedOrigins.includes(origin)) return cb(null, true);
     return cb(new Error("Not allowed by CORS: " + origin));
   },
