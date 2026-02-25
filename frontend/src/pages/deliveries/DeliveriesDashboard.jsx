@@ -160,7 +160,7 @@ export default function DeliveriesDashboard() {
   const handleDelete = async (id) => {
     // Eliminar confirmación: if (!window.confirm("¿Eliminar registro?")) return;
     try {
-      await apiFetch(`/deliveries/${id}`, { method: "DELETE", token: getToken() });
+      await apiFetch(`/work-entries/${id}`, { method: "DELETE", token: getToken() });
       fetchData();
     } catch (e) {
       alert(e.message);
