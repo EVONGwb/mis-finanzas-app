@@ -411,17 +411,34 @@ export default function DeliveriesDashboard() {
     <div className="animate-fade-in" style={{ paddingBottom: "5rem", maxWidth: "1200px", margin: "0 auto" }}>
       
       {/* 1. Header & Controls */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "1rem" }}>
-        <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <Briefcase className="text-primary" size={24} /> 
-            Ingresos & Horas
-          </h1>
-          <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
-            {currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase()}
-          </p>
+      <div style={{ marginBottom: "1.5rem" }}>
+        {/* Top Row: Title & Date Nav */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <div>
+            <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Briefcase className="text-primary" size={24} /> 
+              Ingresos & Horas
+            </h1>
+            <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
+              {currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase()}
+            </p>
+          </div>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", padding: "0.25rem", border: "1px solid var(--color-border)" }}>
+             <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)", padding: "0.25rem" }}>
+              <ChevronLeft size={18} />
+            </button>
+            <span style={{ fontSize: "0.875rem", fontWeight: 600, minWidth: "80px", textAlign: "center" }}>
+              {currentDate.toLocaleDateString('es-ES', { month: 'short' })}
+            </span>
+            <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)", padding: "0.25rem" }}>
+              <ChevronRight size={18} />
+            </button>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+
+        {/* Bottom Row: Actions (Centered & Responsive) */}
+        <div style={{ display: "flex", justifyContent: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           {isMonthClosed ? (
             <Button variant="outline" size="sm" onClick={() => setIsUnlockModalOpen(true)} style={{ borderColor: "var(--color-warning)", color: "var(--color-warning)" }}>
               <Lock size={16} style={{ marginRight: "0.5rem" }} /> Mes Cerrado
@@ -436,19 +453,8 @@ export default function DeliveriesDashboard() {
             Empresas
           </Button>
           <Button variant="outline" size="sm" onClick={() => setIsSummaryModalOpen(true)}>
-            <FileText size={16} />
+            <FileText size={16} style={{ marginRight: "0.5rem" }} /> Resumen
           </Button>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", padding: "0.25rem", border: "1px solid var(--color-border)" }}>
-             <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)", padding: "0.25rem" }}>
-              <ChevronLeft size={18} />
-            </button>
-            <span style={{ fontSize: "0.875rem", fontWeight: 600, minWidth: "80px", textAlign: "center" }}>
-              {currentDate.toLocaleDateString('es-ES', { month: 'short' })}
-            </span>
-            <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)", padding: "0.25rem" }}>
-              <ChevronRight size={18} />
-            </button>
-          </div>
         </div>
       </div>
       
