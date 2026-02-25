@@ -97,9 +97,6 @@ export default function Expenses() {
           <h1 style={{ fontSize: "1.875rem" }}>Gastos</h1>
           <p style={{ color: "var(--color-text-secondary)" }}>Controla en qué se va tu dinero</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} variant="danger">
-          <Plus size={18} /> Nuevo Gasto
-        </Button>
       </div>
 
       {/* View Type Toggles */}
@@ -117,13 +114,42 @@ export default function Expenses() {
             cursor: "pointer",
             transition: "all 0.2s",
             textAlign: "center",
-            boxShadow: viewType === "monthly" ? "var(--shadow-md)" : "none"
+            boxShadow: viewType === "monthly" ? "var(--shadow-md)" : "none",
+            position: "relative"
           }}
         >
           Gastos Mensuales
           <span style={{ display: "block", fontSize: "0.75rem", fontWeight: 400, opacity: 0.9, marginTop: "0.25rem" }}>
             Fijos (Alquiler, Luz, Internet...)
           </span>
+          {viewType === "monthly" && (
+            <div 
+              onClick={(e) => {
+                e.stopPropagation();
+                setFormData({ ...formData, type: "monthly" });
+                setIsModalOpen(true);
+              }}
+              style={{
+                position: "absolute",
+                bottom: "-12px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                backgroundColor: "white",
+                color: "var(--color-danger)",
+                width: "24px",
+                height: "24px",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "var(--shadow-md)",
+                border: "2px solid var(--color-danger)",
+                zIndex: 10
+              }}
+            >
+              <Plus size={16} strokeWidth={3} />
+            </div>
+          )}
         </button>
         <button
           onClick={() => setViewType("daily")}
@@ -138,13 +164,42 @@ export default function Expenses() {
             cursor: "pointer",
             transition: "all 0.2s",
             textAlign: "center",
-            boxShadow: viewType === "daily" ? "var(--shadow-md)" : "none"
+            boxShadow: viewType === "daily" ? "var(--shadow-md)" : "none",
+            position: "relative"
           }}
         >
           Gastos Diarios
           <span style={{ display: "block", fontSize: "0.75rem", fontWeight: 400, opacity: 0.9, marginTop: "0.25rem" }}>
             Variables (Café, Cine, Compras...)
           </span>
+          {viewType === "daily" && (
+            <div 
+              onClick={(e) => {
+                e.stopPropagation();
+                setFormData({ ...formData, type: "daily" });
+                setIsModalOpen(true);
+              }}
+              style={{
+                position: "absolute",
+                bottom: "-12px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                backgroundColor: "white",
+                color: "var(--color-warning)",
+                width: "24px",
+                height: "24px",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "var(--shadow-md)",
+                border: "2px solid var(--color-warning)",
+                zIndex: 10
+              }}
+            >
+              <Plus size={16} strokeWidth={3} />
+            </div>
+          )}
         </button>
       </div>
 
