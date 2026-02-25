@@ -94,10 +94,10 @@ export default function DeliveriesDashboard() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
       
-      // Start of month in UTC
-      const from = new Date(Date.UTC(year, month, 1)).toISOString();
-      // End of month in UTC
-      const to = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999)).toISOString();
+      // Start of month in UTC with 2 days buffer to catch timezone spillovers
+      const from = new Date(Date.UTC(year, month, 1) - 2 * 24 * 60 * 60 * 1000).toISOString();
+      // End of month in UTC with 2 days buffer
+      const to = new Date(Date.UTC(year, month + 1, 0) + 2 * 24 * 60 * 60 * 1000).toISOString();
       
       const token = getToken();
 
@@ -315,10 +315,12 @@ export default function DeliveriesDashboard() {
 
     // Filter entries for the selected date
     const selectedDateEntries = useMemo(() => {
-      // Ajustar la fecha seleccionada a la zona horaria local para comparar con strings YYYY-MM-DD
-      const localDate = new Date(selectedDate.getTime() - (selectedDate.getTimezoneOffset() * 60000));
-      const dateStr = localDate.toISOString().split("T")[0];
-      return entries.filter(e => e.date.startsWith(dateStr));
+      return entries.filter(e => {
+        const entryDate = new Date(e.date); // This converts UTC to Local Time of browser
+        return entryDate.getDate() === selectedDate.getDate() &&
+               entryDate.getMonth() === selectedDate.getMonth() &&
+               entryDate.getFullYear() === selectedDate.getFullYear();
+      });
     }, [entries, selectedDate]);
 
     // Calendar Generation
@@ -351,19 +353,23 @@ export default function DeliveriesDashboard() {
 
     const hasEntryOnDate = (date) => {
       if (!date) return false;
-      // Ajustar fecha para comparación local
-      const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
-      const dateStr = localDate.toISOString().split("T")[0];
-      return entries.some(e => e.date.startsWith(dateStr));
+      return entries.some(e => {
+        const entryDate = new Date(e.date);
+        return entryDate.getDate() === date.getDate() &&
+               entryDate.getMonth() === date.getMonth() &&
+               entryDate.getFullYear() === date.getFullYear();
+      });
     };
 
     const getDayTotal = (date) => {
       if (!date) return 0;
-      // Ajustar fecha para comparación local
-      const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
-      const dateStr = localDate.toISOString().split("T")[0];
       return entries
-        .filter(e => e.date.startsWith(dateStr))
+        .filter(e => {
+          const entryDate = new Date(e.date);
+          return entryDate.getDate() === date.getDate() &&
+                 entryDate.getMonth() === date.getMonth() &&
+                 entryDate.getFullYear() === date.getFullYear();
+        })
         .reduce((sum, e) => sum + (e.total || 0), 0);
     };
 
