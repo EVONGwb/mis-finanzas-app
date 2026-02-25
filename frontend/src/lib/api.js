@@ -1,8 +1,10 @@
 import { getToken } from "./auth";
 
 const RAW = import.meta.env.VITE_API_BASE || "";
-const BASE = (RAW || "http://localhost:5050").replace(/\/+$/, "");
-const BASE_NO_API = BASE.replace(/\/api$/, "");
+// Detectar si estamos en producción (dominio real) o desarrollo
+const IS_PROD = window.location.hostname !== "localhost";
+const BASE = RAW || (IS_PROD ? "https://finanzas-app-backend.vercel.app" : "http://localhost:5050");
+const BASE_NO_API = BASE.replace(/\/+$/, "").replace(/\/api$/, "");
 const API_ROOT = `${BASE_NO_API}/api`;
 
 const CACHE = new Map();
