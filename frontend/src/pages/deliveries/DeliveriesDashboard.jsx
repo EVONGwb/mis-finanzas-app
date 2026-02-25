@@ -136,13 +136,13 @@ export default function DeliveriesDashboard() {
     }
   };
 
-  const handleDeleteEntry = async (id) => {
-    if (!window.confirm("¿Eliminar registro?")) return;
+  const handleDelete = async (id) => {
+    // Eliminar confirmación: if (!window.confirm("¿Eliminar registro?")) return;
     try {
-      await apiFetch(`/work-entries/${id}`, { method: "DELETE", token: getToken() });
+      await apiFetch(`/deliveries/${id}`, { method: "DELETE", token: getToken() });
       fetchData();
-    } catch (error) {
-      alert(error.message);
+    } catch (e) {
+      alert(e.message);
     }
   };
 

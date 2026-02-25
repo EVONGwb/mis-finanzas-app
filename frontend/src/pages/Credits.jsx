@@ -99,7 +99,7 @@ export default function Credits() {
   };
 
   const handleDeleteCredit = async (id) => {
-    if (!window.confirm("¿Estás seguro de eliminar este registro y todo su historial?")) return;
+    // Eliminar confirmación: if (!window.confirm("¿Estás seguro de eliminar este registro y todo su historial?")) return;
     try {
       await apiFetch(`/credits/${id}`, { method: "DELETE", token: getToken() });
       fetchCredits();

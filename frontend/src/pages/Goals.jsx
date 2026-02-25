@@ -29,9 +29,9 @@ export default function Goals() {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm("¿Eliminar objetivo?")) {
+    // Eliminar confirmación: if (window.confirm("¿Eliminar objetivo?")) {
       setGoals(goals.filter(g => g.id !== id));
-    }
+    // }
   };
 
   const handleEdit = (goal) => {

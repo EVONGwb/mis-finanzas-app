@@ -102,7 +102,7 @@ export default function Debts() {
   };
 
   const handleDeleteDebt = async (id) => {
-    if (!window.confirm("¿Estás seguro de eliminar esta deuda y todo su historial?")) return;
+    // Eliminar confirmación: if (!window.confirm("¿Estás seguro de eliminar esta deuda y todo su historial?")) return;
     try {
       await apiFetch(`/debts/${id}`, { method: "DELETE", token: getToken() });
       fetchDebts();

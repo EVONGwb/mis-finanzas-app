@@ -64,7 +64,7 @@ export default function Expenses() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Estás seguro de que quieres eliminar este gasto?")) return;
+    // Eliminar confirmación: if (!window.confirm("¿Estás seguro de que quieres eliminar este gasto?")) return;
     
     setDeletingId(id);
     try {

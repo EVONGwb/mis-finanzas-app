@@ -62,7 +62,7 @@ export default function Incomes() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Estás seguro de que quieres eliminar este ingreso?")) return;
+    // Eliminar confirmación: if (!window.confirm("¿Estás seguro de que quieres eliminar este ingreso?")) return;
     
     setDeletingId(id);
     try {
