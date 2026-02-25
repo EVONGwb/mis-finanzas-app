@@ -6,17 +6,9 @@ export function Sidebar({ isOpen, onClose, onLogout, user }) {
   const [logoError, setLogoError] = useState(false);
 
   const links = [
-    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/incomes", label: "Ingresos", icon: TrendingUp },
+    { to: "/dashboard", label: "Inicio", icon: LayoutDashboard },
+    { to: "/deliveries", label: "Horas", icon: Briefcase },
     { to: "/expenses", label: "Gastos", icon: TrendingDown },
-    { to: "/debts", label: "Deudas", icon: CreditCard },
-    { to: "/credits", label: "Me Deben", icon: HandCoins },
-    { to: "/goals", label: "Objetivos", icon: Target },
-    { to: "/reports", label: "Reportes", icon: PieChart },
-    { to: "/profit", label: "Beneficio", icon: BadgeDollarSign },
-    { to: "/home", label: "Hogar", icon: Home },
-    { to: "/deliveries", label: "Registro de Horas", icon: Briefcase },
-    { to: "/closing", label: "Cierre Mensual", icon: FileText },
   ];
 
   if (user?.role === "admin") {

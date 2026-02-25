@@ -18,7 +18,7 @@ const Closing = lazy(() => import("./pages/Closing"));
 const DeliveriesDashboard = lazy(() => import("./pages/deliveries/DeliveriesDashboard"));
 const Goals = lazy(() => import("./pages/Goals"));
 const Reports = lazy(() => import("./pages/Reports"));
-const Profit = lazy(() => import("./pages/Profit"));
+const Bank = lazy(() => import("./pages/Bank"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const Profile = lazy(() => import("./pages/Profile"));
 
@@ -195,10 +195,10 @@ export default function App() {
             }
           />
           <Route
-            path="/profit"
+            path="/bank"
             element={
               <Protected>
-                <Profit />
+                <Bank />
               </Protected>
             }
           />

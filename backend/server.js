@@ -19,6 +19,7 @@ import deliveriesRoutes from "./src/routes/deliveries.routes.js";
 import debtsRoutes from "./src/routes/debt.routes.js";
 import homeRoutes from "./src/routes/home.routes.js";
 import creditRoutes from "./src/routes/credit.routes.js";
+import bankRoutes from "./src/routes/bank.routes.js";
 import { notFound } from "./src/middlewares/notFound.js";
 import { errorHandler } from "./src/middlewares/errorHandler.js";
 
@@ -70,6 +71,7 @@ app.use("/api", deliveriesRoutes);
 app.use("/api", debtsRoutes);
 app.use("/api", homeRoutes);
 app.use("/api", creditRoutes);
+app.use("/api/bank", bankRoutes);
 
 app.use("/api", incomesRoutes);
 app.use("/api", expensesRoutes);
