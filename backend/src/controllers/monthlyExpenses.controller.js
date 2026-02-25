@@ -158,8 +158,9 @@ export const confirmExpense = async (req, res, next) => {
     }
 
     // Link Bank Movement to Instance
-    bankMov.relatedId = instance._id;
-    await bankMov.save();
+    // Check if bankMov still exists (it might have failed if mongoose validation failed, but create throws error so we are safe)
+    // Actually, we need to update bankMov with relatedId.
+    await BankMovement.findByIdAndUpdate(bankMov._id, { relatedId: instance._id });
 
     res.json({ ok: true, data: instance });
   } catch (error) {
