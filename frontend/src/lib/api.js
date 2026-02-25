@@ -5,19 +5,30 @@ const BASE = (RAW || "http://localhost:5050").replace(/\/+$/, "");
 const BASE_NO_API = BASE.replace(/\/api$/, "");
 const API_ROOT = `${BASE_NO_API}/api`;
 
+const CACHE = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
 export async function apiFetch(path, { token, method = "GET", body } = {}) {
   const headers = { "Content-Type": "application/json" };
-  const authToken = token || localStorage.getItem("token"); // Lectura directa o via parámetro
+  const authToken = token || localStorage.getItem("token"); 
   
   if (authToken) {
     headers.Authorization = `Bearer ${authToken}`;
   }
   
-  // Eliminamos validación rígida para permitir endpoints públicos sin /auth/ si fuera necesario
-  // pero mantenemos la lógica de Authorization si existe token.
-
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const url = `${API_ROOT}${normalizedPath}`;
+  
+  // Cache Key para GET requests
+  const cacheKey = `${url}|${authToken}`;
+  
+  // Si es GET y tenemos caché válida, devolvemos inmediatamente
+  if (method === "GET") {
+    const cached = CACHE.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
+      return cached.data;
+    }
+  }
 
   const res = await fetch(url, {
     method,
@@ -37,5 +48,14 @@ export async function apiFetch(path, { token, method = "GET", body } = {}) {
     const msg = `${res.status} ${res.statusText} - ${url}`;
     throw new Error(`Error API: ${msg}`);
   }
+
+  // Guardar en caché si es GET exitoso
+  if (method === "GET") {
+    CACHE.set(cacheKey, { data, timestamp: Date.now() });
+  } else {
+    // Si modificamos datos (POST, PUT, DELETE), invalidamos caché relacionada
+    CACHE.clear();
+  }
+
   return data;
 }
