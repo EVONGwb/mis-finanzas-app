@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useState } from "react";
-import { LayoutDashboard, TrendingUp, TrendingDown, FileText, LogOut, X, Shield, Briefcase, CreditCard, Home, HandCoins } from "lucide-react";
+import { LayoutDashboard, TrendingUp, TrendingDown, FileText, LogOut, X, Shield, Briefcase, CreditCard, Home, HandCoins, Target, PieChart, BadgeDollarSign } from "lucide-react";
 
 export function Sidebar({ isOpen, onClose, onLogout, user }) {
   const [logoError, setLogoError] = useState(false);
@@ -11,6 +11,9 @@ export function Sidebar({ isOpen, onClose, onLogout, user }) {
     { to: "/expenses", label: "Gastos", icon: TrendingDown },
     { to: "/debts", label: "Deudas", icon: CreditCard },
     { to: "/credits", label: "Me Deben", icon: HandCoins },
+    { to: "/goals", label: "Objetivos", icon: Target },
+    { to: "/reports", label: "Reportes", icon: PieChart },
+    { to: "/profit", label: "Beneficio", icon: BadgeDollarSign },
     { to: "/home", label: "Hogar", icon: Home },
     { to: "/deliveries", label: "Registro de Horas", icon: Briefcase },
     { to: "/closing", label: "Cierre Mensual", icon: FileText },

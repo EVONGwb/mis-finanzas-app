@@ -16,6 +16,9 @@ const Credits = lazy(() => import("./pages/Credits"));
 const Home = lazy(() => import("./pages/Home"));
 const Closing = lazy(() => import("./pages/Closing"));
 const DeliveriesDashboard = lazy(() => import("./pages/deliveries/DeliveriesDashboard"));
+const Goals = lazy(() => import("./pages/Goals"));
+const Reports = lazy(() => import("./pages/Reports"));
+const Profit = lazy(() => import("./pages/Profit"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const Profile = lazy(() => import("./pages/Profile"));
 
@@ -172,6 +175,30 @@ export default function App() {
             element={
               <Protected>
                 <DeliveriesDashboard />
+              </Protected>
+            }
+          />
+          <Route
+            path="/goals"
+            element={
+              <Protected>
+                <Goals />
+              </Protected>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <Protected>
+                <Reports />
+              </Protected>
+            }
+          />
+          <Route
+            path="/profit"
+            element={
+              <Protected>
+                <Profit />
               </Protected>
             }
           />
