@@ -132,29 +132,36 @@ export const confirmExpense = async (req, res, next) => {
       description: `${template.name} - ${month}/${year}`,
       amount: -Math.abs(finalAmount), // Negative for expense
       date: new Date(), // Confirm date is payment date
-      relatedModel: "MonthlyExpenseInstance"
+      relatedModel: "MonthlyExpenseInstance",
+      // relatedId: placeholder - will update later
     });
 
     // 2. Create or Update Instance
     let instance;
-    if (existing) {
-      existing.status = "confirmed";
-      existing.confirmedAt = new Date();
-      existing.amount = finalAmount;
-      existing.bankMovement = bankMov._id;
-      await existing.save();
-      instance = existing;
-    } else {
-      instance = await MonthlyExpenseInstance.create({
-        user: req.user._id,
-        template: template._id,
-        month,
-        year,
-        status: "confirmed",
-        confirmedAt: new Date(),
-        amount: finalAmount,
-        bankMovement: bankMov._id
-      });
+    try {
+      if (existing) {
+        existing.status = "confirmed";
+        existing.confirmedAt = new Date();
+        existing.amount = finalAmount;
+        existing.bankMovement = bankMov._id;
+        await existing.save();
+        instance = existing;
+      } else {
+        instance = await MonthlyExpenseInstance.create({
+          user: req.user._id,
+          template: template._id,
+          month,
+          year,
+          status: "confirmed",
+          confirmedAt: new Date(),
+          amount: finalAmount,
+          bankMovement: bankMov._id
+        });
+      }
+    } catch (dbError) {
+      // If instance creation fails (e.g. unique constraint race condition), delete the bank movement to avoid zombie records
+      await BankMovement.deleteOne({ _id: bankMov._id });
+      throw dbError;
     }
 
     // Link Bank Movement to Instance
