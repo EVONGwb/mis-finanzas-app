@@ -90,11 +90,14 @@ export default function DeliveriesDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Always fetch for the full month of currentDate
+      // Use UTC dates to match backend storage (which saves YYYY-MM-DD as UTC midnight)
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      const from = new Date(year, month, 1).toISOString();
-      const to = new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString();
+      
+      // Start of month in UTC
+      const from = new Date(Date.UTC(year, month, 1)).toISOString();
+      // End of month in UTC
+      const to = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999)).toISOString();
       
       const token = getToken();
 
