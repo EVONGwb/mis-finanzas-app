@@ -3,7 +3,9 @@ import { getToken } from "./auth";
 const RAW = import.meta.env.VITE_API_BASE || "";
 // Detectar si estamos en producción (dominio real) o desarrollo
 const IS_PROD = window.location.hostname !== "localhost";
-const BASE = RAW || (IS_PROD ? "https://finanzas-app-backend.vercel.app" : "http://localhost:5050");
+// IMPORTANTE: Asegúrate de que esta URL es la correcta de tu backend desplegado en Vercel
+// Si tu backend tiene otra URL, cámbiala aquí.
+const BASE = RAW || (IS_PROD ? "https://mis-finanzas-app-backend.vercel.app" : "http://localhost:5050");
 const BASE_NO_API = BASE.replace(/\/+$/, "").replace(/\/api$/, "");
 const API_ROOT = `${BASE_NO_API}/api`;
 
