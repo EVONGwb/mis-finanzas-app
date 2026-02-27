@@ -1,15 +1,49 @@
-import { useState } from "react";
-import { Card } from "../components/ui/Card";
-import { Filter } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Card, StatsCard } from "../components/ui/Card";
+import { Filter, DollarSign, Calendar, TrendingDown } from "lucide-react";
 import MonthlyExpenses from "./expenses/MonthlyExpenses";
 import DailyExpenses from "./expenses/DailyExpenses";
+import { apiFetch } from "../lib/api";
+import { getToken } from "../lib/auth";
+import { useCurrency } from "../context/CurrencyContext";
 
 export default function Expenses() {
+  const { formatCurrency } = useCurrency();
   const [viewType, setViewType] = useState("monthly"); // "monthly" or "daily"
   
   // Filter state (Shared between tabs)
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
+
+  // Totals state
+  const [totals, setTotals] = useState({ monthly: 0, daily: 0, total: 0 });
+
+  useEffect(() => {
+    fetchTotals();
+  }, [month, year]);
+
+  const fetchTotals = async () => {
+    try {
+      // Fetch monthly expenses total
+      const resMonthly = await apiFetch(`/monthly-expenses/status?month=${month}&year=${year}`, { token: getToken() });
+      const monthlyTotal = resMonthly.data?.reduce((sum, item) => sum + (item.status === 'confirmed' ? item.amount : 0), 0) || 0;
+
+      // Fetch daily expenses total
+      const resDaily = await apiFetch("/expenses", { token: getToken() });
+      const dailyTotal = resDaily.data?.filter(item => {
+        const d = new Date(item.date);
+        return d.getMonth() + 1 === month && d.getFullYear() === year && (item.type || "daily") === "daily";
+      }).reduce((sum, item) => sum + item.amount, 0) || 0;
+
+      setTotals({
+        monthly: monthlyTotal,
+        daily: dailyTotal,
+        total: monthlyTotal + dailyTotal
+      });
+    } catch (error) {
+      console.error("Error calculating totals:", error);
+    }
+  };
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "5rem" }}>
@@ -18,6 +52,29 @@ export default function Expenses() {
           <h1 style={{ fontSize: "1.875rem" }}>Gastos</h1>
           <p style={{ color: "var(--color-text-secondary)" }}>Controla en qué se va tu dinero</p>
         </div>
+      </div>
+
+      {/* Totals Summary Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+        <StatsCard 
+          title="Gastos Mensuales" 
+          value={formatCurrency(totals.monthly)} 
+          icon={Calendar} 
+          color="danger" 
+        />
+        <StatsCard 
+          title="Gastos Diarios" 
+          value={formatCurrency(totals.daily)} 
+          icon={TrendingDown} 
+          color="warning" 
+        />
+        <StatsCard 
+          title="Gasto Total" 
+          value={formatCurrency(totals.total)} 
+          icon={DollarSign} 
+          color="primary" 
+          style={{ gridColumn: "1 / -1" }} // Full width on mobile if odd count
+        />
       </div>
 
       {/* View Type Toggles */}
