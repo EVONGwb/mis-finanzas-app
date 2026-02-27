@@ -11,7 +11,7 @@ export function Modal({ isOpen, onClose, title, children }) {
       display: "flex",
       alignItems: "flex-end", // Align to bottom on mobile
       justifyContent: "center",
-      zIndex: 50,
+      zIndex: 100, // Higher than bottom nav (50)
       padding: 0 // Remove padding to allow full width/height
     }}>
       <div 
@@ -24,7 +24,7 @@ export function Modal({ isOpen, onClose, title, children }) {
           borderBottomRightRadius: 0,
           width: "100%",
           maxWidth: "500px", // Keep desktop constraint
-          maxHeight: "90vh", // Max 90% of screen height
+          maxHeight: "100dvh", // Allow full screen height if needed
           height: "auto", // Auto height up to max
           display: "flex",
           flexDirection: "column",
