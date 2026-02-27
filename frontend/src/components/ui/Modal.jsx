@@ -9,23 +9,30 @@ export function Modal({ isOpen, onClose, title, children }) {
       inset: 0,
       backgroundColor: "rgba(0,0,0,0.5)",
       display: "flex",
-      alignItems: "center", // Center vertically
+      alignItems: "flex-end", // Align to bottom on mobile
       justifyContent: "center",
       zIndex: 50,
-      padding: "1rem",
-      overflowY: "auto" // Allow scrolling the entire overlay if modal is too tall
+      padding: 0 // Remove padding to allow full width/height
     }}>
-      <div style={{
-        backgroundColor: "var(--color-surface)",
-        borderRadius: "var(--radius-lg)",
-        width: "100%",
-        maxWidth: "500px",
-        display: "flex",
-        flexDirection: "column",
-        boxShadow: "var(--shadow-lg)",
-        animation: "fadeIn 0.2s ease-out",
-        margin: "auto" // Keep it centered when scrolling
-      }}>
+      <div 
+        className="modal-content"
+        style={{
+          backgroundColor: "var(--color-surface)",
+          borderTopLeftRadius: "1.5rem", // Rounded top only
+          borderTopRightRadius: "1.5rem",
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
+          width: "100%",
+          maxWidth: "500px", // Keep desktop constraint
+          maxHeight: "90vh", // Max 90% of screen height
+          height: "auto", // Auto height up to max
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "var(--shadow-lg)",
+          animation: "slideUp 0.3s ease-out",
+          margin: 0 // Flush with bottom
+        }}
+      >
         <div style={{ 
           display: "flex", 
           justifyContent: "space-between", 
@@ -49,11 +56,32 @@ export function Modal({ isOpen, onClose, title, children }) {
           </button>
         </div>
         <div style={{ 
-          padding: "1.5rem"
+          padding: "1.5rem",
+          overflowY: "auto", // Internal scroll only if needed
+          overscrollBehavior: "contain",
+          flex: 1
         }}>
           {children}
         </div>
       </div>
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        @media (min-width: 640px) {
+          .modal-content {
+            border-radius: var(--radius-lg) !important;
+            margin: 1rem !important;
+            align-self: center !important;
+            max-height: 85vh !important;
+          }
+          div[style*="align-items: flex-end"] {
+            align-items: center !important;
+            padding: 1rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
