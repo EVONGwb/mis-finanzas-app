@@ -74,21 +74,11 @@ export function CurrencyProvider({ children }) {
     initCurrency();
   }, [user]); // Re-run if user changes (e.g. login/logout)
 
-  const formatCurrency = (amount) => {
-    if (amount === undefined || amount === null) return "-";
-    
-    // Find symbol
-    const currObj = CURRENCIES.find(c => c.code === currency) || CURRENCIES[0];
-    
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
-  };
-
   const updateCurrency = (newCurrency) => {
+    // Validate currency
+    const isValid = CURRENCIES.some(c => c.code === newCurrency);
+    if (!isValid) return;
+
     setCurrency(newCurrency);
     // Also update local storage user if present to keep in sync immediately
     const storedUser = localStorage.getItem("user");
@@ -96,6 +86,24 @@ export function CurrencyProvider({ children }) {
       const user = JSON.parse(storedUser);
       user.currency = newCurrency;
       localStorage.setItem("user", JSON.stringify(user));
+    }
+  };
+
+  const safeCurrency = CURRENCIES.some(c => c.code === currency) ? currency : "EUR";
+
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return "-";
+    
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency: safeCurrency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount);
+    } catch (e) {
+      console.error("Format currency error:", e);
+      return `${amount}`;
     }
   };
 
