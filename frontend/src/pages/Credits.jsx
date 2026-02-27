@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../lib/api";
 import { getToken } from "../lib/auth";
 import { Card, StatsCard } from "../components/ui/Card";
@@ -15,17 +15,25 @@ import {
   CheckCircle, 
   Plus, 
   Trash2, 
-  Edit2
+  Edit2,
+  Search,
+  Calendar,
+  AlertCircle
 } from "lucide-react";
 
 export default function Credits() {
   const { formatCurrency } = useCurrency();
-  const [data, setData] = useState(null);
+  const [data, setData] = useState({ summary: { totalPending: 0, totalCollectedGlobal: 0, globalProgress: 0 }, list: [] });
   const [loading, setLoading] = useState(true);
   
+  // UI State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("pending"); // 'all', 'pending', 'paid', 'overdue'
+
   // Modals
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   
   // Forms & Selected Item
   const [selectedCredit, setSelectedCredit] = useState(null);
@@ -53,9 +61,14 @@ export default function Credits() {
     setLoading(true);
     try {
       const res = await apiFetch("/credits", { token: getToken() });
-      setData(res.data);
+      if (res && res.data) {
+        setData(res.data);
+      } else {
+        setData({ summary: { totalPending: 0, totalCollectedGlobal: 0, globalProgress: 0 }, list: [] });
+      }
     } catch (error) {
       console.error("Error loading credits:", error);
+      setData({ summary: { totalPending: 0, totalCollectedGlobal: 0, globalProgress: 0 }, list: [] });
     } finally {
       setLoading(false);
     }
@@ -95,15 +108,19 @@ export default function Credits() {
       setIsPaymentModalOpen(false);
       setPaymentForm({ amount: "", date: new Date().toISOString().split("T")[0], note: "" });
       fetchCredits();
+      if (isDetailModalOpen) {
+        setIsDetailModalOpen(false);
+      }
     } catch (error) {
       alert(error.message);
     }
   };
 
   const handleDeleteCredit = async (id) => {
-    // Eliminar confirmación: if (!window.confirm("¿Estás seguro de eliminar este registro y todo su historial?")) return;
+    if (!window.confirm("¿Estás seguro de eliminar este registro?")) return;
     try {
       await apiFetch(`/credits/${id}`, { method: "DELETE", token: getToken() });
+      setIsDetailModalOpen(false);
       fetchCredits();
     } catch (error) {
       alert(error.message);
@@ -135,11 +152,47 @@ export default function Credits() {
     setIsCreditModalOpen(true);
   };
 
-  const openPaymentModal = (credit) => {
+  const openPaymentModal = (credit, e) => {
+    e?.stopPropagation();
     setSelectedCredit(credit);
     setPaymentForm({ amount: "", date: new Date().toISOString().split("T")[0], note: "" });
     setIsPaymentModalOpen(true);
   };
+
+  const openDetailModal = (credit) => {
+    setSelectedCredit(credit);
+    setIsDetailModalOpen(true);
+  };
+
+  // Filter Logic
+  const filteredCredits = useMemo(() => {
+    if (!data?.list) return [];
+    return data.list.filter(credit => {
+      const matchesSearch = credit.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            (credit.debtor && credit.debtor.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      if (!matchesSearch) return false;
+
+      const today = new Date();
+      const dueDate = credit.dueDate ? new Date(credit.dueDate) : null;
+      const isOverdue = dueDate && dueDate < today && credit.remaining > 0;
+
+      if (activeTab === 'all') return true;
+      if (activeTab === 'pending') return credit.remaining > 0;
+      if (activeTab === 'paid') return credit.remaining <= 0;
+      if (activeTab === 'overdue') return isOverdue;
+      
+      return true;
+    });
+  }, [data, searchQuery, activeTab]);
+
+  const upcomingCollections = useMemo(() => {
+    if (!data?.list) return [];
+    return data.list
+      .filter(c => c.remaining > 0 && c.dueDate)
+      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+      .slice(0, 5);
+  }, [data]);
 
   // UI Helpers
   const getProgressColor = (progress) => {
@@ -149,133 +202,304 @@ export default function Credits() {
   };
 
   return (
-    <div className="animate-fade-in" style={{ paddingBottom: "5rem" }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+    <div className="animate-fade-in" style={{ paddingBottom: "6rem" }}>
+      {/* 1) Header Superior */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <HandCoins className="text-success" /> Me Deben
-          </h1>
-          <p style={{ color: "var(--color-text-secondary)" }}>Control de dinero prestado y cuentas por cobrar</p>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: "bold", color: "var(--color-text)" }}>Me Deben</h1>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Cuentas por cobrar</p>
         </div>
-        <Button onClick={() => { resetCreditForm(); setIsCreditModalOpen(true); }}>
-          <Plus size={18} style={{ marginRight: "0.5rem" }} /> Nuevo Préstamo
+        <Button onClick={() => { resetCreditForm(); setIsCreditModalOpen(true); }} size="sm">
+          <Plus size={18} style={{ marginRight: "0.25rem" }} /> Nuevo
         </Button>
       </div>
 
-      {/* KPIs */}
-      {loading ? (
-        <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginBottom: "2rem" }}>
-          <Skeleton height="120px" />
-          <Skeleton height="120px" />
-          <Skeleton height="120px" />
+      {/* 2) Buscador + Filtros */}
+      <div style={{ marginBottom: "1.5rem" }}>
+        <div style={{ position: "relative", marginBottom: "1rem" }}>
+          <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-secondary)" }} />
+          <input 
+            type="text" 
+            placeholder="Buscar por nombre..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ 
+              width: "100%", 
+              padding: "0.75rem 0.75rem 0.75rem 2.5rem", 
+              borderRadius: "var(--radius-md)", 
+              border: "1px solid var(--color-border)",
+              backgroundColor: "var(--color-surface)",
+              color: "var(--color-text)",
+              fontSize: "0.9rem"
+            }} 
+          />
         </div>
+        <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", paddingBottom: "0.5rem", scrollbarWidth: "none" }}>
+          {[
+            { id: 'pending', label: 'Pendientes' },
+            { id: 'all', label: 'Todos' },
+            { id: 'overdue', label: 'Vencidos' },
+            { id: 'paid', label: 'Cobrados' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "99px",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+                whiteSpace: "nowrap",
+                border: activeTab === tab.id ? "1px solid var(--color-primary)" : "1px solid var(--color-border)",
+                backgroundColor: activeTab === tab.id ? "var(--color-primary-light)" : "var(--color-surface)",
+                color: activeTab === tab.id ? "var(--color-primary)" : "var(--color-text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 3) Resumen Compacto */}
+      {loading ? (
+        <Skeleton height="150px" style={{ marginBottom: "2rem" }} />
       ) : (
-        <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginBottom: "2rem" }}>
-          <StatsCard 
-            title="Total por Cobrar" 
-            value={formatCurrency(data?.summary?.totalPending || 0)} 
-            icon={DollarSign} 
-            color="warning" 
-          />
-          <StatsCard 
-            title="Total Recuperado" 
-            value={formatCurrency(data?.summary?.totalCollectedGlobal || 0)} 
-            icon={CheckCircle} 
-            color="success" 
-          />
-          <StatsCard 
-            title="Progreso Cobro" 
-            value={`${(data?.summary?.globalProgress || 0).toFixed(1)}%`} 
-            icon={PieChart} 
-            color="primary" 
-          />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
+          <div style={{ backgroundColor: "var(--color-surface)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem", color: "var(--color-text-secondary)", fontSize: "0.8rem" }}>
+              <AlertCircle size={14} /> Por Cobrar
+            </div>
+            <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "var(--color-warning)" }}>
+              {formatCurrency(data?.summary?.totalPending || 0)}
+            </div>
+          </div>
+          <div style={{ backgroundColor: "var(--color-surface)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem", color: "var(--color-text-secondary)", fontSize: "0.8rem" }}>
+              <CheckCircle size={14} /> Cobrado
+            </div>
+            <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "var(--color-success)" }}>
+              {formatCurrency(data?.summary?.totalCollectedGlobal || 0)}
+            </div>
+          </div>
+          <div style={{ gridColumn: "1 / -1", backgroundColor: "var(--color-surface)", padding: "1.25rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <span style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)", display: "block", marginBottom: "0.25rem" }}>Progreso Global</span>
+              <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "var(--color-primary)" }}>
+                {(data?.summary?.globalProgress || 0).toFixed(1)}%
+              </div>
+              <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
+                {data?.list?.filter(d => d.remaining <= 0).length} de {data?.list?.length} cobrados
+              </span>
+            </div>
+            <div style={{ width: "60px", height: "60px", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <PieChart size={40} className="text-primary" />
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Lista de Créditos */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-        {loading ? (
-          <Skeleton height="200px" />
-        ) : data?.list?.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "3rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
-            <p style={{ color: "var(--color-text-secondary)" }}>No tienes préstamos pendientes de cobro.</p>
+      {/* 4) Próximos Cobros */}
+      {upcomingCollections.length > 0 && (
+        <div style={{ marginBottom: "2rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Próximos Cobros</h3>
           </div>
-        ) : (
-          data?.list?.map(credit => (
-            <Card key={credit._id} padding="0">
-              <div style={{ 
-                padding: "1.5rem", 
-                backgroundColor: credit.status === 'paid' ? 'rgba(16, 185, 129, 0.1)' : 'var(--color-surface)',
-                borderBottom: "1px solid var(--color-border)"
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+          <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "1rem", scrollbarWidth: "none" }}>
+            {upcomingCollections.map(credit => {
+               const isOverdue = new Date(credit.dueDate) < new Date();
+               return (
+                <div key={credit._id} onClick={() => openDetailModal(credit)} style={{ 
+                  minWidth: "200px", 
+                  backgroundColor: "var(--color-surface)", 
+                  padding: "1rem", 
+                  borderRadius: "var(--radius-md)", 
+                  border: isOverdue ? "1px solid var(--color-danger)" : "1px solid var(--color-border)",
+                  cursor: "pointer",
+                  position: "relative"
+                }}>
+                  {isOverdue && <div style={{ position: "absolute", top: "0.5rem", right: "0.5rem", width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-danger)" }}></div>}
+                  <div style={{ fontWeight: 600, marginBottom: "0.25rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{credit.name}</div>
+                  <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--color-text)", marginBottom: "0.5rem" }}>{formatCurrency(credit.remaining)}</div>
+                  <div style={{ fontSize: "0.75rem", color: isOverdue ? "var(--color-danger)" : "var(--color-text-secondary)", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                    <Calendar size={12} /> {new Date(credit.dueDate).toLocaleDateString()}
+                  </div>
+                </div>
+               );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 5) Lista de Créditos */}
+      <div>
+        <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Listado de Cobros</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {loading ? (
+             <>
+              <Skeleton height="100px" />
+              <Skeleton height="100px" />
+             </>
+          ) : filteredCredits.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "3rem 1rem", color: "var(--color-text-secondary)" }}>
+              <p>No se encontraron registros.</p>
+            </div>
+          ) : (
+            filteredCredits.map(credit => (
+              <div 
+                key={credit._id} 
+                onClick={() => openDetailModal(credit)}
+                style={{ 
+                  backgroundColor: "var(--color-surface)", 
+                  borderRadius: "var(--radius-lg)", 
+                  padding: "1rem",
+                  border: "1px solid var(--color-border)",
+                  boxShadow: "var(--shadow-sm)",
+                  cursor: "pointer",
+                  transition: "transform 0.1s"
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.25rem" }}>
-                      <h3 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-text)" }}>{credit.name}</h3>
-                      {credit.status === 'paid' ? (
-                        <Badge variant="success">COBRADO</Badge>
-                      ) : (
-                        <Badge variant="warning">PENDIENTE</Badge>
-                      )}
-                    </div>
-                    {credit.debtor && (
-                      <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Deudor: {credit.debtor}</p>
-                    )}
+                    <h4 style={{ fontWeight: "bold", fontSize: "1rem", marginBottom: "0.25rem" }}>{credit.name}</h4>
+                    <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                       {credit.debtor || "Sin deudor"}
+                    </span>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text)" }}>
-                      {formatCurrency(credit.totalAmount)}
-                    </div>
-                    <div style={{ fontSize: "0.875rem", color: credit.remaining > 0 ? "var(--color-warning)" : "var(--color-success)" }}>
-                      Falta cobrar: {formatCurrency(credit.remaining)}
-                    </div>
+                    <span style={{ display: "block", fontSize: "1.1rem", fontWeight: "bold", color: credit.remaining > 0 ? "var(--color-text)" : "var(--color-success)" }}>
+                      {formatCurrency(credit.remaining > 0 ? credit.remaining : credit.totalAmount)}
+                    </span>
+                    <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)" }}>
+                      {credit.remaining > 0 ? "Falta cobrar" : "Completado"}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Progress Bar */}
+                <div style={{ marginBottom: "1rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", marginBottom: "0.25rem" }}>
+                    <span>Progreso</span>
+                    <span>{(credit.progress || 0).toFixed(0)}%</span>
+                  </div>
+                  <div style={{ width: "100%", height: "6px", backgroundColor: "var(--color-surface-hover)", borderRadius: "99px", overflow: "hidden" }}>
+                    <div style={{ width: `${credit.progress}%`, height: "100%", backgroundColor: getProgressColor(credit.progress), borderRadius: "99px" }}></div>
                   </div>
                 </div>
 
-                {/* Barra de Progreso */}
-                <div style={{ position: "relative", height: "8px", backgroundColor: "#E5E7EB", borderRadius: "99px", overflow: "hidden", marginBottom: "1rem" }}>
-                  <div style={{ 
-                    position: "absolute", 
-                    top: 0, left: 0, bottom: 0, 
-                    width: `${credit.progress}%`, 
-                    backgroundColor: getProgressColor(credit.progress),
-                    transition: "width 0.5s ease"
-                  }} />
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                  <span>Recuperado: {formatCurrency(credit.totalPaid)} ({(credit.progress || 0).toFixed(1)}%)</span>
-                  {credit.dueDate && <span>Vence: {new Date(credit.dueDate).toLocaleDateString()}</span>}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                   <div style={{ display: "flex", gap: "0.5rem" }}>
+                     {credit.status === 'paid' ? (
+                       <Badge variant="success" style={{ fontSize: "0.7rem" }}>COBRADO</Badge>
+                     ) : (
+                        credit.dueDate && new Date(credit.dueDate) < new Date() ? 
+                        <Badge variant="danger" style={{ fontSize: "0.7rem" }}>VENCIDO</Badge> :
+                        <Badge variant="warning" style={{ fontSize: "0.7rem" }}>PENDIENTE</Badge>
+                     )}
+                   </div>
+                   
+                   {credit.remaining > 0 && (
+                     <button 
+                       onClick={(e) => openPaymentModal(credit, e)}
+                       style={{ 
+                         backgroundColor: "var(--color-primary-light)", 
+                         color: "var(--color-primary)", 
+                         border: "none", 
+                         padding: "0.5rem 1rem", 
+                         borderRadius: "99px", 
+                         fontSize: "0.8rem", 
+                         fontWeight: 600,
+                         display: "flex",
+                         alignItems: "center",
+                         gap: "0.25rem",
+                         cursor: "pointer"
+                       }}
+                     >
+                       <Plus size={14} /> Cobrar
+                     </button>
+                   )}
                 </div>
               </div>
-
-              {/* Acciones */}
-              <div style={{ 
-                padding: "1rem 1.5rem", 
-                backgroundColor: "var(--color-surface-hover)", 
-                display: "flex", 
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <Button size="sm" variant="ghost" onClick={() => openEditModal(credit)} title="Editar">
-                    <Edit2 size={16} />
-                  </Button>
-                  <Button size="sm" variant="ghost" style={{ color: "var(--color-danger)" }} onClick={() => handleDeleteCredit(credit._id)} title="Eliminar">
-                    <Trash2 size={16} />
-                  </Button>
-                </div>
-                
-                {credit.status === 'active' && (
-                  <Button size="sm" onClick={() => openPaymentModal(credit)}>
-                    <Plus size={16} style={{ marginRight: "0.25rem" }} /> Registrar Cobro
-                  </Button>
-                )}
-              </div>
-            </Card>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
+
+      {/* DETALLE MODAL (Full Screen-ish) */}
+      {isDetailModalOpen && selectedCredit && (
+        <Modal 
+           isOpen={isDetailModalOpen} 
+           onClose={() => setIsDetailModalOpen(false)} 
+           title="Detalle del Cobro"
+        >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "1.5rem" }}>
+              <div>
+                <h2 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "0.25rem" }}>{selectedCredit.name}</h2>
+                <p style={{ color: "var(--color-text-secondary)" }}>{selectedCredit.debtor}</p>
+              </div>
+            </div>
+
+            {/* Main Stats in Detail */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", marginBottom: "2rem", textAlign: "center" }}>
+              <div style={{ padding: "1rem 0.5rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
+                <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Total</div>
+                <div style={{ fontWeight: "bold" }}>{formatCurrency(selectedCredit.totalAmount)}</div>
+              </div>
+              <div style={{ padding: "1rem 0.5rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
+                <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Cobrado</div>
+                <div style={{ fontWeight: "bold", color: "var(--color-success)" }}>{formatCurrency(selectedCredit.totalPaid)}</div>
+              </div>
+              <div style={{ padding: "1rem 0.5rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
+                <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Falta</div>
+                <div style={{ fontWeight: "bold", color: "var(--color-warning)" }}>{formatCurrency(selectedCredit.remaining)}</div>
+              </div>
+            </div>
+
+            {/* Progress */}
+            <div style={{ marginBottom: "2rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                <span style={{ fontWeight: 600 }}>Progreso del cobro</span>
+                <span style={{ fontWeight: 600 }}>{(selectedCredit.progress || 0).toFixed(1)}%</span>
+              </div>
+              <div style={{ height: "10px", backgroundColor: "var(--color-surface-hover)", borderRadius: "99px", overflow: "hidden" }}>
+                <div style={{ width: `${selectedCredit.progress}%`, height: "100%", backgroundColor: getProgressColor(selectedCredit.progress) }}></div>
+              </div>
+              {selectedCredit.remaining <= 0 && (
+                <div style={{ marginTop: "1rem", padding: "0.75rem", backgroundColor: "var(--color-success-bg)", color: "var(--color-success)", borderRadius: "var(--radius-md)", textAlign: "center", fontWeight: "bold" }}>
+                   ¡TOTALMENTE COBRADO! 🎉
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
+               {selectedCredit.remaining > 0 && (
+                 <Button onClick={() => openPaymentModal(selectedCredit)} style={{ display: "flex", justifyContent: "center", gap: "0.5rem" }}>
+                   <Plus size={18} /> Añadir Cobro
+                 </Button>
+               )}
+               <Button variant="outline" onClick={() => { setIsDetailModalOpen(false); openEditModal(selectedCredit); }} style={{ display: "flex", justifyContent: "center", gap: "0.5rem" }}>
+                 <Edit2 size={18} /> Editar
+               </Button>
+            </div>
+            
+            <div style={{ marginBottom: "2rem" }}>
+               <Button variant="ghost" onClick={() => handleDeleteCredit(selectedCredit._id)} style={{ width: "100%", color: "var(--color-danger)", display: "flex", justifyContent: "center", gap: "0.5rem" }}>
+                 <Trash2 size={18} /> Eliminar Registro
+               </Button>
+            </div>
+
+            {/* Timeline Placeholder */}
+            <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1.5rem" }}>
+              <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Historial</h3>
+              <div style={{ padding: "1rem", textAlign: "center", color: "var(--color-text-secondary)", fontStyle: "italic" }}>
+                 (Historial de cobros próximamente)
+              </div>
+            </div>
+        </Modal>
+      )}
 
       {/* Modal: Crear/Editar Crédito */}
       <Modal 
@@ -285,47 +509,23 @@ export default function Credits() {
       >
         <form onSubmit={handleSaveCredit} style={{ display: "grid", gap: "1rem" }}>
           <Input 
-            label="Concepto" 
-            required 
-            placeholder="Ej: Préstamo a Juan"
-            value={creditForm.name}
-            onChange={(e) => setCreditForm({...creditForm, name: e.target.value})}
+            label="Concepto" required placeholder="Ej: Préstamo a Juan"
+            value={creditForm.name} onChange={(e) => setCreditForm({...creditForm, name: e.target.value})}
           />
           <Input 
-            label="Deudor (Quién me debe)" 
-            required
-            placeholder="Ej: Juan Pérez"
-            value={creditForm.debtor}
-            onChange={(e) => setCreditForm({...creditForm, debtor: e.target.value})}
+            label="Deudor" required placeholder="Ej: Juan Pérez"
+            value={creditForm.debtor} onChange={(e) => setCreditForm({...creditForm, debtor: e.target.value})}
           />
           <Input 
-            label={`Importe a Prestar (${formatCurrency(0).replace(/\d/g, "").replace(/[,.]/g, "").trim()})`} 
-            type="number" 
-            step="0.01" 
-            required 
-            value={creditForm.totalAmount}
-            onChange={(e) => setCreditForm({...creditForm, totalAmount: e.target.value})}
+            label={`Total (${formatCurrency(0).replace(/\d/g, "").replace(/[,.]/g, "").trim()})`} 
+            type="number" step="0.01" required 
+            value={creditForm.totalAmount} onChange={(e) => setCreditForm({...creditForm, totalAmount: e.target.value})}
           />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <Input 
-              label="Fecha Préstamo" 
-              type="date" 
-              value={creditForm.startDate}
-              onChange={(e) => setCreditForm({...creditForm, startDate: e.target.value})}
-            />
-            <Input 
-              label="Fecha Límite (Opcional)" 
-              type="date" 
-              value={creditForm.dueDate}
-              onChange={(e) => setCreditForm({...creditForm, dueDate: e.target.value})}
-            />
+            <Input label="Fecha" type="date" value={creditForm.startDate} onChange={(e) => setCreditForm({...creditForm, startDate: e.target.value})} />
+            <Input label="Vencimiento" type="date" value={creditForm.dueDate} onChange={(e) => setCreditForm({...creditForm, dueDate: e.target.value})} />
           </div>
-          <Input 
-            label="Descripción" 
-            placeholder="Detalles adicionales..."
-            value={creditForm.description}
-            onChange={(e) => setCreditForm({...creditForm, description: e.target.value})}
-          />
+          <Input label="Notas" value={creditForm.description} onChange={(e) => setCreditForm({...creditForm, description: e.target.value})} />
           <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
             <Button type="button" variant="ghost" onClick={() => setIsCreditModalOpen(false)} style={{ flex: 1 }}>Cancelar</Button>
             <Button type="submit" style={{ flex: 1 }}>Guardar</Button>
@@ -337,40 +537,27 @@ export default function Credits() {
       <Modal 
         isOpen={isPaymentModalOpen} 
         onClose={() => setIsPaymentModalOpen(false)} 
-        title="Registrar Cobro Recibido"
+        title="Registrar Cobro"
       >
         <div style={{ marginBottom: "1.5rem", padding: "1rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-sm)" }}>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Concepto: <strong>{selectedCredit?.name}</strong></p>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Falta cobrar: <strong style={{ color: "var(--color-warning)" }}>{selectedCredit && formatCurrency(selectedCredit.remaining)}</strong></p>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>{selectedCredit?.name}</p>
+          <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "var(--color-text)" }}>
+             {selectedCredit && formatCurrency(selectedCredit.remaining)} <span style={{ fontSize: "0.8rem", fontWeight: "normal" }}>pendientes</span>
+          </div>
         </div>
 
         <form onSubmit={handleAddPayment} style={{ display: "grid", gap: "1rem" }}>
           <Input 
-            label={`Importe Recibido (${formatCurrency(0).replace(/\d/g, "").replace(/[,.]/g, "").trim()})`} 
-            type="number" 
-            step="0.01" 
-            required 
-            max={selectedCredit?.remaining}
-            value={paymentForm.amount}
-            onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
+            label={`Importe (${formatCurrency(0).replace(/\d/g, "").replace(/[,.]/g, "").trim()})`} 
+            type="number" step="0.01" required max={selectedCredit?.remaining}
+            value={paymentForm.amount} onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
           />
-          <Input 
-            label="Fecha del Cobro" 
-            type="date" 
-            required 
-            value={paymentForm.date}
-            onChange={(e) => setPaymentForm({...paymentForm, date: e.target.value})}
-          />
-          <Input 
-            label="Nota (Opcional)" 
-            placeholder="Bizum, efectivo..."
-            value={paymentForm.note}
-            onChange={(e) => setPaymentForm({...paymentForm, note: e.target.value})}
-          />
+          <Input label="Fecha" type="date" required value={paymentForm.date} onChange={(e) => setPaymentForm({...paymentForm, date: e.target.value})} />
+          <Input label="Nota" placeholder="Opcional" value={paymentForm.note} onChange={(e) => setPaymentForm({...paymentForm, note: e.target.value})} />
           
           <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
             <Button type="button" variant="ghost" onClick={() => setIsPaymentModalOpen(false)} style={{ flex: 1 }}>Cancelar</Button>
-            <Button type="submit" style={{ flex: 1 }}>Confirmar Cobro</Button>
+            <Button type="submit" style={{ flex: 1 }}>Confirmar</Button>
           </div>
         </form>
       </Modal>
