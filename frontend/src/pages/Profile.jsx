@@ -4,11 +4,13 @@ import { apiFetch } from "../lib/api";
 import { getToken } from "../lib/auth";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
-import { User, Lock, Mail, Save, LogOut, Copy, Check } from "lucide-react";
+import { User, Lock, Mail, Save, LogOut, Copy, Check, DollarSign } from "lucide-react";
 import { Card } from "../components/ui/Card";
+import { useCurrency, CURRENCIES } from "../context/CurrencyContext";
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { currency, setCurrency } = useCurrency();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -18,6 +20,7 @@ export default function Profile() {
   // Form states
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [selectedCurrency, setSelectedCurrency] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -31,6 +34,7 @@ export default function Profile() {
           setUser(userData);
           setName(userData.name);
           setEmail(userData.email);
+          setSelectedCurrency(userData.currency || currency);
         }
       } catch (e) {
         setError("Error al cargar perfil");
@@ -39,7 +43,7 @@ export default function Profile() {
       }
     };
     fetchUser();
-  }, []);
+  }, [currency]);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -49,28 +53,24 @@ export default function Profile() {
 
     try {
       const token = getToken();
-      const res = await apiFetch("/auth/profile", { // Assuming this endpoint exists or will be created
+      const res = await apiFetch("/auth/profile", {
         method: "PUT",
         headers: { "Authorization": `Bearer ${token}` },
-        body: { name }
+        body: { name, currency: selectedCurrency }
       });
 
       if (res.data) {
-        const updatedUser = { ...user, name };
+        const updatedUser = { ...user, name, currency: selectedCurrency };
         localStorage.setItem("user", JSON.stringify(updatedUser));
         setUser(updatedUser);
+        setCurrency(selectedCurrency); // Update context
         setSuccess("Perfil actualizado correctamente");
         
         // Clear success message after 3 seconds
         setTimeout(() => setSuccess(""), 3000);
       }
     } catch (err) {
-      // Mock success for now if endpoint doesn't exist yet to show UI behavior
-      const updatedUser = { ...user, name };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
-      setSuccess("Perfil actualizado (Simulado)");
-      setTimeout(() => setSuccess(""), 3000);
+      setError(err.message || "Error al actualizar perfil");
     } finally {
       setSaving(false);
     }
@@ -193,6 +193,32 @@ export default function Profile() {
               onChange={(e) => setName(e.target.value)} 
               icon={User}
             />
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+              <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>Moneda</label>
+              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                <DollarSign size={18} style={{ position: "absolute", left: "0.75rem", color: "var(--color-text-secondary)" }} />
+                <select 
+                  value={selectedCurrency}
+                  onChange={(e) => setSelectedCurrency(e.target.value)}
+                  style={{ 
+                    width: "100%", 
+                    padding: "0.75rem 0.75rem 0.75rem 2.5rem", 
+                    borderRadius: "var(--radius-md)", 
+                    border: "1px solid var(--color-border)",
+                    backgroundColor: "var(--color-surface)",
+                    color: "var(--color-text)",
+                    fontSize: "1rem",
+                    appearance: "none"
+                  }}
+                >
+                  {CURRENCIES.map(c => (
+                    <option key={c.code} value={c.code}>{c.label} ({c.symbol})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <Input 
               label="Correo Electrónico" 
               value={email} 

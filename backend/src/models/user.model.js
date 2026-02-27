@@ -7,7 +7,8 @@ const UserSchema = new mongoose.Schema(
     role: { type: String, default: "user" }, // user | admin
     passwordHash: { type: String, select: false },
     googleId: { type: String, unique: true, sparse: true },
-    avatar: { type: String }
+    avatar: { type: String },
+    currency: { type: String, default: "EUR" }
   },
   { timestamps: true }
 );

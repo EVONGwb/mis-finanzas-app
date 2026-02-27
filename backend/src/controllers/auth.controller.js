@@ -73,12 +73,33 @@ export async function login(req, res, next) {
     const token = signToken({ sub: user._id.toString() });
     return res.json({
       ok: true,
-      data: { token, user: { _id: user._id, email: user.email, name: user.name, role: user.role } }
+      data: { token, user: { _id: user._id, email: user.email, name: user.name, role: user.role, currency: user.currency } }
     });
   } catch (err) {
     return next(err);
   }
 }
+
+export async function updateProfile(req, res, next) {
+  try {
+    const { name, currency } = req.body;
+    const userId = req.user._id;
+
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (currency !== undefined) updates.currency = currency;
+
+    const user = await User.findByIdAndUpdate(userId, updates, { new: true });
+
+    res.json({
+      ok: true,
+      data: { _id: user._id, email: user.email, name: user.name, role: user.role, currency: user.currency }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function googleLogin(req, res, next) {
   try {
     const { idToken, accessToken } = req.body;

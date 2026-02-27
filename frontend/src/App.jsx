@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import { Layout } from "./components/layout/Layout";
 import { getToken, clearToken } from "./lib/auth";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { CurrencyProvider } from "./context/CurrencyContext";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 
 // Lazy loading components
@@ -107,9 +108,10 @@ function RegisterRoute() {
 export default function App() {
   return (
     <AuthProvider>
-      <PWAInstallPrompt />
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
+      <CurrencyProvider>
+        <PWAInstallPrompt />
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginRoute />} />
           <Route path="/register" element={<RegisterRoute />} />
@@ -228,6 +230,7 @@ export default function App() {
           <Route path="*" element={<div style={{ padding: 20 }}>Página no encontrada</div>} />
         </Routes>
       </Suspense>
+      </CurrencyProvider>
     </AuthProvider>
   );
 }

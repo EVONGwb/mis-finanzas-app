@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, registerAdmin, googleLogin } from "../controllers/auth.controller.js";
+import { register, login, registerAdmin, googleLogin, updateProfile } from "../controllers/auth.controller.js";
 import { requireAuth, requireRole } from "../middlewares/auth.js";
 
 const router = Router();
@@ -15,5 +15,7 @@ router.post("/auth/register-admin", requireAuth, requireRole("admin"), registerA
 router.get("/auth/me", requireAuth, (req, res) => {
   res.json({ ok: true, data: req.user });
 });
+
+router.put("/auth/profile", requireAuth, updateProfile);
 
 export default router;

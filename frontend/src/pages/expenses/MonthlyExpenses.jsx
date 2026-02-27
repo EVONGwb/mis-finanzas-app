@@ -7,9 +7,11 @@ import { Input } from "../../components/ui/Input";
 import { Table, TableRow, TableCell } from "../../components/ui/Table";
 import { Modal } from "../../components/ui/Modal";
 import { Badge } from "../../components/ui/Badge";
+import { useCurrency } from "../../context/CurrencyContext";
 import { Plus, CheckCircle, Clock, Trash2, Edit2 } from "lucide-react";
 
 export default function MonthlyExpenses({ month, year }) {
+  const { formatCurrency } = useCurrency();
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -169,7 +171,7 @@ export default function MonthlyExpenses({ month, year }) {
               <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontWeight: "bold", fontSize: "1.1rem", color: item.status === "confirmed" ? "var(--color-success)" : "var(--color-text)" }}>
-                    ${item.amount.toLocaleString()}
+                    {formatCurrency(item.amount)}
                   </div>
                   <div style={{ fontSize: "0.75rem", color: item.status === "confirmed" ? "var(--color-success)" : "var(--color-warning)" }}>
                     {item.status === "confirmed" ? "Pagado ✅" : "Pendiente ⏳"}
@@ -225,7 +227,7 @@ export default function MonthlyExpenses({ month, year }) {
         <div style={{ display: "grid", gap: "1rem" }}>
           <p style={{ color: "var(--color-text-secondary)" }}>Este es un gasto variable. Confirma el importe exacto para este mes.</p>
           <Input 
-            label="Importe Real ($)" 
+            label={`Importe Real (${formatCurrency(0).replace("0,00", "").trim()})`} 
             type="number" 
             value={confirmAmount} 
             onChange={(e) => setConfirmAmount(e.target.value)} 

@@ -7,9 +7,11 @@ import { Input } from "../../components/ui/Input";
 import { Table, TableRow, TableCell } from "../../components/ui/Table";
 import { Modal } from "../../components/ui/Modal";
 import { Badge } from "../../components/ui/Badge";
+import { useCurrency } from "../../context/CurrencyContext";
 import { Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 
 export default function DailyExpenses({ month, year }) {
+  const { formatCurrency } = useCurrency();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -99,7 +101,7 @@ export default function DailyExpenses({ month, year }) {
                 <TableCell>{item.concept || "-"}</TableCell>
                 <TableCell><Badge variant="default">{item.category}</Badge></TableCell>
                 <TableCell>{item.paymentMethod}</TableCell>
-                <TableCell className="font-bold text-warning">-${item.amount.toLocaleString()}</TableCell>
+                <TableCell className="font-bold text-warning">-{formatCurrency(item.amount)}</TableCell>
                 <TableCell>
                   <button 
                     onClick={() => handleDelete(item._id)}

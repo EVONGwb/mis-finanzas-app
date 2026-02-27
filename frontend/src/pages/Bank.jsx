@@ -4,6 +4,7 @@ import { getToken } from "../lib/auth";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Badge } from "../components/ui/Badge";
+import { useCurrency } from "../context/CurrencyContext";
 import { 
   Building2, 
   TrendingUp, 
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 
 export default function Bank() {
+  const { formatCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState("balance");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -160,11 +162,11 @@ export default function Bank() {
                   <div>
                     <h2 style={{ fontSize: "1rem", fontWeight: 500, opacity: 0.9, marginBottom: "0.5rem" }}>Saldo Actual</h2>
                     <div style={{ fontSize: "3.5rem", fontWeight: "bold", lineHeight: 1 }}>
-                      ${data.balance.toLocaleString()}
+                      {formatCurrency(data.balance)}
                     </div>
                     <div style={{ marginTop: "1rem", display: "inline-flex", alignItems: "center", gap: "0.5rem", backgroundColor: "rgba(255,255,255,0.2)", padding: "0.25rem 0.75rem", borderRadius: "99px", fontSize: "0.875rem" }}>
                       {data.monthStats.variation >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                      <span>{data.monthStats.variation >= 0 ? "+" : ""}${data.monthStats.variation.toLocaleString()} este mes</span>
+                      <span>{data.monthStats.variation >= 0 ? "+" : ""}{formatCurrency(data.monthStats.variation)} este mes</span>
                     </div>
                   </div>
                   <div style={{ 
@@ -182,15 +184,15 @@ export default function Bank() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
                 <Card style={{ padding: "1rem", textAlign: "center" }}>
                   <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", display: "block", marginBottom: "0.25rem" }}>Ingresos Mes</span>
-                  <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--color-success)" }}>+${data.monthStats.incomes.toLocaleString()}</span>
+                  <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--color-success)" }}>+{formatCurrency(data.monthStats.incomes)}</span>
                 </Card>
                 <Card style={{ padding: "1rem", textAlign: "center" }}>
                   <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", display: "block", marginBottom: "0.25rem" }}>Gastos Mes</span>
-                  <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--color-danger)" }}>-${Math.abs(data.monthStats.expenses).toLocaleString()}</span>
+                  <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--color-danger)" }}>-{formatCurrency(Math.abs(data.monthStats.expenses))}</span>
                 </Card>
                 <Card style={{ padding: "1rem", textAlign: "center" }}>
                   <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", display: "block", marginBottom: "0.25rem" }}>Saldo Final Mes</span>
-                  <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--color-primary)" }}>${data.monthStats.finalBalance.toLocaleString()}</span>
+                  <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--color-primary)" }}>{formatCurrency(data.monthStats.finalBalance)}</span>
                 </Card>
               </div>
             </div>
@@ -251,7 +253,7 @@ export default function Bank() {
                         </span>
                       </div>
                       <div style={{ fontWeight: "bold", fontSize: "1rem", color: mov.amount >= 0 ? "var(--color-success)" : "var(--color-danger)" }}>
-                        {mov.amount >= 0 ? "+" : ""}{mov.amount.toLocaleString()}
+                        {mov.amount >= 0 ? "+" : ""}{formatCurrency(mov.amount)}
                       </div>
                     </Card>
                   ))
@@ -306,7 +308,7 @@ export default function Bank() {
                       </div>
                     </div>
                     <div style={{ fontWeight: "bold", color: "var(--color-success)" }}>
-                      +${closing.totalAmount.toLocaleString()}
+                      +{formatCurrency(closing.totalAmount)}
                     </div>
                   </Card>
                 ))}

@@ -7,9 +7,11 @@ import { Input } from "../components/ui/Input";
 import { Table, TableRow, TableCell } from "../components/ui/Table";
 import { Modal } from "../components/ui/Modal";
 import { Badge } from "../components/ui/Badge";
+import { useCurrency } from "../context/CurrencyContext";
 import { Plus, Filter, Trash2 } from "lucide-react";
 
 export default function Incomes() {
+  const { formatCurrency } = useCurrency();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -148,7 +150,7 @@ export default function Incomes() {
                 <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
                 <TableCell>{item.concept || "-"}</TableCell>
                 <TableCell><Badge variant="success">{item.category}</Badge></TableCell>
-                <TableCell className="font-bold text-success">+${item.amount.toLocaleString()}</TableCell>
+                <TableCell className="font-bold text-success">+{formatCurrency(item.amount)}</TableCell>
                 <TableCell>
                   <button 
                     onClick={() => handleDelete(item._id)}
