@@ -76,7 +76,7 @@ export default function MonthlyExpenses({ month, year }) {
   };
 
   const handleDeleteTemplate = async (id) => {
-    if (!window.confirm("¿Eliminar esta plantilla? Desaparecerá de futuros meses.")) return;
+    // Eliminar confirmación directa
     try {
       await apiFetch(`/monthly-expenses/templates/${id}`, { method: "DELETE", token: getToken() });
       fetchData();
@@ -188,10 +188,15 @@ export default function MonthlyExpenses({ month, year }) {
                   </Button>
                 )}
                 
-                {/* Edit Template Button (Only small icon) */}
-                <button onClick={() => openEditTemplate(item)} style={{ background: "none", border: "none", cursor: "pointer", opacity: 0.5 }}>
-                  <Edit2 size={16} />
-                </button>
+                {/* Edit & Delete Template Buttons */}
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <button onClick={() => openEditTemplate(item)} style={{ background: "none", border: "none", cursor: "pointer", opacity: 0.5 }} title="Editar">
+                    <Edit2 size={16} />
+                  </button>
+                  <button onClick={() => handleDeleteTemplate(item.templateId)} style={{ background: "none", border: "none", cursor: "pointer", opacity: 0.5, color: "var(--color-danger)" }} title="Eliminar sin confirmar">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             </Card>
           ))
