@@ -582,7 +582,7 @@ export default function DeliveriesDashboard() {
                   </span>
                   {hasData && (
                     <div style={{ marginTop: "0px", fontSize: "0.5rem", fontWeight: 600, color: "var(--color-success)", lineHeight: 1 }}>
-                    {formatCurrency(Math.round(dayTotal))}
+                    {formatCurrency(dayTotal)}
                   </div>
                   )}
                   {isToday && !isSelected && (

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { apiFetch } from "../lib/api";
 import { getToken } from "../lib/auth";
 import { Card } from "../components/ui/Card";
+import { useCurrency } from "../context/CurrencyContext";
 import { 
   TrendingUp, 
   DollarSign, 
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 
 export default function Profit() {
+  const { formatCurrency } = useCurrency();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [month, setMonth] = useState(new Date().getMonth() + 1);
@@ -71,7 +73,7 @@ export default function Profit() {
               <div>
                 <h2 style={{ fontSize: "1rem", fontWeight: 500, opacity: 0.9, marginBottom: "0.5rem" }}>Beneficio Neto del Mes</h2>
                 <div style={{ fontSize: "3.5rem", fontWeight: "bold", lineHeight: 1 }}>
-                  ${summary.totals.balance.toLocaleString()}
+                  {formatCurrency(summary.totals.balance)}
                 </div>
                 <div style={{ marginTop: "1rem", display: "inline-flex", alignItems: "center", gap: "0.5rem", backgroundColor: "rgba(255,255,255,0.2)", padding: "0.25rem 0.75rem", borderRadius: "99px", fontSize: "0.875rem" }}>
                   <TrendingUp size={14} />
@@ -101,7 +103,7 @@ export default function Profit() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <span style={{ display: "block", fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Ingresos Totales</span>
-                  <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>${summary.totals.incomes.toLocaleString()}</span>
+                  <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>{formatCurrency(summary.totals.incomes)}</span>
                 </div>
               </div>
 
@@ -117,7 +119,7 @@ export default function Profit() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <span style={{ display: "block", fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Gastos Totales</span>
-                  <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>-${summary.totals.expenses.toLocaleString()}</span>
+                  <span style={{ fontSize: "1.1rem", fontWeight: "bold" }}>-{formatCurrency(summary.totals.expenses)}</span>
                 </div>
               </div>
 
@@ -133,7 +135,7 @@ export default function Profit() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <span style={{ display: "block", fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Se queda en tu bolsillo</span>
-                  <span style={{ fontSize: "1.25rem", fontWeight: "bold", color: "var(--color-success)" }}>${summary.totals.balance.toLocaleString()}</span>
+                  <span style={{ fontSize: "1.25rem", fontWeight: "bold", color: "var(--color-success)" }}>{formatCurrency(summary.totals.balance)}</span>
                 </div>
               </div>
 
@@ -150,7 +152,7 @@ export default function Profit() {
                 Si mantienes este ritmo, en un año habrás ahorrado:
               </p>
               <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "var(--color-primary)" }}>
-                ${projectedAnnualSavings.toLocaleString()}
+                {formatCurrency(projectedAnnualSavings)}
               </div>
             </Card>
 
