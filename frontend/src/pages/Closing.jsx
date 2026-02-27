@@ -97,18 +97,18 @@ export default function Closing() {
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <StatsCard 
               title="Balance Final" 
-              value={`$${summary.totals.balance.toLocaleString()}`} 
+              value={formatCurrency(summary.totals.balance)} 
               color="primary"
             />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
               <StatsCard 
                 title="Ingresos" 
-                value={`$${summary.totals.incomes.toLocaleString()}`} 
+                value={formatCurrency(summary.totals.incomes)} 
                 color="success"
               />
               <StatsCard 
                 title="Gastos" 
-                value={`$${summary.totals.expenses.toLocaleString()}`} 
+                value={formatCurrency(summary.totals.expenses)} 
                 color="danger"
               />
             </div>

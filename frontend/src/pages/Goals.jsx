@@ -64,6 +64,7 @@ const IconSelector = ({ selected, onSelect }) => {
 };
 
 export default function Goals() {
+  const { formatCurrency } = useCurrency();
   const [goals, setGoals] = useState(() => {
     const saved = localStorage.getItem("goals");
     return saved ? JSON.parse(saved) : [];
@@ -279,13 +280,13 @@ export default function Goals() {
                   <div>
                     <span style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", display: "block" }}>Ahorrado</span>
                     <span style={{ fontSize: "1.5rem", fontWeight: "bold", color: isCompleted ? "var(--color-success)" : "var(--color-text)" }}>
-                      ${goal.current.toLocaleString()}
+                      {formatCurrency(goal.current)}
                     </span>
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <span style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", display: "block" }}>Objetivo</span>
                     <span style={{ fontSize: "1rem", fontWeight: 600, color: "var(--color-text-secondary)" }}>
-                      ${goal.target.toLocaleString()}
+                      {formatCurrency(goal.target)}
                     </span>
                   </div>
                 </div>
@@ -352,7 +353,7 @@ export default function Goals() {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
             <Input 
-              label="Meta ($)" 
+              label={`Meta (${formatCurrency(0).replace("0,00", "").trim()})`} 
               type="number" 
               value={form.target} 
               onChange={e => setForm({...form, target: e.target.value})} 
@@ -360,7 +361,7 @@ export default function Goals() {
               required 
             />
             <Input 
-              label="Ahorrado Inicial ($)" 
+              label={`Ahorrado Inicial (${formatCurrency(0).replace("0,00", "").trim()})`} 
               type="number" 
               value={form.current} 
               onChange={e => setForm({...form, current: e.target.value})} 
@@ -419,7 +420,7 @@ export default function Goals() {
                   fontSize: "0.9rem"
                 }}
               >
-                +${val}
+                +{formatCurrency(val)}
               </button>
             ))}
           </div>

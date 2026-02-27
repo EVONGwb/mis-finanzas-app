@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 export default function Credits() {
+  const { formatCurrency } = useCurrency();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -297,7 +298,7 @@ export default function Credits() {
             onChange={(e) => setCreditForm({...creditForm, debtor: e.target.value})}
           />
           <Input 
-            label="Importe Total ($)" 
+            label={`Importe a Prestar (${formatCurrency(0).replace("0,00", "").trim()})`} 
             type="number" 
             step="0.01" 
             required 
@@ -339,12 +340,12 @@ export default function Credits() {
       >
         <div style={{ marginBottom: "1.5rem", padding: "1rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-sm)" }}>
           <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Concepto: <strong>{selectedCredit?.name}</strong></p>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Falta cobrar: <strong style={{ color: "var(--color-warning)" }}>${selectedCredit?.remaining.toLocaleString()}</strong></p>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Falta cobrar: <strong style={{ color: "var(--color-warning)" }}>{selectedCredit && formatCurrency(selectedCredit.remaining)}</strong></p>
         </div>
 
         <form onSubmit={handleAddPayment} style={{ display: "grid", gap: "1rem" }}>
           <Input 
-            label="Importe Recibido ($)" 
+            label={`Importe Recibido (${formatCurrency(0).replace("0,00", "").trim()})`} 
             type="number" 
             step="0.01" 
             required 

@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
 import { Input } from "../../components/ui/Input";
 import { Badge } from "../../components/ui/Badge";
+import { useCurrency } from "../../context/CurrencyContext";
 import { 
   Briefcase, 
   Calendar as CalendarIcon, 
@@ -23,6 +24,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function DeliveriesDashboard() {
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
   const [stats, setStats] = useState(null);
   const [entries, setEntries] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -485,7 +487,7 @@ export default function DeliveriesDashboard() {
         <div style={{ textAlign: "center", flex: 1 }}>
           <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)", display: "block", textTransform: "uppercase" }}>Ganancias</span>
           <span style={{ fontSize: "1rem", fontWeight: "bold", color: "var(--color-success)" }}>
-            ${stats?.totalEarnings?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}
+            {formatCurrency(stats?.totalEarnings || 0)}
           </span>
         </div>
         
@@ -503,7 +505,7 @@ export default function DeliveriesDashboard() {
         <div style={{ textAlign: "center", flex: 1 }}>
           <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)", display: "block", textTransform: "uppercase" }}>Promedio</span>
           <span style={{ fontSize: "1rem", fontWeight: "bold", color: "var(--color-warning)" }}>
-            ${stats?.dailyAverage?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}
+            {formatCurrency(stats?.dailyAverage || 0)}
           </span>
         </div>
 
@@ -513,7 +515,7 @@ export default function DeliveriesDashboard() {
             <div style={{ textAlign: "center", flex: 1 }}>
               <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)", display: "block", textTransform: "uppercase" }}>Neto</span>
               <span style={{ fontSize: "1rem", fontWeight: "bold", color: "var(--color-primary)" }}>
-                ${payroll.totalRealCobrado.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                {formatCurrency(payroll.totalRealCobrado)}
               </span>
             </div>
           </>
@@ -580,8 +582,8 @@ export default function DeliveriesDashboard() {
                   </span>
                   {hasData && (
                     <div style={{ marginTop: "0px", fontSize: "0.5rem", fontWeight: 600, color: "var(--color-success)", lineHeight: 1 }}>
-                      ${Math.round(dayTotal)}
-                    </div>
+                    {formatCurrency(Math.round(dayTotal))}
+                  </div>
                   )}
                   {isToday && !isSelected && (
                     <div style={{ position: "absolute", bottom: "2px", width: "3px", height: "3px", borderRadius: "50%", backgroundColor: "var(--color-primary)" }} />
@@ -610,7 +612,7 @@ export default function DeliveriesDashboard() {
                   <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>Excedente Libre</span>
                </div>
                <span style={{ fontSize: "1.125rem", fontWeight: "bold" }}>
-                  ${payroll.excedenteLibre.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  {formatCurrency(payroll.excedenteLibre)}
                </span>
             </div>
           )}
@@ -627,7 +629,7 @@ export default function DeliveriesDashboard() {
           <div style={{ padding: "1rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
             <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "0.5rem" }}>INGRESOS BRUTOS</h4>
             <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "var(--color-text)" }}>
-              ${stats?.totalEarnings?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}
+              {formatCurrency(stats?.totalEarnings || 0)}
             </div>
             <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
               {stats?.totalHours || 0} horas trabajadas
@@ -641,25 +643,25 @@ export default function DeliveriesDashboard() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
                     <span>Contingencias Comunes</span>
-                    <span style={{ color: "var(--color-danger)" }}>-${payroll.deductions.cc.toFixed(2)}</span>
+                    <span style={{ color: "var(--color-danger)" }}>-{formatCurrency(payroll.deductions.cc)}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
                     <span>Desempleo / FP</span>
-                    <span style={{ color: "var(--color-danger)" }}>-${payroll.deductions.da.toFixed(2)}</span>
+                    <span style={{ color: "var(--color-danger)" }}>-{formatCurrency(payroll.deductions.da)}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
                     <span>IRPF</span>
-                    <span style={{ color: "var(--color-danger)" }}>-${payroll.deductions.irpf.toFixed(2)}</span>
+                    <span style={{ color: "var(--color-danger)" }}>-{formatCurrency(payroll.deductions.irpf)}</span>
                   </div>
                   {payroll.deductions.other > 0 && (
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
                       <span>Otras</span>
-                      <span style={{ color: "var(--color-danger)" }}>-${payroll.deductions.other.toFixed(2)}</span>
+                      <span style={{ color: "var(--color-danger)" }}>-{formatCurrency(payroll.deductions.other)}</span>
                     </div>
                   )}
                   <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "0.5rem", display: "flex", justifyContent: "space-between", fontWeight: 600 }}>
                     <span>Total Deducciones</span>
-                    <span style={{ color: "var(--color-danger)" }}>-${payroll.deductions.total.toFixed(2)}</span>
+                    <span style={{ color: "var(--color-danger)" }}>-{formatCurrency(payroll.deductions.total)}</span>
                   </div>
                 </div>
               </div>
@@ -669,21 +671,21 @@ export default function DeliveriesDashboard() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>Tramo Deducible (Base)</span>
-                    <span style={{ fontWeight: 600 }}>${payroll.tramoDeducible.toFixed(2)}</span>
+                    <span style={{ fontWeight: 600 }}>{formatCurrency(payroll.tramoDeducible)}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>Neto de Nómina</span>
-                    <span style={{ fontWeight: 600, color: "var(--color-primary)" }}>${payroll.netoNomina.toFixed(2)}</span>
+                    <span style={{ fontWeight: 600, color: "var(--color-primary)" }}>{formatCurrency(payroll.netoNomina)}</span>
                   </div>
                   {payroll.excedenteLibre > 0 && (
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "var(--color-success)", fontWeight: 600 }}>
                       <span>+ Excedente Libre</span>
-                      <span>${payroll.excedenteLibre.toFixed(2)}</span>
+                      <span>{formatCurrency(payroll.excedenteLibre)}</span>
                     </div>
                   )}
                   <div style={{ borderTop: "2px solid var(--color-border)", paddingTop: "0.5rem", marginTop: "0.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontSize: "1.125rem", fontWeight: "bold" }}>TOTAL A PERCIBIR</span>
-                    <span style={{ fontSize: "1.25rem", fontWeight: "bold", color: "var(--color-primary)" }}>${payroll.totalRealCobrado.toFixed(2)}</span>
+                    <span style={{ fontSize: "1.25rem", fontWeight: "bold", color: "var(--color-primary)" }}>{formatCurrency(payroll.totalRealCobrado)}</span>
                   </div>
                 </div>
               </div>
@@ -712,13 +714,13 @@ export default function DeliveriesDashboard() {
                     <div>
                       <div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>{entry.company?.name || "Empresa"}</div>
                       <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
-                        {entry.hours}h × ${entry.hourlyRate}/h
+                        {entry.hours}h × {formatCurrency(entry.hourlyRate)}/h
                       </div>
                       {entry.notes && <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "0.25rem" }}>"{entry.notes}"</div>}
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontWeight: "bold", color: "var(--color-success)", fontSize: "1.125rem" }}>
-                        ${entry.total.toLocaleString()}
+                        {formatCurrency(entry.total)}
                       </div>
                       <button 
                         onClick={() => handleDelete(entry._id)}
@@ -798,7 +800,7 @@ export default function DeliveriesDashboard() {
                     onChange={(e) => setEntryForm({...entryForm, hours: e.target.value})}
                   />
                   <Input 
-                    label="PRECIO/H" 
+                    label={`PRECIO/H (${formatCurrency(0).replace("0,00", "").trim()})`}
                     type="number" step="0.01" required 
                     placeholder="0.00"
                     value={entryForm.hourlyRate}
@@ -834,15 +836,15 @@ export default function DeliveriesDashboard() {
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span>Neto de Nómina</span>
-                <span style={{ fontWeight: 600 }}>${payroll?.netoNomina.toFixed(2) || "0.00"}</span>
+                <span style={{ fontWeight: 600 }}>{formatCurrency(payroll?.netoNomina || 0)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span>Excedente Libre</span>
-                <span style={{ fontWeight: 600, color: "var(--color-success)" }}>+${payroll?.excedenteLibre.toFixed(2) || "0.00"}</span>
+                <span style={{ fontWeight: 600, color: "var(--color-success)" }}>+{formatCurrency(payroll?.excedenteLibre || 0)}</span>
               </div>
               <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "0.5rem", marginTop: "0.5rem", display: "flex", justifyContent: "space-between", fontSize: "1.1rem", fontWeight: "bold" }}>
                 <span>Total a Banco</span>
-                <span style={{ color: "var(--color-primary)" }}>${payroll?.totalRealCobrado.toFixed(2) || "0.00"}</span>
+                <span style={{ color: "var(--color-primary)" }}>{formatCurrency(payroll?.totalRealCobrado || 0)}</span>
               </div>
             </div>
           </div>
@@ -935,7 +937,7 @@ export default function DeliveriesDashboard() {
             value={companyForm.name} onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})}
           />
           <Input 
-            label="Precio Hora Estándar ($)" type="number" step="0.01" required placeholder="Ej: 15.50"
+            label={`Precio Hora Estándar (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" required placeholder="Ej: 15.50"
             value={companyForm.hourlyRateDefault} onChange={(e) => setCompanyForm({...companyForm, hourlyRateDefault: e.target.value})}
           />
           <Input 
@@ -953,11 +955,11 @@ export default function DeliveriesDashboard() {
           <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
           <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Complementos (Aumentan Nómina)</h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <Input label="Beneficios (€)" type="number" step="0.01" value={companyForm.supplements?.benefits || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, benefits: parseFloat(e.target.value) || 0 }})} />
-            <Input label="Plus Convenio (€)" type="number" step="0.01" value={companyForm.supplements?.agreementBonus || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, agreementBonus: parseFloat(e.target.value) || 0 }})} />
-            <Input label="Prorrata Pagas (€)" type="number" step="0.01" value={companyForm.supplements?.proratedPayments || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, proratedPayments: parseFloat(e.target.value) || 0 }})} />
-            <Input label="Mejora Voluntaria (€)" type="number" step="0.01" value={companyForm.supplements?.voluntaryImprovement || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, voluntaryImprovement: parseFloat(e.target.value) || 0 }})} />
-            <Input label="Otros (€)" type="number" step="0.01" value={companyForm.supplements?.other || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, other: parseFloat(e.target.value) || 0 }})} />
+            <Input label={`Beneficios (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.benefits || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, benefits: parseFloat(e.target.value) || 0 }})} />
+            <Input label={`Plus Convenio (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.agreementBonus || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, agreementBonus: parseFloat(e.target.value) || 0 }})} />
+            <Input label={`Prorrata Pagas (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.proratedPayments || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, proratedPayments: parseFloat(e.target.value) || 0 }})} />
+            <Input label={`Mejora Voluntaria (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.voluntaryImprovement || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, voluntaryImprovement: parseFloat(e.target.value) || 0 }})} />
+            <Input label={`Otros (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.other || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, other: parseFloat(e.target.value) || 0 }})} />
           </div>
           <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
           <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -967,7 +969,7 @@ export default function DeliveriesDashboard() {
             </label>
           </div>
           {companyForm.limitRule?.enabled && (
-             <Input label="Límite (€)" type="number" step="0.01" value={companyForm.limitRule?.amount || 1600} onChange={(e) => setCompanyForm({...companyForm, limitRule: { ...companyForm.limitRule, amount: parseFloat(e.target.value) || 0 }})} />
+             <Input label={`Límite (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.limitRule?.amount || 1600} onChange={(e) => setCompanyForm({...companyForm, limitRule: { ...companyForm.limitRule, amount: parseFloat(e.target.value) || 0 }})} />
           )}
           <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
             <Button type="button" variant="ghost" onClick={() => { setIsCompanyModalOpen(false); resetCompanyForm(); }} style={{ flex: 1 }}>Cancelar</Button>

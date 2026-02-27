@@ -3,6 +3,7 @@ import { apiFetch } from "../lib/api";
 import { getToken } from "../lib/auth";
 import { Card } from "../components/ui/Card";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { useCurrency } from "../context/CurrencyContext";
 import { 
   FileText, 
   TrendingDown, 
@@ -15,12 +16,12 @@ import {
 
 const COLORS = ["#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#6366F1", "#8B5CF6", "#EC4899", "#14B8A6"];
 
-const CustomTooltip = ({ active, payload }) => {
+const CustomTooltip = ({ active, payload, formatCurrency }) => {
   if (active && payload && payload.length) {
     return (
       <div style={{ backgroundColor: "var(--color-surface)", padding: "0.5rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-md)" }}>
         <p style={{ fontWeight: "bold", margin: 0 }}>{payload[0].name}</p>
-        <p style={{ margin: 0 }}>${payload[0].value.toLocaleString()}</p>
+        <p style={{ margin: 0 }}>{formatCurrency ? formatCurrency(payload[0].value) : payload[0].value}</p>
       </div>
     );
   }
@@ -28,6 +29,7 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 export default function Reports() {
+  const { formatCurrency } = useCurrency();
   const [expenses, setExpenses] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -130,7 +132,7 @@ export default function Reports() {
                 <span style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Ingresos</span>
                 <ArrowUpRight size={16} className="text-success" />
               </div>
-              <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>${summary?.totals.incomes.toLocaleString()}</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>{formatCurrency(summary?.totals.incomes)}</div>
             </Card>
             
             <Card style={{ padding: "1rem" }}>
@@ -138,7 +140,7 @@ export default function Reports() {
                 <span style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Gastos</span>
                 <ArrowDownRight size={16} className="text-danger" />
               </div>
-              <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>${summary?.totals.expenses.toLocaleString()}</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: "bold" }}>{formatCurrency(summary?.totals.expenses)}</div>
             </Card>
 
             <Card style={{ padding: "1rem", backgroundColor: balance >= 0 ? "var(--color-success-bg)" : "var(--color-danger-bg)" }}>
@@ -147,7 +149,7 @@ export default function Reports() {
                 <DollarSign size={16} color={balance >= 0 ? "var(--color-success)" : "var(--color-danger)"} />
               </div>
               <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: balance >= 0 ? "var(--color-success)" : "var(--color-danger)" }}>
-                {balance >= 0 ? "+" : ""}${balance.toLocaleString()}
+                {balance >= 0 ? "+" : ""}{formatCurrency(balance)}
               </div>
             </Card>
           </div>
@@ -179,7 +181,7 @@ export default function Reports() {
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip content={<CustomTooltip />} />
+                        <Tooltip content={<CustomTooltip formatCurrency={formatCurrency} />} />
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (
@@ -201,7 +203,7 @@ export default function Reports() {
                         <span>{entry.name}</span>
                       </div>
                       <div style={{ display: "flex", gap: "1rem" }}>
-                        <span style={{ fontWeight: 600 }}>${entry.value.toLocaleString()}</span>
+                        <span style={{ fontWeight: 600 }}>{formatCurrency(entry.value)}</span>
                         <span style={{ color: "var(--color-text-secondary)", width: "35px", textAlign: "right" }}>
                           {((entry.value / summary.totals.expenses) * 100).toFixed(0)}%
                         </span>
@@ -223,7 +225,7 @@ export default function Reports() {
                     <BarChart data={barData} layout="vertical" margin={{ left: 20, right: 20 }}>
                       <XAxis type="number" hide />
                       <YAxis dataKey="name" type="category" width={60} tick={{ fontSize: 12 }} />
-                      <Tooltip cursor={{ fill: 'transparent' }} content={<CustomTooltip />} />
+                      <Tooltip cursor={{ fill: 'transparent' }} content={<CustomTooltip formatCurrency={formatCurrency} />} />
                       <Bar dataKey="amount" radius={[0, 4, 4, 0]} barSize={30}>
                         {barData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.name === "Gastos" ? "var(--color-danger)" : "var(--color-success)"} />

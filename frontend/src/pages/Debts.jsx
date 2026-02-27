@@ -245,7 +245,7 @@ export default function Debts() {
                   }} />
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                  <span>Pagado: ${debt.totalPaid.toLocaleString()} ({debt.progress.toFixed(1)}%)</span>
+                  <span>Pagado: {formatCurrency(debt.totalPaid)} ({debt.progress.toFixed(1)}%)</span>
                   {debt.dueDate && <span>Vence: {new Date(debt.dueDate).toLocaleDateString()}</span>}
                 </div>
               </div>
@@ -299,7 +299,7 @@ export default function Debts() {
             onChange={(e) => setDebtForm({...debtForm, creditor: e.target.value})}
           />
           <Input 
-            label="Importe Total ($)" 
+            label={`Importe Total (${formatCurrency(0).replace("0,00", "").trim()})`} 
             type="number" 
             step="0.01" 
             required 
@@ -341,12 +341,12 @@ export default function Debts() {
       >
         <div style={{ marginBottom: "1.5rem", padding: "1rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-sm)" }}>
           <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Deuda: <strong>{selectedDebt?.name}</strong></p>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Pendiente: <strong style={{ color: "var(--color-danger)" }}>${selectedDebt?.remaining.toLocaleString()}</strong></p>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Pendiente: <strong style={{ color: "var(--color-danger)" }}>{selectedDebt && formatCurrency(selectedDebt.remaining)}</strong></p>
         </div>
 
         <form onSubmit={handleAddPayment} style={{ display: "grid", gap: "1rem" }}>
           <Input 
-            label="Importe Pagado ($)" 
+            label={`Importe Pagado (${formatCurrency(0).replace("0,00", "").trim()})`} 
             type="number" 
             step="0.01" 
             required 

@@ -8,6 +8,7 @@ import { Input } from "../components/ui/Input";
 import { Table, TableRow, TableCell } from "../components/ui/Table";
 import { Badge } from "../components/ui/Badge";
 import { Skeleton } from "../components/ui/Skeleton";
+import { useCurrency } from "../context/CurrencyContext";
 import { 
   Home as HomeIcon, 
   ShoppingCart, 
@@ -22,6 +23,7 @@ import {
 } from "lucide-react";
 
 export default function Home() {
+  const { formatCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState("list"); // 'list', 'inventory', 'history', 'settings'
   const [homeData, setHomeData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -423,7 +425,7 @@ export default function Home() {
               <TableRow key={h._id}>
                 <TableCell>{h.productName}</TableCell>
                 <TableCell>{h.quantity} {h.unit}</TableCell>
-                <TableCell>${h.price}</TableCell>
+                <TableCell>{formatCurrency(h.price)}</TableCell>
                 <TableCell>{h.buyer?.name}</TableCell>
                 <TableCell>{new Date(h.date).toLocaleDateString()}</TableCell>
               </TableRow>
@@ -488,7 +490,7 @@ export default function Home() {
           <div style={{ padding: "0.75rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-sm)", textAlign: "right" }}>
             <span style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Total Estimado: </span>
             <span style={{ fontWeight: "bold", fontSize: "1.1rem" }}>
-              ${((parseFloat(buyForm.quantity) || 0) * (parseFloat(buyForm.pricePerUnit) || 0)).toFixed(2)}
+              {formatCurrency((parseFloat(buyForm.quantity) || 0) * (parseFloat(buyForm.pricePerUnit) || 0))}
             </span>
           </div>
 
