@@ -19,6 +19,9 @@ export function Modal({ isOpen, onClose, title, children }) {
         borderRadius: "var(--radius-lg)",
         width: "100%",
         maxWidth: "500px",
+        maxHeight: "90vh",
+        display: "flex",
+        flexDirection: "column",
         boxShadow: "var(--shadow-lg)",
         animation: "fadeIn 0.2s ease-out"
       }}>
@@ -26,8 +29,9 @@ export function Modal({ isOpen, onClose, title, children }) {
           display: "flex", 
           justifyContent: "space-between", 
           alignItems: "center", 
-          padding: "1.5rem",
-          borderBottom: "1px solid var(--color-border)"
+          padding: "1rem 1.5rem",
+          borderBottom: "1px solid var(--color-border)",
+          flexShrink: 0
         }}>
           <h3 style={{ fontSize: "1.25rem", fontWeight: 600 }}>{title}</h3>
           <button 
@@ -43,7 +47,11 @@ export function Modal({ isOpen, onClose, title, children }) {
             <X size={20} />
           </button>
         </div>
-        <div style={{ padding: "1.5rem" }}>
+        <div style={{ 
+          padding: "1.5rem",
+          overflowY: "auto",
+          overscrollBehavior: "contain"
+        }}>
           {children}
         </div>
       </div>
