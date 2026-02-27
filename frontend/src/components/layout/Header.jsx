@@ -1,9 +1,11 @@
-import { Menu, Bell, ChevronDown, RefreshCw } from "lucide-react";
+import { Menu, Bell, ChevronDown, RefreshCw, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useCurrency, CURRENCIES } from "../../context/CurrencyContext";
 
 export function Header({ onMenuClick, user }) {
   const navigate = useNavigate();
+  const { currency, setCurrency } = useCurrency();
   const [logoError, setLogoError] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -19,6 +21,10 @@ export function Header({ onMenuClick, user }) {
     setTimeout(() => {
       window.location.reload();
     }, 300);
+  };
+
+  const handleCurrencyChange = (e) => {
+    setCurrency(e.target.value);
   };
 
   return (
@@ -67,7 +73,47 @@ export function Header({ onMenuClick, user }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        {/* Currency Selector (Direct Access) */}
+        <div style={{ 
+          position: "relative", 
+          display: "flex", 
+          alignItems: "center", 
+          backgroundColor: "#F3F4F6", 
+          borderRadius: "8px", 
+          padding: "4px 8px",
+          border: "1px solid #E5E7EB"
+        }}>
+          <span style={{ 
+            fontSize: "0.8rem", 
+            fontWeight: "bold", 
+            color: "#374151", 
+            marginRight: "4px" 
+          }}>
+            {CURRENCIES.find(c => c.code === currency)?.symbol}
+          </span>
+          <select 
+            value={currency} 
+            onChange={handleCurrencyChange}
+            style={{
+              appearance: "none",
+              background: "transparent",
+              border: "none",
+              fontSize: "0.8rem",
+              fontWeight: 600,
+              color: "#374151",
+              cursor: "pointer",
+              paddingRight: "14px", // Space for chevron
+              outline: "none"
+            }}
+          >
+            {CURRENCIES.map(c => (
+              <option key={c.code} value={c.code}>{c.code}</option>
+            ))}
+          </select>
+          <ChevronDown size={12} style={{ position: "absolute", right: "6px", pointerEvents: "none", color: "#6B7280" }} />
+        </div>
+
         {/* Refresh Button - Small & Subtle */}
         <button 
           onClick={handleRefresh}
@@ -104,7 +150,8 @@ export function Header({ onMenuClick, user }) {
             backgroundColor: "#F3F4F6", // Light grey circle background
             borderRadius: "50%",
             padding: "2px",
-            border: "1px solid #E5E7EB"
+            border: "1px solid #E5E7EB",
+            marginLeft: "0.5rem"
           }}
         >
           <div style={{
