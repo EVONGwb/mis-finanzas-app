@@ -54,28 +54,44 @@ export default function Expenses() {
         </div>
       </div>
 
-      {/* Totals Summary Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
-        <StatsCard 
-          title="Gastos Mensuales" 
-          value={formatCurrency(totals.monthly)} 
-          icon={Calendar} 
-          color="danger" 
-        />
-        <StatsCard 
-          title="Gastos Diarios" 
-          value={formatCurrency(totals.daily)} 
-          icon={TrendingDown} 
-          color="warning" 
-        />
-        <StatsCard 
-          title="Gasto Total" 
-          value={formatCurrency(totals.total)} 
-          icon={DollarSign} 
-          color="primary" 
-          style={{ gridColumn: "1 / -1" }} // Full width on mobile if odd count
-        />
-      </div>
+      {/* Totals Summary Card (Consolidated) */}
+      <Card style={{ marginBottom: "1.5rem", background: "linear-gradient(135deg, #1F2937 0%, #111827 100%)", color: "white", border: "none" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <DollarSign size={20} className="text-primary" />
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 600 }}>Resumen de Gastos</h3>
+          </div>
+          <div style={{ fontSize: "0.8rem", opacity: 0.7, backgroundColor: "rgba(255,255,255,0.1)", padding: "0.25rem 0.75rem", borderRadius: "99px" }}>
+            {new Date(year, month - 1).toLocaleString('es-ES', { month: 'long', year: 'numeric' })}
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr 1px 1fr", alignItems: "center", gap: "0.5rem" }}>
+          {/* Monthly */}
+          <div style={{ textAlign: "center" }}>
+            <span style={{ fontSize: "0.75rem", opacity: 0.7, display: "block", marginBottom: "0.25rem" }}>Fijos (Mes)</span>
+            <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#F87171" }}>{formatCurrency(totals.monthly)}</span>
+          </div>
+          
+          {/* Divider */}
+          <div style={{ width: "1px", height: "40px", backgroundColor: "rgba(255,255,255,0.1)" }}></div>
+
+          {/* Daily */}
+          <div style={{ textAlign: "center" }}>
+            <span style={{ fontSize: "0.75rem", opacity: 0.7, display: "block", marginBottom: "0.25rem" }}>Variables (Día)</span>
+            <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#FBBF24" }}>{formatCurrency(totals.daily)}</span>
+          </div>
+
+          {/* Divider */}
+          <div style={{ width: "1px", height: "40px", backgroundColor: "rgba(255,255,255,0.1)" }}></div>
+
+          {/* Total */}
+          <div style={{ textAlign: "center" }}>
+            <span style={{ fontSize: "0.75rem", opacity: 0.7, display: "block", marginBottom: "0.25rem" }}>Total Real</span>
+            <span style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#34D399" }}>{formatCurrency(totals.total)}</span>
+          </div>
+        </div>
+      </Card>
 
       {/* View Type Toggles */}
       <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
