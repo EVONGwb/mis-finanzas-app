@@ -22,7 +22,8 @@ import {
 } from "lucide-react";
 
 export default function Debts() {
-  const [data, setData] = useState(null);
+  const { formatCurrency } = useCurrency();
+  const [data, setData] = useState({ summary: { totalPending: 0, totalPaidGlobal: 0, globalProgress: 0 }, list: [] });
   const [loading, setLoading] = useState(true);
   
   // Modals
@@ -55,9 +56,14 @@ export default function Debts() {
     setLoading(true);
     try {
       const res = await apiFetch("/debts", { token: getToken() });
-      setData(res.data);
+      if (res && res.data) {
+        setData(res.data);
+      } else {
+        setData({ summary: { totalPending: 0, totalPaidGlobal: 0, globalProgress: 0 }, list: [] });
+      }
     } catch (error) {
       console.error("Error loading debts:", error);
+      setData({ summary: { totalPending: 0, totalPaidGlobal: 0, globalProgress: 0 }, list: [] });
     } finally {
       setLoading(false);
     }
@@ -183,7 +189,7 @@ export default function Debts() {
           <StatsCard 
             title="Total Pagado" 
             value={formatCurrency(data?.summary?.totalPaidGlobal || 0)} 
-            icon={CheckCircle} 
+            icon={History} 
             color="success" 
           />
           <StatsCard 
@@ -201,7 +207,10 @@ export default function Debts() {
           <Skeleton height="200px" />
         ) : data?.list?.length === 0 ? (
           <div style={{ textAlign: "center", padding: "3rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
-            <p style={{ color: "var(--color-text-secondary)" }}>No tienes deudas registradas. ¡Genial!</p>
+            <p style={{ color: "var(--color-text-secondary)", marginBottom: "1rem" }}>No tienes deudas registradas. ¡Genial!</p>
+            <Button onClick={() => { resetDebtForm(); setIsDebtModalOpen(true); }}>
+              <Plus size={18} style={{ marginRight: "0.5rem" }} /> Nueva Deuda
+            </Button>
           </div>
         ) : (
           data?.list?.map(debt => (
