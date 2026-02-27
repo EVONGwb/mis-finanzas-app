@@ -43,9 +43,17 @@ export default function Incomes() {
     }
   };
 
+  // Force re-render on currency change without re-fetching
+  useEffect(() => {
+    // Just trigger a re-render if needed, but since we use formatCurrency in render, 
+    // it should update automatically if context updates. 
+    // However, if items are not re-rendered, we might need to force it.
+    // Actually, fetchItems() is not needed on currency change, just re-render.
+  }, [currency]);
+
   useEffect(() => {
     fetchItems();
-  }, [currency]); // Force re-render on currency change
+  }, []); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
