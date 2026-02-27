@@ -11,7 +11,7 @@ import { useCurrency } from "../context/CurrencyContext";
 import { Plus, Filter, Trash2 } from "lucide-react";
 
 export default function Incomes() {
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency, currency } = useCurrency();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -45,7 +45,7 @@ export default function Incomes() {
 
   useEffect(() => {
     fetchItems();
-  }, []); // Re-fetch on mount. We don't depend on currency change as formatCurrency is reactive.
+  }, [currency]); // Force re-render on currency change
 
   const handleSubmit = async (e) => {
     e.preventDefault();
