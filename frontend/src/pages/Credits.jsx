@@ -7,6 +7,7 @@ import { Modal } from "../components/ui/Modal";
 import { Input } from "../components/ui/Input";
 import { Badge } from "../components/ui/Badge";
 import { Skeleton } from "../components/ui/Skeleton";
+import { useCurrency } from "../context/CurrencyContext";
 import { 
   HandCoins, 
   DollarSign, 

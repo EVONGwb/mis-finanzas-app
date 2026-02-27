@@ -3,6 +3,7 @@ import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Modal } from "../components/ui/Modal";
+import { useCurrency } from "../context/CurrencyContext";
 import { 
   Plus, 
   Target, 
@@ -389,7 +390,7 @@ export default function Goals() {
         <form onSubmit={handleDeposit} style={{ display: "grid", gap: "1rem" }}>
           <div style={{ textAlign: "center", marginBottom: "1rem" }}>
             <div style={{ fontSize: "3rem", fontWeight: "bold", color: "var(--color-primary)" }}>
-              ${depositForm.amount || "0"}
+              {formatCurrency(depositForm.amount || 0)}
             </div>
             <p style={{ color: "var(--color-text-secondary)" }}>¿Cuánto vas a ahorrar hoy?</p>
           </div>

@@ -8,6 +8,7 @@ import { Input } from "../components/ui/Input";
 import { Table, TableRow, TableCell } from "../components/ui/Table";
 import { Badge } from "../components/ui/Badge";
 import { Skeleton } from "../components/ui/Skeleton";
+import { useCurrency } from "../context/CurrencyContext";
 import { 
   CreditCard, 
   DollarSign, 
