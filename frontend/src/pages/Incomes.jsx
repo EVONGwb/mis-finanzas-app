@@ -45,7 +45,7 @@ export default function Incomes() {
 
   useEffect(() => {
     fetchItems();
-  }, []);
+  }, []); // Re-fetch on mount. We don't depend on currency change as formatCurrency is reactive.
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -184,7 +184,7 @@ export default function Incomes() {
             required
           />
           <Input 
-            label="Monto" 
+            label={`Monto (${formatCurrency(0).replace("0,00", "").trim()})`} 
             type="number" 
             value={formData.amount} 
             onChange={(e) => setFormData({...formData, amount: e.target.value})}
