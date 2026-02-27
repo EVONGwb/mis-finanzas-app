@@ -1,9 +1,10 @@
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 export function Modal({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div style={{
       position: "fixed",
       inset: 0,
@@ -11,7 +12,7 @@ export function Modal({ isOpen, onClose, title, children }) {
       display: "flex",
       alignItems: "flex-end", // Align to bottom on mobile
       justifyContent: "center",
-      zIndex: 100, // Higher than bottom nav (50)
+      zIndex: 9999, // Super high z-index to cover everything
       padding: 0 // Remove padding to allow full width/height
     }}>
       <div 
@@ -30,7 +31,8 @@ export function Modal({ isOpen, onClose, title, children }) {
           flexDirection: "column",
           boxShadow: "var(--shadow-lg)",
           animation: "slideUp 0.3s ease-out",
-          margin: 0 // Flush with bottom
+          margin: 0, // Flush with bottom
+          paddingBottom: "env(safe-area-inset-bottom, 20px)" // Safe area for iPhone home bar
         }}
       >
         <div style={{ 
@@ -75,6 +77,7 @@ export function Modal({ isOpen, onClose, title, children }) {
             margin: 1rem !important;
             align-self: center !important;
             max-height: 85vh !important;
+            padding-bottom: 0 !important;
           }
           div[style*="align-items: flex-end"] {
             align-items: center !important;
@@ -82,6 +85,7 @@ export function Modal({ isOpen, onClose, title, children }) {
           }
         }
       `}</style>
-    </div>
+    </div>,
+    document.body
   );
 }
