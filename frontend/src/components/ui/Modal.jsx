@@ -9,21 +9,22 @@ export function Modal({ isOpen, onClose, title, children }) {
       inset: 0,
       backgroundColor: "rgba(0,0,0,0.5)",
       display: "flex",
-      alignItems: "center",
+      alignItems: "center", // Center vertically
       justifyContent: "center",
       zIndex: 50,
-      padding: "1rem"
+      padding: "1rem",
+      overflowY: "auto" // Allow scrolling the entire overlay if modal is too tall
     }}>
       <div style={{
         backgroundColor: "var(--color-surface)",
         borderRadius: "var(--radius-lg)",
         width: "100%",
         maxWidth: "500px",
-        maxHeight: "90vh",
         display: "flex",
         flexDirection: "column",
         boxShadow: "var(--shadow-lg)",
-        animation: "fadeIn 0.2s ease-out"
+        animation: "fadeIn 0.2s ease-out",
+        margin: "auto" // Keep it centered when scrolling
       }}>
         <div style={{ 
           display: "flex", 
@@ -48,9 +49,7 @@ export function Modal({ isOpen, onClose, title, children }) {
           </button>
         </div>
         <div style={{ 
-          padding: "1.5rem",
-          overflowY: "auto",
-          overscrollBehavior: "contain"
+          padding: "1.5rem"
         }}>
           {children}
         </div>
