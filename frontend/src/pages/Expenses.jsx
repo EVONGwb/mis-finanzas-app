@@ -16,7 +16,7 @@ export default function Expenses() {
   const [year, setYear] = useState(new Date().getFullYear());
 
   // Totals state
-  const [totals, setTotals] = useState({ monthly: 0, daily: 0, total: 0 });
+  const [totals, setTotals] = useState({ monthlyPlanned: 0, monthlyPaid: 0, daily: 0, totalPlanned: 0, totalPaid: 0 });
 
   useEffect(() => {
     fetchTotals();
@@ -26,7 +26,8 @@ export default function Expenses() {
     try {
       // Fetch monthly expenses total
       const resMonthly = await apiFetch(`/monthly-expenses/status?month=${month}&year=${year}`, { token: getToken() });
-      const monthlyTotal = resMonthly.data?.reduce((sum, item) => sum + (item.status === 'confirmed' ? item.amount : 0), 0) || 0;
+      const monthlyPlanned = resMonthly.data?.reduce((sum, item) => sum + item.amount, 0) || 0;
+      const monthlyPaid = resMonthly.data?.reduce((sum, item) => sum + (item.status === 'confirmed' ? item.amount : 0), 0) || 0;
 
       // Fetch daily expenses total
       const resDaily = await apiFetch("/expenses", { token: getToken() });
@@ -36,9 +37,11 @@ export default function Expenses() {
       }).reduce((sum, item) => sum + item.amount, 0) || 0;
 
       setTotals({
-        monthly: monthlyTotal,
+        monthlyPlanned,
+        monthlyPaid,
         daily: dailyTotal,
-        total: monthlyTotal + dailyTotal
+        totalPlanned: monthlyPlanned + dailyTotal,
+        totalPaid: monthlyPaid + dailyTotal
       });
     } catch (error) {
       console.error("Error calculating totals:", error);
@@ -67,28 +70,28 @@ export default function Expenses() {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr 1px 1fr", alignItems: "center", gap: "0.5rem" }}>
-          {/* Monthly */}
+          {/* Estimated */}
           <div style={{ textAlign: "center" }}>
-            <span style={{ fontSize: "0.75rem", opacity: 0.7, display: "block", marginBottom: "0.25rem" }}>Fijos (Mes)</span>
-            <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#F87171" }}>{formatCurrency(totals.monthly)}</span>
+            <span style={{ fontSize: "0.75rem", opacity: 0.7, display: "block", marginBottom: "0.25rem" }}>Total Previsto</span>
+            <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "white" }}>{formatCurrency(totals.totalPlanned)}</span>
           </div>
           
           {/* Divider */}
           <div style={{ width: "1px", height: "40px", backgroundColor: "rgba(255,255,255,0.1)" }}></div>
 
-          {/* Daily */}
+          {/* Paid */}
           <div style={{ textAlign: "center" }}>
-            <span style={{ fontSize: "0.75rem", opacity: 0.7, display: "block", marginBottom: "0.25rem" }}>Variables (Día)</span>
-            <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#FBBF24" }}>{formatCurrency(totals.daily)}</span>
+            <span style={{ fontSize: "0.75rem", opacity: 0.7, display: "block", marginBottom: "0.25rem" }}>Total Pagado</span>
+            <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#34D399" }}>{formatCurrency(totals.totalPaid)}</span>
           </div>
 
           {/* Divider */}
           <div style={{ width: "1px", height: "40px", backgroundColor: "rgba(255,255,255,0.1)" }}></div>
 
-          {/* Total */}
+          {/* Pending */}
           <div style={{ textAlign: "center" }}>
-            <span style={{ fontSize: "0.75rem", opacity: 0.7, display: "block", marginBottom: "0.25rem" }}>Total Real</span>
-            <span style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#34D399" }}>{formatCurrency(totals.total)}</span>
+            <span style={{ fontSize: "0.75rem", opacity: 0.7, display: "block", marginBottom: "0.25rem" }}>Pendiente</span>
+            <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#F87171" }}>{formatCurrency(totals.totalPlanned - totals.totalPaid)}</span>
           </div>
         </div>
       </Card>
