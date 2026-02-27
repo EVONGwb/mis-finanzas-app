@@ -55,6 +55,7 @@ export default function Dashboard() {
 
   const menuItems = [
     { title: "Ingresos", icon: Building2, bg: "linear-gradient(135deg, #059669 0%, #10B981 100%)", link: "/deliveries", desc: "Nóminas y trabajos" },
+    { title: "Gastos", icon: TrendingDown, bg: "linear-gradient(135deg, #DC2626 0%, #EF4444 100%)", link: "/expenses", desc: "Controla tus gastos" },
     { title: "Banco", icon: Wallet, bg: "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)", link: "/bank", desc: "Saldo y movimientos" },
     { title: "Me Deben", icon: HandCoins, bg: "linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%)", link: "/credits", desc: "Cuentas y cobros" }, 
     { title: "Deudas", icon: CreditCard, bg: "linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)", link: "/debts", desc: "Control de deudas" },
