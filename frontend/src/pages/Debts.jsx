@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../lib/api";
 import { getToken } from "../lib/auth";
 import { Card, StatsCard } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
 import { Input } from "../components/ui/Input";
-import { Table, TableRow, TableCell } from "../components/ui/Table";
 import { Badge } from "../components/ui/Badge";
 import { Skeleton } from "../components/ui/Skeleton";
 import { useCurrency } from "../context/CurrencyContext";
@@ -17,8 +16,15 @@ import {
   Plus, 
   Trash2, 
   Edit2, 
+  Search,
+  Filter,
+  Calendar,
+  ArrowRight,
+  Clock,
+  AlertCircle,
   MoreHorizontal,
-  History
+  ChevronRight,
+  ArrowUpRight
 } from "lucide-react";
 
 export default function Debts() {
@@ -26,12 +32,18 @@ export default function Debts() {
   const [data, setData] = useState({ summary: { totalPending: 0, totalPaidGlobal: 0, globalProgress: 0 }, list: [] });
   const [loading, setLoading] = useState(true);
   
+  // UI State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("pending"); // 'all', 'pending', 'paid', 'overdue'
+  
   // Modals
   const [isDebtModalOpen, setIsDebtModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   
   // Forms & Selected Item
   const [selectedDebt, setSelectedDebt] = useState(null);
+  const [debtDetails, setDebtDetails] = useState(null); // For fetching full details with history
   const [debtForm, setDebtForm] = useState({
     id: null,
     name: "",
@@ -69,6 +81,18 @@ export default function Debts() {
     }
   };
 
+  const fetchDebtDetails = async (id) => {
+    try {
+      // Assuming endpoint exists, otherwise we use selectedDebt
+      // const res = await apiFetch(`/debts/${id}`, { token: getToken() });
+      // setDebtDetails(res.data);
+      // Fallback if no specific endpoint:
+      setDebtDetails(selectedDebt); 
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleSaveDebt = async (e) => {
     e.preventDefault();
     try {
@@ -103,15 +127,21 @@ export default function Debts() {
       setIsPaymentModalOpen(false);
       setPaymentForm({ amount: "", date: new Date().toISOString().split("T")[0], note: "" });
       fetchDebts();
+      if (isDetailModalOpen) {
+        // Refresh details if open
+        // fetchDebtDetails(selectedDebt._id);
+        setIsDetailModalOpen(false); // Close detail to refresh list
+      }
     } catch (error) {
       alert(error.message);
     }
   };
 
   const handleDeleteDebt = async (id) => {
-    // Eliminar confirmación: if (!window.confirm("¿Estás seguro de eliminar esta deuda y todo su historial?")) return;
+    if (!window.confirm("¿Estás seguro de eliminar esta deuda?")) return;
     try {
       await apiFetch(`/debts/${id}`, { method: "DELETE", token: getToken() });
+      setIsDetailModalOpen(false);
       fetchDebts();
     } catch (error) {
       alert(error.message);
@@ -143,11 +173,49 @@ export default function Debts() {
     setIsDebtModalOpen(true);
   };
 
-  const openPaymentModal = (debt) => {
+  const openPaymentModal = (debt, e) => {
+    e?.stopPropagation();
     setSelectedDebt(debt);
     setPaymentForm({ amount: "", date: new Date().toISOString().split("T")[0], note: "" });
     setIsPaymentModalOpen(true);
   };
+
+  const openDetailModal = (debt) => {
+    setSelectedDebt(debt);
+    setDebtDetails(debt); // Set initial data
+    // fetchDebtDetails(debt._id); // Fetch more if needed
+    setIsDetailModalOpen(true);
+  };
+
+  // Filter Logic
+  const filteredDebts = useMemo(() => {
+    if (!data?.list) return [];
+    return data.list.filter(debt => {
+      const matchesSearch = debt.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            (debt.creditor && debt.creditor.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      if (!matchesSearch) return false;
+
+      const today = new Date();
+      const dueDate = debt.dueDate ? new Date(debt.dueDate) : null;
+      const isOverdue = dueDate && dueDate < today && debt.remaining > 0;
+
+      if (activeTab === 'all') return true;
+      if (activeTab === 'pending') return debt.remaining > 0;
+      if (activeTab === 'paid') return debt.remaining <= 0;
+      if (activeTab === 'overdue') return isOverdue;
+      
+      return true;
+    });
+  }, [data, searchQuery, activeTab]);
+
+  const upcomingPayments = useMemo(() => {
+    if (!data?.list) return [];
+    return data.list
+      .filter(d => d.remaining > 0 && d.dueDate)
+      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+      .slice(0, 5);
+  }, [data]);
 
   // UI Helpers
   const getProgressColor = (progress) => {
@@ -157,138 +225,321 @@ export default function Debts() {
   };
 
   return (
-    <div className="animate-fade-in" style={{ paddingBottom: "5rem" }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+    <div className="animate-fade-in" style={{ paddingBottom: "6rem" }}>
+      {/* 1) Header Superior */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <CreditCard className="text-danger" /> Deudas
-          </h1>
-          <p style={{ color: "var(--color-text-secondary)" }}>Control y seguimiento de obligaciones financieras</p>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: "bold", color: "var(--color-text)" }}>Deudas</h1>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Gestión de pasivos</p>
         </div>
-        <Button onClick={() => { resetDebtForm(); setIsDebtModalOpen(true); }}>
-          <Plus size={18} style={{ marginRight: "0.5rem" }} /> Nueva Deuda
+        <Button onClick={() => { resetDebtForm(); setIsDebtModalOpen(true); }} size="sm">
+          <Plus size={18} style={{ marginRight: "0.25rem" }} /> Nueva
         </Button>
       </div>
 
-      {/* KPIs */}
-      {loading ? (
-        <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginBottom: "2rem" }}>
-          <Skeleton height="120px" />
-          <Skeleton height="120px" />
-          <Skeleton height="120px" />
+      {/* 2) Buscador + Filtros */}
+      <div style={{ marginBottom: "1.5rem" }}>
+        <div style={{ position: "relative", marginBottom: "1rem" }}>
+          <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-secondary)" }} />
+          <input 
+            type="text" 
+            placeholder="Buscar deuda..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ 
+              width: "100%", 
+              padding: "0.75rem 0.75rem 0.75rem 2.5rem", 
+              borderRadius: "var(--radius-md)", 
+              border: "1px solid var(--color-border)",
+              backgroundColor: "var(--color-surface)",
+              color: "var(--color-text)",
+              fontSize: "0.9rem"
+            }} 
+          />
         </div>
+        <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", paddingBottom: "0.5rem", scrollbarWidth: "none" }}>
+          {[
+            { id: 'pending', label: 'Pendientes' },
+            { id: 'all', label: 'Todas' },
+            { id: 'overdue', label: 'Vencidas' },
+            { id: 'paid', label: 'Pagadas' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "99px",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+                whiteSpace: "nowrap",
+                border: activeTab === tab.id ? "1px solid var(--color-primary)" : "1px solid var(--color-border)",
+                backgroundColor: activeTab === tab.id ? "var(--color-primary-light)" : "var(--color-surface)",
+                color: activeTab === tab.id ? "var(--color-primary)" : "var(--color-text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 3) Resumen Compacto */}
+      {loading ? (
+        <Skeleton height="150px" style={{ marginBottom: "2rem" }} />
       ) : (
-        <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginBottom: "2rem" }}>
-          <StatsCard 
-            title="Deuda Pendiente" 
-            value={formatCurrency(data?.summary?.totalPending || 0)} 
-            icon={DollarSign} 
-            color="danger" 
-          />
-          <StatsCard 
-            title="Total Pagado" 
-            value={formatCurrency(data?.summary?.totalPaidGlobal || 0)} 
-            icon={History} 
-            color="success" 
-          />
-          <StatsCard 
-            title="Progreso Global" 
-            value={`${(data?.summary?.globalProgress || 0).toFixed(1)}%`} 
-            icon={PieChart} 
-            color="primary" 
-          />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
+          <div style={{ backgroundColor: "var(--color-surface)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem", color: "var(--color-text-secondary)", fontSize: "0.8rem" }}>
+              <AlertCircle size={14} /> Pendiente
+            </div>
+            <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "var(--color-danger)" }}>
+              {formatCurrency(data?.summary?.totalPending || 0)}
+            </div>
+          </div>
+          <div style={{ backgroundColor: "var(--color-surface)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem", color: "var(--color-text-secondary)", fontSize: "0.8rem" }}>
+              <CheckCircle size={14} /> Pagado
+            </div>
+            <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "var(--color-success)" }}>
+              {formatCurrency(data?.summary?.totalPaidGlobal || 0)}
+            </div>
+          </div>
+          <div style={{ gridColumn: "1 / -1", backgroundColor: "var(--color-surface)", padding: "1.25rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <span style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)", display: "block", marginBottom: "0.25rem" }}>Progreso Global</span>
+              <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "var(--color-primary)" }}>
+                {(data?.summary?.globalProgress || 0).toFixed(1)}%
+              </div>
+              <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
+                {data?.list?.filter(d => d.remaining <= 0).length} de {data?.list?.length} deudas saldadas
+              </span>
+            </div>
+            <div style={{ width: "60px", height: "60px", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <PieChart size={40} className="text-primary" />
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Lista de Deudas */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-        {loading ? (
-          <Skeleton height="200px" />
-        ) : data?.list?.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "3rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
-            <p style={{ color: "var(--color-text-secondary)", marginBottom: "1rem" }}>No tienes deudas registradas. ¡Genial!</p>
-            <Button onClick={() => { resetDebtForm(); setIsDebtModalOpen(true); }}>
-              <Plus size={18} style={{ marginRight: "0.5rem" }} /> Nueva Deuda
-            </Button>
+      {/* 4) Próximos Pagos */}
+      {upcomingPayments.length > 0 && (
+        <div style={{ marginBottom: "2rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Próximos Vencimientos</h3>
           </div>
-        ) : (
-          data?.list?.map(debt => (
-            <Card key={debt._id} padding="0">
-              <div style={{ 
-                padding: "1.5rem", 
-                backgroundColor: debt.status === 'paid' ? 'rgba(16, 185, 129, 0.1)' : 'var(--color-surface)',
-                borderBottom: "1px solid var(--color-border)"
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+          <div style={{ display: "flex", gap: "1rem", overflowX: "auto", paddingBottom: "1rem", scrollbarWidth: "none" }}>
+            {upcomingPayments.map(debt => {
+               const isOverdue = new Date(debt.dueDate) < new Date();
+               return (
+                <div key={debt._id} onClick={() => openDetailModal(debt)} style={{ 
+                  minWidth: "200px", 
+                  backgroundColor: "var(--color-surface)", 
+                  padding: "1rem", 
+                  borderRadius: "var(--radius-md)", 
+                  border: isOverdue ? "1px solid var(--color-danger)" : "1px solid var(--color-border)",
+                  cursor: "pointer",
+                  position: "relative"
+                }}>
+                  {isOverdue && <div style={{ position: "absolute", top: "0.5rem", right: "0.5rem", width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-danger)" }}></div>}
+                  <div style={{ fontWeight: 600, marginBottom: "0.25rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{debt.name}</div>
+                  <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--color-text)", marginBottom: "0.5rem" }}>{formatCurrency(debt.remaining)}</div>
+                  <div style={{ fontSize: "0.75rem", color: isOverdue ? "var(--color-danger)" : "var(--color-text-secondary)", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                    <Calendar size={12} /> {new Date(debt.dueDate).toLocaleDateString()}
+                  </div>
+                </div>
+               );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 5) Todas las deudas */}
+      <div>
+        <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Listado de Deudas</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {loading ? (
+             <>
+              <Skeleton height="100px" />
+              <Skeleton height="100px" />
+             </>
+          ) : filteredDebts.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "3rem 1rem", color: "var(--color-text-secondary)" }}>
+              <p>No se encontraron deudas.</p>
+            </div>
+          ) : (
+            filteredDebts.map(debt => (
+              <div 
+                key={debt._id} 
+                onClick={() => openDetailModal(debt)}
+                style={{ 
+                  backgroundColor: "var(--color-surface)", 
+                  borderRadius: "var(--radius-lg)", 
+                  padding: "1rem",
+                  border: "1px solid var(--color-border)",
+                  boxShadow: "var(--shadow-sm)",
+                  cursor: "pointer",
+                  transition: "transform 0.1s"
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.25rem" }}>
-                      <h3 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-text)" }}>{debt.name}</h3>
-                      {debt.status === 'paid' ? (
-                        <Badge variant="success">PAGADA</Badge>
-                      ) : (
-                        <Badge variant="warning">ACTIVA</Badge>
-                      )}
-                    </div>
-                    {debt.creditor && (
-                      <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Acreedor: {debt.creditor}</p>
-                    )}
+                    <h4 style={{ fontWeight: "bold", fontSize: "1rem", marginBottom: "0.25rem" }}>{debt.name}</h4>
+                    <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                       {debt.creditor || "Sin acreedor"}
+                    </span>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text)" }}>
-                      {formatCurrency(debt.totalAmount)}
-                    </div>
-                    <div style={{ fontSize: "0.875rem", color: debt.remaining > 0 ? "var(--color-danger)" : "var(--color-success)" }}>
-                      Pendiente: {formatCurrency(debt.remaining)}
-                    </div>
+                    <span style={{ display: "block", fontSize: "1.1rem", fontWeight: "bold", color: debt.remaining > 0 ? "var(--color-text)" : "var(--color-success)" }}>
+                      {formatCurrency(debt.remaining > 0 ? debt.remaining : debt.totalAmount)}
+                    </span>
+                    <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)" }}>
+                      {debt.remaining > 0 ? "Restante" : "Completado"}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Progress Bar */}
+                <div style={{ marginBottom: "1rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", marginBottom: "0.25rem" }}>
+                    <span>Progreso</span>
+                    <span>{(debt.progress || 0).toFixed(0)}%</span>
+                  </div>
+                  <div style={{ width: "100%", height: "6px", backgroundColor: "var(--color-surface-hover)", borderRadius: "99px", overflow: "hidden" }}>
+                    <div style={{ width: `${debt.progress}%`, height: "100%", backgroundColor: getProgressColor(debt.progress), borderRadius: "99px" }}></div>
                   </div>
                 </div>
 
-                {/* Barra de Progreso */}
-                <div style={{ position: "relative", height: "8px", backgroundColor: "#E5E7EB", borderRadius: "99px", overflow: "hidden", marginBottom: "1rem" }}>
-                  <div style={{ 
-                    position: "absolute", 
-                    top: 0, left: 0, bottom: 0, 
-                    width: `${debt.progress}%`, 
-                    backgroundColor: getProgressColor(debt.progress),
-                    transition: "width 0.5s ease"
-                  }} />
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                  <span>Pagado: {formatCurrency(debt.totalPaid)} ({(debt.progress || 0).toFixed(1)}%)</span>
-                  {debt.dueDate && <span>Vence: {new Date(debt.dueDate).toLocaleDateString()}</span>}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                   <div style={{ display: "flex", gap: "0.5rem" }}>
+                     {debt.status === 'paid' ? (
+                       <Badge variant="success" style={{ fontSize: "0.7rem" }}>PAGADA</Badge>
+                     ) : (
+                        debt.dueDate && new Date(debt.dueDate) < new Date() ? 
+                        <Badge variant="danger" style={{ fontSize: "0.7rem" }}>VENCIDA</Badge> :
+                        <Badge variant="warning" style={{ fontSize: "0.7rem" }}>PENDIENTE</Badge>
+                     )}
+                   </div>
+                   
+                   {debt.remaining > 0 && (
+                     <button 
+                       onClick={(e) => openPaymentModal(debt, e)}
+                       style={{ 
+                         backgroundColor: "var(--color-primary-light)", 
+                         color: "var(--color-primary)", 
+                         border: "none", 
+                         padding: "0.5rem 1rem", 
+                         borderRadius: "99px", 
+                         fontSize: "0.8rem", 
+                         fontWeight: 600,
+                         display: "flex",
+                         alignItems: "center",
+                         gap: "0.25rem",
+                         cursor: "pointer"
+                       }}
+                     >
+                       <Plus size={14} /> Pagar
+                     </button>
+                   )}
                 </div>
               </div>
-
-              {/* Acciones */}
-              <div style={{ 
-                padding: "1rem 1.5rem", 
-                backgroundColor: "var(--color-surface-hover)", 
-                display: "flex", 
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <Button size="sm" variant="ghost" onClick={() => openEditModal(debt)} title="Editar">
-                    <Edit2 size={16} />
-                  </Button>
-                  <Button size="sm" variant="ghost" style={{ color: "var(--color-danger)" }} onClick={() => handleDeleteDebt(debt._id)} title="Eliminar">
-                    <Trash2 size={16} />
-                  </Button>
-                </div>
-                
-                {debt.status === 'active' && (
-                  <Button size="sm" onClick={() => openPaymentModal(debt)}>
-                    <Plus size={16} style={{ marginRight: "0.25rem" }} /> Añadir Pago
-                  </Button>
-                )}
-              </div>
-            </Card>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
 
-      {/* Modal: Crear/Editar Deuda */}
+      {/* DETALLE MODAL (Full Screen-ish) */}
+      {isDetailModalOpen && selectedDebt && (
+        <div style={{ 
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0, 
+          backgroundColor: "rgba(0,0,0,0.5)", zIndex: 50, 
+          display: "flex", alignItems: "flex-end", justifyContent: "center"
+        }} onClick={() => setIsDetailModalOpen(false)}>
+          <div style={{ 
+            width: "100%", maxWidth: "600px", height: "90vh", 
+            backgroundColor: "var(--color-surface)", 
+            borderTopLeftRadius: "1.5rem", borderTopRightRadius: "1.5rem", 
+            padding: "1.5rem", overflowY: "auto", position: "relative",
+            animation: "slideUp 0.3s ease-out"
+          }} onClick={e => e.stopPropagation()}>
+            
+            <div style={{ width: "40px", height: "4px", backgroundColor: "var(--color-border)", borderRadius: "99px", margin: "0 auto 1.5rem auto" }}></div>
+            
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "1.5rem" }}>
+              <div>
+                <h2 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "0.25rem" }}>{selectedDebt.name}</h2>
+                <p style={{ color: "var(--color-text-secondary)" }}>{selectedDebt.creditor}</p>
+              </div>
+              <button onClick={() => setIsDetailModalOpen(false)} style={{ padding: "0.5rem", background: "none", border: "none", cursor: "pointer" }}>
+                 ✕
+              </button>
+            </div>
+
+            {/* Main Stats in Detail */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", marginBottom: "2rem", textAlign: "center" }}>
+              <div style={{ padding: "1rem 0.5rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
+                <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Total</div>
+                <div style={{ fontWeight: "bold" }}>{formatCurrency(selectedDebt.totalAmount)}</div>
+              </div>
+              <div style={{ padding: "1rem 0.5rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
+                <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Pagado</div>
+                <div style={{ fontWeight: "bold", color: "var(--color-success)" }}>{formatCurrency(selectedDebt.totalPaid)}</div>
+              </div>
+              <div style={{ padding: "1rem 0.5rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
+                <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Restante</div>
+                <div style={{ fontWeight: "bold", color: "var(--color-danger)" }}>{formatCurrency(selectedDebt.remaining)}</div>
+              </div>
+            </div>
+
+            {/* Progress */}
+            <div style={{ marginBottom: "2rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                <span style={{ fontWeight: 600 }}>Progreso del pago</span>
+                <span style={{ fontWeight: 600 }}>{(selectedDebt.progress || 0).toFixed(1)}%</span>
+              </div>
+              <div style={{ height: "10px", backgroundColor: "var(--color-surface-hover)", borderRadius: "99px", overflow: "hidden" }}>
+                <div style={{ width: `${selectedDebt.progress}%`, height: "100%", backgroundColor: getProgressColor(selectedDebt.progress) }}></div>
+              </div>
+              {selectedDebt.remaining <= 0 && (
+                <div style={{ marginTop: "1rem", padding: "0.75rem", backgroundColor: "var(--color-success-bg)", color: "var(--color-success)", borderRadius: "var(--radius-md)", textAlign: "center", fontWeight: "bold" }}>
+                   ¡DEUDA PAGADA! 🎉
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
+               {selectedDebt.remaining > 0 && (
+                 <Button onClick={() => openPaymentModal(selectedDebt)} style={{ display: "flex", justifyContent: "center", gap: "0.5rem" }}>
+                   <Plus size={18} /> Añadir Pago
+                 </Button>
+               )}
+               <Button variant="outline" onClick={() => { setIsDetailModalOpen(false); openEditModal(selectedDebt); }} style={{ display: "flex", justifyContent: "center", gap: "0.5rem" }}>
+                 <Edit2 size={18} /> Editar
+               </Button>
+            </div>
+            
+            <div style={{ marginBottom: "2rem" }}>
+               <Button variant="ghost" onClick={() => handleDeleteDebt(selectedDebt._id)} style={{ width: "100%", color: "var(--color-danger)", display: "flex", justifyContent: "center", gap: "0.5rem" }}>
+                 <Trash2 size={18} /> Eliminar Deuda
+               </Button>
+            </div>
+
+            {/* Timeline Placeholder (Future) */}
+            <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1.5rem" }}>
+              <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Historial</h3>
+              <div style={{ padding: "1rem", textAlign: "center", color: "var(--color-text-secondary)", fontStyle: "italic" }}>
+                 (Historial de pagos detallado próximamente)
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Crear/Editar Deuda (Original logic preserved) */}
       <Modal 
         isOpen={isDebtModalOpen} 
         onClose={() => setIsDebtModalOpen(false)} 
@@ -296,46 +547,23 @@ export default function Debts() {
       >
         <form onSubmit={handleSaveDebt} style={{ display: "grid", gap: "1rem" }}>
           <Input 
-            label="Nombre de la Deuda" 
-            required 
-            placeholder="Ej: Préstamo Coche"
-            value={debtForm.name}
-            onChange={(e) => setDebtForm({...debtForm, name: e.target.value})}
+            label="Nombre" required placeholder="Ej: Préstamo Coche"
+            value={debtForm.name} onChange={(e) => setDebtForm({...debtForm, name: e.target.value})}
           />
           <Input 
-            label="Acreedor (Persona/Entidad)" 
-            placeholder="Ej: Banco Santander"
-            value={debtForm.creditor}
-            onChange={(e) => setDebtForm({...debtForm, creditor: e.target.value})}
+            label="Acreedor" placeholder="Ej: Banco"
+            value={debtForm.creditor} onChange={(e) => setDebtForm({...debtForm, creditor: e.target.value})}
           />
           <Input 
-            label={`Importe Total (${formatCurrency(0).replace(/\d/g, "").replace(/[,.]/g, "").trim()})`} 
-            type="number" 
-            step="0.01" 
-            required 
-            value={debtForm.totalAmount}
-            onChange={(e) => setDebtForm({...debtForm, totalAmount: e.target.value})}
+            label={`Total (${formatCurrency(0).replace(/\d/g, "").replace(/[,.]/g, "").trim()})`} 
+            type="number" step="0.01" required 
+            value={debtForm.totalAmount} onChange={(e) => setDebtForm({...debtForm, totalAmount: e.target.value})}
           />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <Input 
-              label="Fecha Inicio" 
-              type="date" 
-              value={debtForm.startDate}
-              onChange={(e) => setDebtForm({...debtForm, startDate: e.target.value})}
-            />
-            <Input 
-              label="Fecha Límite (Opcional)" 
-              type="date" 
-              value={debtForm.dueDate}
-              onChange={(e) => setDebtForm({...debtForm, dueDate: e.target.value})}
-            />
+            <Input label="Inicio" type="date" value={debtForm.startDate} onChange={(e) => setDebtForm({...debtForm, startDate: e.target.value})} />
+            <Input label="Vencimiento" type="date" value={debtForm.dueDate} onChange={(e) => setDebtForm({...debtForm, dueDate: e.target.value})} />
           </div>
-          <Input 
-            label="Descripción" 
-            placeholder="Detalles adicionales..."
-            value={debtForm.description}
-            onChange={(e) => setDebtForm({...debtForm, description: e.target.value})}
-          />
+          <Input label="Notas" value={debtForm.description} onChange={(e) => setDebtForm({...debtForm, description: e.target.value})} />
           <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
             <Button type="button" variant="ghost" onClick={() => setIsDebtModalOpen(false)} style={{ flex: 1 }}>Cancelar</Button>
             <Button type="submit" style={{ flex: 1 }}>Guardar</Button>
@@ -350,37 +578,24 @@ export default function Debts() {
         title="Registrar Pago"
       >
         <div style={{ marginBottom: "1.5rem", padding: "1rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-sm)" }}>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Deuda: <strong>{selectedDebt?.name}</strong></p>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>Pendiente: <strong style={{ color: "var(--color-danger)" }}>{selectedDebt && formatCurrency(selectedDebt.remaining)}</strong></p>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>{selectedDebt?.name}</p>
+          <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "var(--color-text)" }}>
+             {selectedDebt && formatCurrency(selectedDebt.remaining)} <span style={{ fontSize: "0.8rem", fontWeight: "normal" }}>pendientes</span>
+          </div>
         </div>
 
         <form onSubmit={handleAddPayment} style={{ display: "grid", gap: "1rem" }}>
           <Input 
-            label={`Importe Pagado (${formatCurrency(0).replace(/\d/g, "").replace(/[,.]/g, "").trim()})`} 
-            type="number" 
-            step="0.01" 
-            required 
-            max={selectedDebt?.remaining} // Opcional: limitar al restante
-            value={paymentForm.amount}
-            onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
+            label={`Importe (${formatCurrency(0).replace(/\d/g, "").replace(/[,.]/g, "").trim()})`} 
+            type="number" step="0.01" required max={selectedDebt?.remaining}
+            value={paymentForm.amount} onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
           />
-          <Input 
-            label="Fecha del Pago" 
-            type="date" 
-            required 
-            value={paymentForm.date}
-            onChange={(e) => setPaymentForm({...paymentForm, date: e.target.value})}
-          />
-          <Input 
-            label="Nota (Opcional)" 
-            placeholder="Transferencia #123..."
-            value={paymentForm.note}
-            onChange={(e) => setPaymentForm({...paymentForm, note: e.target.value})}
-          />
+          <Input label="Fecha" type="date" required value={paymentForm.date} onChange={(e) => setPaymentForm({...paymentForm, date: e.target.value})} />
+          <Input label="Nota" placeholder="Opcional" value={paymentForm.note} onChange={(e) => setPaymentForm({...paymentForm, note: e.target.value})} />
           
           <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
             <Button type="button" variant="ghost" onClick={() => setIsPaymentModalOpen(false)} style={{ flex: 1 }}>Cancelar</Button>
-            <Button type="submit" style={{ flex: 1 }}>Confirmar Pago</Button>
+            <Button type="submit" style={{ flex: 1 }}>Confirmar</Button>
           </div>
         </form>
       </Modal>
