@@ -174,19 +174,19 @@ export default function Credits() {
         <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginBottom: "2rem" }}>
           <StatsCard 
             title="Total por Cobrar" 
-            value={`$${data?.summary?.totalPending?.toLocaleString() || "0"}`} 
+            value={formatCurrency(data?.summary?.totalPending || 0)} 
             icon={DollarSign} 
             color="warning" 
           />
           <StatsCard 
             title="Total Recuperado" 
-            value={`$${data?.summary?.totalCollectedGlobal?.toLocaleString() || "0"}`} 
+            value={formatCurrency(data?.summary?.totalCollectedGlobal || 0)} 
             icon={CheckCircle} 
             color="success" 
           />
           <StatsCard 
             title="Progreso Cobro" 
-            value={`${data?.summary?.globalProgress?.toFixed(1) || "0"}%`} 
+            value={`${(data?.summary?.globalProgress || 0).toFixed(1)}%`} 
             icon={PieChart} 
             color="primary" 
           />
@@ -225,10 +225,10 @@ export default function Credits() {
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text)" }}>
-                      ${credit.totalAmount.toLocaleString()}
+                      {formatCurrency(credit.totalAmount)}
                     </div>
                     <div style={{ fontSize: "0.875rem", color: credit.remaining > 0 ? "var(--color-warning)" : "var(--color-success)" }}>
-                      Falta cobrar: ${credit.remaining.toLocaleString()}
+                      Falta cobrar: {formatCurrency(credit.remaining)}
                     </div>
                   </div>
                 </div>
@@ -244,7 +244,7 @@ export default function Credits() {
                   }} />
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                  <span>Recuperado: ${credit.totalPaid.toLocaleString()} ({credit.progress.toFixed(1)}%)</span>
+                  <span>Recuperado: {formatCurrency(credit.totalPaid)} ({(credit.progress || 0).toFixed(1)}%)</span>
                   {credit.dueDate && <span>Vence: {new Date(credit.dueDate).toLocaleDateString()}</span>}
                 </div>
               </div>
@@ -299,7 +299,7 @@ export default function Credits() {
             onChange={(e) => setCreditForm({...creditForm, debtor: e.target.value})}
           />
           <Input 
-            label={`Importe a Prestar (${formatCurrency(0).replace("0,00", "").trim()})`} 
+            label={`Importe a Prestar (${formatCurrency(0).replace(/\d/g, "").replace(/[,.]/g, "").trim()})`} 
             type="number" 
             step="0.01" 
             required 
@@ -346,7 +346,7 @@ export default function Credits() {
 
         <form onSubmit={handleAddPayment} style={{ display: "grid", gap: "1rem" }}>
           <Input 
-            label={`Importe Recibido (${formatCurrency(0).replace("0,00", "").trim()})`} 
+            label={`Importe Recibido (${formatCurrency(0).replace(/\d/g, "").replace(/[,.]/g, "").trim()})`} 
             type="number" 
             step="0.01" 
             required 

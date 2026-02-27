@@ -176,19 +176,19 @@ export default function Debts() {
         <div style={{ display: "grid", gap: "1.5rem", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", marginBottom: "2rem" }}>
           <StatsCard 
             title="Deuda Pendiente" 
-            value={`$${data?.summary?.totalPending?.toLocaleString() || "0"}`} 
+            value={formatCurrency(data?.summary?.totalPending || 0)} 
             icon={DollarSign} 
             color="danger" 
           />
           <StatsCard 
             title="Total Pagado" 
-            value={`$${data?.summary?.totalPaidGlobal?.toLocaleString() || "0"}`} 
+            value={formatCurrency(data?.summary?.totalPaidGlobal || 0)} 
             icon={CheckCircle} 
             color="success" 
           />
           <StatsCard 
             title="Progreso Global" 
-            value={`${data?.summary?.globalProgress?.toFixed(1) || "0"}%`} 
+            value={`${(data?.summary?.globalProgress || 0).toFixed(1)}%`} 
             icon={PieChart} 
             color="primary" 
           />
@@ -227,10 +227,10 @@ export default function Debts() {
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text)" }}>
-                      ${debt.totalAmount.toLocaleString()}
+                      {formatCurrency(debt.totalAmount)}
                     </div>
                     <div style={{ fontSize: "0.875rem", color: debt.remaining > 0 ? "var(--color-danger)" : "var(--color-success)" }}>
-                      Pendiente: ${debt.remaining.toLocaleString()}
+                      Pendiente: {formatCurrency(debt.remaining)}
                     </div>
                   </div>
                 </div>
@@ -246,7 +246,7 @@ export default function Debts() {
                   }} />
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                  <span>Pagado: {formatCurrency(debt.totalPaid)} ({debt.progress.toFixed(1)}%)</span>
+                  <span>Pagado: {formatCurrency(debt.totalPaid)} ({(debt.progress || 0).toFixed(1)}%)</span>
                   {debt.dueDate && <span>Vence: {new Date(debt.dueDate).toLocaleDateString()}</span>}
                 </div>
               </div>
@@ -300,7 +300,7 @@ export default function Debts() {
             onChange={(e) => setDebtForm({...debtForm, creditor: e.target.value})}
           />
           <Input 
-            label={`Importe Total (${formatCurrency(0).replace("0,00", "").trim()})`} 
+            label={`Importe Total (${formatCurrency(0).replace(/\d/g, "").replace(/[,.]/g, "").trim()})`} 
             type="number" 
             step="0.01" 
             required 
@@ -347,7 +347,7 @@ export default function Debts() {
 
         <form onSubmit={handleAddPayment} style={{ display: "grid", gap: "1rem" }}>
           <Input 
-            label={`Importe Pagado (${formatCurrency(0).replace("0,00", "").trim()})`} 
+            label={`Importe Pagado (${formatCurrency(0).replace(/\d/g, "").replace(/[,.]/g, "").trim()})`} 
             type="number" 
             step="0.01" 
             required 
