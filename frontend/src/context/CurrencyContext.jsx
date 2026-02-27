@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { getToken } from "../lib/auth";
+import { useAuth } from "./AuthContext";
 
 const CurrencyContext = createContext();
 
@@ -19,19 +20,31 @@ export const CURRENCIES = [
 ];
 
 export function CurrencyProvider({ children }) {
+  const { user } = useAuth();
   const [currency, setCurrency] = useState("EUR"); // Default fallback
   const [loading, setLoading] = useState(true);
 
-  // Load from User preference or LocalStorage or Browser Locale
+  // Sync with user profile from API (AuthContext)
+  useEffect(() => {
+    if (user && user.currency) {
+      setCurrency(user.currency);
+      setLoading(false);
+    }
+  }, [user]);
+
+  // Initial Load from LocalStorage or Browser Locale (if user not yet loaded)
   useEffect(() => {
     const initCurrency = async () => {
       try {
-        // 1. Try to get from logged user
+        // 0. If user is already loaded from AuthContext, skip (handled by above useEffect)
+        if (user && user.currency) return;
+
+        // 1. Try to get from logged user in localStorage
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
-          const user = JSON.parse(storedUser);
-          if (user.currency) {
-            setCurrency(user.currency);
+          const u = JSON.parse(storedUser);
+          if (u.currency) {
+            setCurrency(u.currency);
             setLoading(false);
             return;
           }
@@ -59,7 +72,7 @@ export function CurrencyProvider({ children }) {
       }
     };
     initCurrency();
-  }, []);
+  }, [user]); // Re-run if user changes (e.g. login/logout)
 
   const formatCurrency = (amount) => {
     if (amount === undefined || amount === null) return "-";
