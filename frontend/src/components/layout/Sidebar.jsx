@@ -51,13 +51,14 @@ export function Sidebar({ isOpen, onClose, onLogout, user }) {
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             {!logoError ? (
               <img 
-                src="/logo.png" 
-                alt="M" 
+                src="/logo.png?v=1" 
+                alt="Mis Finanzas" 
                 style={{ 
-                  width: "40px", height: "40px", 
-                  borderRadius: "12px", 
+                  height: "40px", 
+                  width: "auto",
+                  maxWidth: "140px", 
                   objectFit: "contain",
-                  boxShadow: "var(--shadow-md)" 
+                  // borderRadius: "8px",
                 }}
                 onError={() => setLogoError(true)}
               />

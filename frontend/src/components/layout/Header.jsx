@@ -36,13 +36,14 @@ export function Header({ onMenuClick, user }) {
         {/* Logo and App Name (Mobile) */}
         {!logoError ? (
           <img 
-            src="/logo.png" 
-            alt="M" 
+            src="/logo.png?v=1" 
+            alt="Mis Finanzas" 
             style={{ 
-              width: "40px", height: "40px", 
-              borderRadius: "12px", // Squircle as per design
+              height: "40px", 
+              width: "auto", 
+              maxWidth: "140px",
               objectFit: "contain",
-              // boxShadow: "0 4px 10px rgba(16, 185, 129, 0.3)" 
+              // borderRadius: "8px",
             }}
             onError={() => setLogoError(true)}
           />

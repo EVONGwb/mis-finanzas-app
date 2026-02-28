@@ -197,17 +197,19 @@ export default function Login({ onAuthed }) {
         {/* Header Section */}
         <div style={{ marginBottom: "2rem", textAlign: "center", width: "100%" }}>
           <div style={{ 
-            width: "56px", height: "56px", 
-            borderRadius: "14px", 
-            background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+            height: "100px", // Height based
+            width: "auto",
+            maxWidth: "280px",
             display: "inline-flex", 
             alignItems: "center", 
             justifyContent: "center",
-            color: "white",
-            marginBottom: "1.5rem",
-            boxShadow: "0 8px 16px -4px rgba(16, 185, 129, 0.4)"
+            marginBottom: "1rem"
           }}>
-            <TrendingUp size={28} strokeWidth={2.5} />
+            <img 
+              src="/logo.png?v=1" 
+              alt="Mis Finanzas" 
+              style={{ width: "100%", height: "100%", objectFit: "contain" }} 
+            />
           </div>
           
           <h1 style={{ 
