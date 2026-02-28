@@ -55,10 +55,10 @@ export default function Login({ onAuthed }) {
           
           if (creds.type === 'token' && creds.token) {
             // Login with stored token (Google flow)
-            // Verify token validity first? For now, trust it and let AuthContext handle 401
-            localStorage.setItem("token", creds.token);
+            // Save to sessionStorage for this session
+            sessionStorage.setItem("token", creds.token);
             if (creds.user) {
-              localStorage.setItem("user", JSON.stringify(creds.user));
+              sessionStorage.setItem("user", JSON.stringify(creds.user));
             }
             onAuthed();
           } else if (creds.email && creds.password) {
@@ -92,24 +92,25 @@ export default function Login({ onAuthed }) {
       const user = res.data?.user;
 
       if (token) {
-        localStorage.setItem("token", token);
-          if (user) {
-            localStorage.setItem("user", JSON.stringify(user));
-            
-            // Handle Remember Me
-            if (rememberMe) {
-              localStorage.setItem("rememberedEmail", emailToUse);
-            } else {
-              localStorage.removeItem("rememberedEmail");
-            }
-
-            // Handle Biometric Save
-            if (enableBio && canUseBio) {
-              const creds = btoa(JSON.stringify({ email: emailToUse, password: passwordToUse }));
-              localStorage.setItem("bio_creds", creds);
-            }
+        // Guardamos el token en sessionStorage (sesión volátil)
+        sessionStorage.setItem("token", token);
+        if (user) {
+          sessionStorage.setItem("user", JSON.stringify(user));
+          
+          // Handle Remember Me (Email only)
+          if (rememberMe) {
+            localStorage.setItem("rememberedEmail", emailToUse);
+          } else {
+            localStorage.removeItem("rememberedEmail");
           }
-          onAuthed();
+
+          // Handle Biometric Save (Credentials persist in localStorage)
+          if (enableBio && canUseBio) {
+            const creds = btoa(JSON.stringify({ email: emailToUse, password: passwordToUse }));
+            localStorage.setItem("bio_creds", creds);
+          }
+        }
+        onAuthed();
       } else {
         setError("Respuesta inválida del servidor");
       }
@@ -133,9 +134,9 @@ export default function Login({ onAuthed }) {
         const user = res.data?.user;
 
         if (token) {
-          localStorage.setItem("token", token);
+          sessionStorage.setItem("token", token);
           if (user) {
-            localStorage.setItem("user", JSON.stringify(user));
+            sessionStorage.setItem("user", JSON.stringify(user));
             
             if (rememberMe) {
               localStorage.setItem("rememberedEmail", email);
