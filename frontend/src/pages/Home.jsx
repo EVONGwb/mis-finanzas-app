@@ -25,66 +25,81 @@ import {
 
 const FOOD_IMAGES = {
   // Frutas y Verduras
-  "manzana": "https://cdn-icons-png.flaticon.com/512/415/415733.png",
-  "platano": "https://cdn-icons-png.flaticon.com/512/2909/2909787.png",
-  "naranja": "https://cdn-icons-png.flaticon.com/512/135/135620.png",
-  "limon": "https://cdn-icons-png.flaticon.com/512/6033/6033703.png",
-  "tomate": "https://cdn-icons-png.flaticon.com/512/1202/1202125.png",
-  "lechuga": "https://cdn-icons-png.flaticon.com/512/765/765618.png",
-  "patata": "https://cdn-icons-png.flaticon.com/512/765/765584.png",
-  "cebolla": "https://cdn-icons-png.flaticon.com/512/765/765551.png",
-  "zanahoria": "https://cdn-icons-png.flaticon.com/512/2909/2909841.png",
-  "ajo": "https://cdn-icons-png.flaticon.com/512/5029/5029236.png",
+  "manzana": "https://spoonacular.com/cdn/ingredients_100x100/apple.jpg",
+  "platano": "https://spoonacular.com/cdn/ingredients_100x100/bananas.jpg",
+  "naranja": "https://spoonacular.com/cdn/ingredients_100x100/orange.jpg",
+  "limon": "https://spoonacular.com/cdn/ingredients_100x100/lemon.jpg",
+  "tomate": "https://spoonacular.com/cdn/ingredients_100x100/tomato.jpg",
+  "lechuga": "https://spoonacular.com/cdn/ingredients_100x100/iceberg-lettuce.jpg",
+  "patata": "https://spoonacular.com/cdn/ingredients_100x100/potatoes.jpg",
+  "cebolla": "https://spoonacular.com/cdn/ingredients_100x100/onion.jpg",
+  "zanahoria": "https://spoonacular.com/cdn/ingredients_100x100/carrots.jpg",
+  "ajo": "https://spoonacular.com/cdn/ingredients_100x100/garlic.jpg",
+  "pimiento": "https://spoonacular.com/cdn/ingredients_100x100/red-pepper.jpg",
+  "pepino": "https://spoonacular.com/cdn/ingredients_100x100/cucumber.jpg",
+  "aguacate": "https://spoonacular.com/cdn/ingredients_100x100/avocado.jpg",
   
   // Lácteos y Huevos
-  "leche": "https://cdn-icons-png.flaticon.com/512/970/970929.png",
-  "huevo": "https://cdn-icons-png.flaticon.com/512/837/837560.png",
-  "queso": "https://cdn-icons-png.flaticon.com/512/305/305978.png",
-  "yogur": "https://cdn-icons-png.flaticon.com/512/2935/2935394.png",
-  "mantequilla": "https://cdn-icons-png.flaticon.com/512/2674/2674062.png",
+  "leche": "https://spoonacular.com/cdn/ingredients_100x100/milk.png",
+  "huevo": "https://spoonacular.com/cdn/ingredients_100x100/egg.png",
+  "queso": "https://spoonacular.com/cdn/ingredients_100x100/cheddar-cheese.png",
+  "yogur": "https://spoonacular.com/cdn/ingredients_100x100/plain-yogurt.jpg",
+  "mantequilla": "https://spoonacular.com/cdn/ingredients_100x100/butter-sliced.jpg",
+  "nata": "https://spoonacular.com/cdn/ingredients_100x100/heavy-cream.jpg",
 
   // Panadería y Cereales
-  "pan": "https://cdn-icons-png.flaticon.com/512/3014/3014520.png",
-  "arroz": "https://cdn-icons-png.flaticon.com/512/3014/3014527.png",
-  "pasta": "https://cdn-icons-png.flaticon.com/512/2515/2515139.png",
-  "harina": "https://cdn-icons-png.flaticon.com/512/3348/3348079.png",
-  "cereal": "https://cdn-icons-png.flaticon.com/512/2674/2674066.png",
+  "pan": "https://spoonacular.com/cdn/ingredients_100x100/white-bread.jpg",
+  "arroz": "https://spoonacular.com/cdn/ingredients_100x100/uncooked-white-rice.png",
+  "pasta": "https://spoonacular.com/cdn/ingredients_100x100/fusilli.jpg",
+  "harina": "https://spoonacular.com/cdn/ingredients_100x100/flour.png",
+  "cereal": "https://spoonacular.com/cdn/ingredients_100x100/rice-krispies.jpg",
+  "galletas": "https://spoonacular.com/cdn/ingredients_100x100/cookies-isolated.jpg",
 
   // Carnes y Pescados
-  "pollo": "https://cdn-icons-png.flaticon.com/512/1046/1046774.png",
-  "carne": "https://cdn-icons-png.flaticon.com/512/3143/3143643.png",
-  "pescado": "https://cdn-icons-png.flaticon.com/512/2515/2515183.png",
-  "jamon": "https://cdn-icons-png.flaticon.com/512/2312/2312297.png",
-  "salchicha": "https://cdn-icons-png.flaticon.com/512/3082/3082008.png",
+  "pollo": "https://spoonacular.com/cdn/ingredients_100x100/chicken-breast.jpg",
+  "carne": "https://spoonacular.com/cdn/ingredients_100x100/beef-cubes-raw.png",
+  "pescado": "https://spoonacular.com/cdn/ingredients_100x100/fish-fillet.jpg",
+  "jamon": "https://spoonacular.com/cdn/ingredients_100x100/ham.jpg",
+  "salchicha": "https://spoonacular.com/cdn/ingredients_100x100/frankfurter.jpg",
+  "bacon": "https://spoonacular.com/cdn/ingredients_100x100/raw-bacon.png",
+  "atun": "https://spoonacular.com/cdn/ingredients_100x100/canned-tuna.png",
 
   // Bebidas
-  "agua": "https://cdn-icons-png.flaticon.com/512/3105/3105807.png",
-  "cafe": "https://cdn-icons-png.flaticon.com/512/3054/3054889.png",
-  "te": "https://cdn-icons-png.flaticon.com/512/3054/3054898.png",
-  "jugo": "https://cdn-icons-png.flaticon.com/512/2405/2405597.png",
-  "cerveza": "https://cdn-icons-png.flaticon.com/512/931/931949.png",
-  "vino": "https://cdn-icons-png.flaticon.com/512/2405/2405451.png",
+  "agua": "https://spoonacular.com/cdn/ingredients_100x100/water.jpg",
+  "cafe": "https://spoonacular.com/cdn/ingredients_100x100/brewed-coffee.jpg",
+  "te": "https://spoonacular.com/cdn/ingredients_100x100/tea-bags.jpg",
+  "jugo": "https://spoonacular.com/cdn/ingredients_100x100/apple-juice.jpg",
+  "zumo": "https://spoonacular.com/cdn/ingredients_100x100/orange-juice.jpg",
+  "cerveza": "https://spoonacular.com/cdn/ingredients_100x100/beer.jpg",
+  "vino": "https://spoonacular.com/cdn/ingredients_100x100/red-wine.jpg",
+  "refresco": "https://spoonacular.com/cdn/ingredients_100x100/soda-can.jpg",
 
   // Otros
-  "aceite": "https://cdn-icons-png.flaticon.com/512/1202/1202058.png",
-  "sal": "https://cdn-icons-png.flaticon.com/512/3348/3348092.png",
-  "azucar": "https://cdn-icons-png.flaticon.com/512/2674/2674116.png",
-  "salsa": "https://cdn-icons-png.flaticon.com/512/859/859344.png",
-  "chocolate": "https://cdn-icons-png.flaticon.com/512/2553/2553691.png"
+  "aceite": "https://spoonacular.com/cdn/ingredients_100x100/olive-oil.jpg",
+  "sal": "https://spoonacular.com/cdn/ingredients_100x100/salt.jpg",
+  "azucar": "https://spoonacular.com/cdn/ingredients_100x100/sugar-in-bowl.jpg",
+  "salsa": "https://spoonacular.com/cdn/ingredients_100x100/tomato-sauce-jar.jpg",
+  "chocolate": "https://spoonacular.com/cdn/ingredients_100x100/milk-chocolate.jpg",
+  "miel": "https://spoonacular.com/cdn/ingredients_100x100/honey.png",
+  "helado": "https://spoonacular.com/cdn/ingredients_100x100/vanilla-ice-cream.png"
 };
 
+const DEFAULT_FOOD_IMAGE = "https://cdn-icons-png.flaticon.com/512/2927/2927347.png";
+
 const getFoodImage = (name) => {
+  if (!name) return DEFAULT_FOOD_IMAGE;
   const lowerName = name.toLowerCase();
+  
   // Búsqueda exacta
   if (FOOD_IMAGES[lowerName]) return FOOD_IMAGES[lowerName];
   
-  // Búsqueda parcial
-  for (const [key, url] of Object.entries(FOOD_IMAGES)) {
-    if (lowerName.includes(key)) return url;
+  // Búsqueda parcial (prioriza coincidencias más largas para evitar falsos positivos cortos)
+  const keys = Object.keys(FOOD_IMAGES).sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    if (lowerName.includes(key)) return FOOD_IMAGES[key];
   }
   
-  // Default fallback icon based on first letter or generic
-  return "https://cdn-icons-png.flaticon.com/512/2927/2927347.png"; // Caja genérica
+  return DEFAULT_FOOD_IMAGE;
 };
 
 export default function Home() {
@@ -371,6 +386,11 @@ export default function Home() {
     }
   };
 
+  const handleImageError = (e) => {
+    e.target.onerror = null; 
+    e.target.src = DEFAULT_FOOD_IMAGE;
+  };
+
   // --- RENDER ---
 
   if (loading) return <div className="p-4"><Skeleton height="300px" /></div>;
@@ -481,7 +501,7 @@ export default function Home() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                     <div style={{ width: "40px", height: "40px", flexShrink: 0 }}>
-                      <img src={getFoodImage(item.productName)} alt={item.productName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      <img src={getFoodImage(item.productName)} onError={handleImageError} alt={item.productName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                     </div>
                     <div>
                       <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>{item.productName}</span>
@@ -520,8 +540,8 @@ export default function Home() {
                 <Card key={prod._id} padding="1rem">
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                      <div style={{ width: "32px", height: "32px", flexShrink: 0 }}>
-                        <img src={getFoodImage(prod.name)} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      <div style={{ width: "48px", height: "48px", flexShrink: 0 }}>
+                        <img src={getFoodImage(prod.name)} onError={handleImageError} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                       </div>
                       <span style={{ fontWeight: 600, cursor: "pointer" }} onClick={() => handleEditProduct(prod)}>{prod.name}</span>
                     </div>
@@ -587,8 +607,8 @@ export default function Home() {
             {history.map(h => (
               <TableRow key={h._id}>
                 <TableCell>
-                  <div style={{ width: "24px", height: "24px" }}>
-                    <img src={getFoodImage(h.productName)} alt={h.productName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  <div style={{ width: "32px", height: "32px" }}>
+                    <img src={getFoodImage(h.productName)} onError={handleImageError} alt={h.productName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                   </div>
                 </TableCell>
                 <TableCell>{h.productName}</TableCell>
@@ -653,7 +673,7 @@ export default function Home() {
                     onMouseEnter={(e) => e.target.style.backgroundColor = "var(--color-surface-hover)"}
                     onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
                   >
-                    <img src={FOOD_IMAGES[s]} alt={s} style={{ width: "24px", height: "24px", objectFit: "contain" }} />
+                    <img src={FOOD_IMAGES[s]} onError={handleImageError} alt={s} style={{ width: "32px", height: "32px", objectFit: "contain" }} />
                     <span style={{ textTransform: "capitalize" }}>{s}</span>
                   </div>
                 ))}
@@ -718,7 +738,7 @@ export default function Home() {
                     onMouseEnter={(e) => e.target.style.backgroundColor = "var(--color-surface-hover)"}
                     onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
                   >
-                    <img src={FOOD_IMAGES[s]} alt={s} style={{ width: "24px", height: "24px", objectFit: "contain" }} />
+                    <img src={FOOD_IMAGES[s]} onError={handleImageError} alt={s} style={{ width: "32px", height: "32px", objectFit: "contain" }} />
                     <span style={{ textTransform: "capitalize" }}>{s}</span>
                   </div>
                 ))}
