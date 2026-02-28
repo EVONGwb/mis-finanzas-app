@@ -25,8 +25,11 @@ export default function Login({ onAuthed }) {
       const saved = localStorage.getItem("bio_creds");
       if (saved) {
         setHasSavedBio(true);
-        // Auto-trigger biometric prompt if credentials exist
-        handleBiometricLogin();
+        // Only auto-trigger if NOT already loading to prevent loops
+        // and add a small check to see if we just failed/logout
+        if (!sessionStorage.getItem("just_logged_out")) {
+           handleBiometricLogin();
+        }
       }
     });
   }, []);
@@ -49,6 +52,9 @@ export default function Login({ onAuthed }) {
       setError("");
       const success = await verifyBiometric();
       if (success) {
+        // Clear logout flag on success
+        sessionStorage.removeItem("just_logged_out");
+        
         const saved = localStorage.getItem("bio_creds");
         if (saved) {
           const creds = JSON.parse(atob(saved));
@@ -76,7 +82,12 @@ export default function Login({ onAuthed }) {
       }
     } catch (err) {
       console.error(err);
-      setError("No se pudo verificar la huella/FaceID");
+      // Don't show error for cancelled biometric prompt to avoid noise
+      if (err.message && !err.message.includes("cancel") && !err.message.includes("abort")) {
+         setError("No se pudo verificar la huella/FaceID");
+      }
+      // If it failed/cancelled, mark as 'just_logged_out' to prevent immediate loop re-trigger
+      sessionStorage.setItem("just_logged_out", "true");
     } finally {
       setLoading(false);
     }

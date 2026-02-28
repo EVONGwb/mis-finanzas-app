@@ -47,6 +47,8 @@ export function AuthProvider({ children }) {
     clearToken();
     setUser(null);
     sessionStorage.removeItem("user");
+    // Mark as intentionally logged out so biometric doesn't auto-trigger immediately
+    sessionStorage.setItem("just_logged_out", "true");
   };
 
   return (
