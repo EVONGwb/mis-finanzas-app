@@ -43,18 +43,29 @@ export const sendHomeRequest = async (req, res, next) => {
   try {
     const { partnerId } = req.body;
     
-    if (!partnerId) throw new HttpError(400, "ID de pareja obligatorio");
+    if (!partnerId) throw new HttpError(400, "ID de usuario obligatorio");
     if (partnerId === req.user._id.toString()) throw new HttpError(400, "No puedes vincularte contigo mismo");
 
-    // Verificar si ya tiene hogar con pareja (más de 1 miembro)
+    // Verificar si ya tiene hogar con pareja (límite 4)
     const existingHome = await Home.findOne({ members: req.user._id });
-    if (existingHome && existingHome.members.length > 1) {
-      throw new HttpError(400, "Ya tienes un hogar compartido activo");
+    if (existingHome && existingHome.members.length >= 4) {
+      throw new HttpError(400, "El hogar ya ha alcanzado el límite de 4 miembros");
     }
 
     // Verificar usuario destino
     const partner = await User.findById(partnerId);
     if (!partner) throw new HttpError(404, "Usuario no encontrado");
+
+    // Verificar si el usuario destino ya está en un hogar compartido diferente
+    const partnerHome = await Home.findOne({ members: partnerId });
+    if (partnerHome && partnerHome.members.length > 1 && partnerHome._id.toString() !== existingHome?._id.toString()) {
+      throw new HttpError(400, "El usuario ya pertenece a otro hogar compartido");
+    }
+    
+    // Si ya son del mismo hogar
+    if (existingHome && existingHome.members.includes(partnerId)) {
+        throw new HttpError(400, "El usuario ya es miembro de tu hogar");
+    }
 
     // Verificar si ya existe solicitud
     const existingReq = await HomeRequest.findOne({
@@ -63,7 +74,7 @@ export const sendHomeRequest = async (req, res, next) => {
         { fromUser: partnerId, toUser: req.user._id, status: "pending" }
       ]
     });
-    if (existingReq) throw new HttpError(400, "Ya existe una solicitud pendiente");
+    if (existingReq) throw new HttpError(400, "Ya existe una solicitud pendiente con este usuario");
 
     const request = await HomeRequest.create({
       fromUser: req.user._id,
@@ -124,8 +135,14 @@ export const respondHomeRequest = async (req, res, next) => {
 
       // 4. Añadir usuario al hogar destino (si no estaba ya)
       if (!targetHome.members.includes(req.user._id)) {
+        if (targetHome.members.length >= 4) {
+          throw new HttpError(400, "El hogar destino ya está lleno (máx 4)");
+        }
         targetHome.members.push(req.user._id);
-        targetHome.name = "Hogar Compartido"; // Renombrar opcionalmente
+        // Solo renombramos si es la primera vinculación
+        if (targetHome.members.length === 2 && targetHome.name === "Mi Hogar") {
+            targetHome.name = "Hogar Compartido";
+        }
         await targetHome.save();
       }
       
@@ -163,6 +180,23 @@ export const leaveHome = async (req, res, next) => {
     }
 
     res.json({ ok: true, message: "Te has desvinculado del hogar" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateHomeName = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+    if (!name || name.trim().length === 0) throw new HttpError(400, "Nombre inválido");
+
+    const home = await Home.findOne({ members: req.user._id });
+    if (!home) throw new HttpError(404, "Hogar no encontrado");
+
+    home.name = name;
+    await home.save();
+
+    res.json({ ok: true, data: home });
   } catch (error) {
     next(error);
   }

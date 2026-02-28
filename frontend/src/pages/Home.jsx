@@ -38,6 +38,8 @@ export default function Home() {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const [newName, setNewName] = useState("");
 
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const [selectedItemToBuy, setSelectedItemToBuy] = useState(null);
@@ -130,6 +132,21 @@ export default function Home() {
     if (!confirm("¿Seguro que quieres desvincularte? Se creará un nuevo hogar vacío para ti.")) return;
     try {
       await apiFetch("/home/leave", { method: "POST", token: getToken() });
+      fetchHomeData();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleUpdateName = async (e) => {
+    e.preventDefault();
+    try {
+      await apiFetch("/home/name", {
+        method: "PATCH",
+        token: getToken(),
+        body: { name: newName }
+      });
+      setIsNameModalOpen(false);
       fetchHomeData();
     } catch (error) {
       alert(error.message);
@@ -266,16 +283,19 @@ export default function Home() {
         <div>
           <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <HomeIcon className="text-primary" /> {homeData.home.name}
+            <Button size="icon" variant="ghost" onClick={() => { setNewName(homeData.home.name); setIsNameModalOpen(true); }} title="Editar nombre">
+              <Edit2 size={16} />
+            </Button>
           </h1>
           <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
-            Miembros: {homeData.home.members.map(m => m.name).join(", ")}
+            Miembros ({homeData.home.members.length}/4): {homeData.home.members.map(m => m.name).join(", ")}
           </p>
         </div>
         
-        {/* Botón de vincular si solo hay 1 miembro */}
-        {homeData.home.members.length === 1 && !homeData.pendingRequest && (
+        {/* Botón de vincular si no está lleno */}
+        {homeData.home.members.length < 4 && !homeData.pendingRequest && (
           <Button size="sm" variant="outline" onClick={() => setIsLinkModalOpen(true)}>
-            <UserPlus size={16} style={{ marginRight: "0.5rem" }} /> Invitar Pareja
+            <UserPlus size={16} style={{ marginRight: "0.5rem" }} /> Invitar Miembro
           </Button>
         )}
 
@@ -518,18 +538,30 @@ export default function Home() {
         </form>
       </Modal>
 
-      <Modal isOpen={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)} title="Vincular Pareja">
+      <Modal isOpen={isLinkModalOpen} onClose={() => setIsLinkModalOpen(false)} title="Invitar Nuevo Miembro">
         <form onSubmit={handleSendRequest} style={{ display: "grid", gap: "1rem" }}>
           <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
-            Pide a tu pareja su ID de usuario (lo puede ver en su Perfil). Al enviar la solicitud, tu hogar actual se fusionará con el de tu pareja.
+            Pide a tu familiar su ID de usuario (lo puede ver en su Perfil). Al enviar la solicitud, se unirá a este hogar y compartirá todo el inventario y listas.
           </p>
           <Input 
-            label="ID de Usuario de tu Pareja" 
+            label="ID de Usuario a Invitar" 
             required 
             value={linkForm.partnerId}
             onChange={(e) => setLinkForm({ partnerId: e.target.value })}
           />
           <Button type="submit">Enviar Solicitud</Button>
+        </form>
+      </Modal>
+
+      <Modal isOpen={isNameModalOpen} onClose={() => setIsNameModalOpen(false)} title="Renombrar Hogar">
+        <form onSubmit={handleUpdateName} style={{ display: "grid", gap: "1rem" }}>
+          <Input 
+            label="Nombre del Hogar" 
+            required 
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+          />
+          <Button type="submit">Guardar</Button>
         </form>
       </Modal>
     </div>
