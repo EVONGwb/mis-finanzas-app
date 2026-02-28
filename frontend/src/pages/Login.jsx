@@ -23,7 +23,11 @@ export default function Login({ onAuthed }) {
     isBiometricsAvailable().then(available => {
       setCanUseBio(available);
       const saved = localStorage.getItem("bio_creds");
-      if (saved) setHasSavedBio(true);
+      if (saved) {
+        setHasSavedBio(true);
+        // Auto-trigger biometric prompt if credentials exist
+        handleBiometricLogin();
+      }
     });
   }, []);
 
@@ -37,6 +41,9 @@ export default function Login({ onAuthed }) {
   }, []);
 
   const handleBiometricLogin = async () => {
+    // Prevent double invocation
+    if (loading) return;
+
     try {
       setLoading(true);
       setError("");
