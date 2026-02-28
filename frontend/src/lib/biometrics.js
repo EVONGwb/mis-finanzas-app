@@ -39,10 +39,10 @@ export const verifyBiometric = async () => {
   };
 
   // Check if we have successfully registered a credential before
-  const isRegistered = localStorage.getItem("bio_registered") === "true";
+  const isRegistered = localStorage.getItem("bio_v2_registered") === "true";
 
   if (!isRegistered) {
-    console.log("No registered credential found, registering new one...");
+    console.log("No registered credential found (v2), registering new one...");
     return await registerDummyCredential();
   }
 
@@ -82,8 +82,9 @@ const registerDummyCredential = async () => {
     pubKeyCredParams: [{ alg: -7, type: "public-key" }],
     authenticatorSelection: { 
       userVerification: "required",
-      authenticatorAttachment: "platform", // Fuerza a usar el dispositivo local (FaceID/TouchID) y evita preguntas extra
-      requireResidentKey: false
+      authenticatorAttachment: "platform", 
+      requireResidentKey: true, // Force saving the key
+      residentKey: "required"   // Newer syntax
     },
     timeout: 60000
   };
@@ -91,7 +92,7 @@ const registerDummyCredential = async () => {
   try {
     const credential = await navigator.credentials.create({ publicKey });
     if (credential) {
-      localStorage.setItem("bio_registered", "true");
+      localStorage.setItem("bio_v2_registered", "true");
     }
     return !!credential;
   } catch (e) {
