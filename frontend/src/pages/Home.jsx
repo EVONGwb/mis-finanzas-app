@@ -279,76 +279,81 @@ export default function Home() {
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "5rem" }}>
       {/* Header */}
-      <div style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <HomeIcon className="text-primary" /> {homeData.home.name}
-            <Button size="icon" variant="ghost" onClick={() => { setNewName(homeData.home.name); setIsNameModalOpen(true); }} title="Editar nombre">
-              <Edit2 size={16} />
-            </Button>
-          </h1>
-          <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
-            Miembros ({homeData.home.members.length}/4): {homeData.home.members.map(m => m.name).join(", ")}
-          </p>
+      <div style={{ marginBottom: "2rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+        {/* Cabecera con Nombre y Botones */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+          <div>
+            <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <HomeIcon className="text-primary" /> {homeData.home.name}
+              <Button size="icon" variant="ghost" onClick={() => { setNewName(homeData.home.name); setIsNameModalOpen(true); }} title="Editar nombre">
+                <Edit2 size={16} />
+              </Button>
+            </h1>
+            <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
+              Miembros ({homeData.home.members.length}/4): {homeData.home.members.map(m => m.name).join(", ")}
+            </p>
+          </div>
+          
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            {/* Botón de vincular si no está lleno */}
+            {homeData.home.members.length < 4 && !homeData.pendingRequest && (
+              <Button size="sm" variant="outline" onClick={() => setIsLinkModalOpen(true)}>
+                <UserPlus size={16} style={{ marginRight: "0.5rem" }} /> Invitar Miembro
+              </Button>
+            )}
+
+            {homeData.home.members.length > 1 && (
+              <Button size="sm" variant="outline" style={{ borderColor: "var(--color-danger)", color: "var(--color-danger)" }} onClick={handleLeaveHome}>
+                <UserMinus size={16} style={{ marginRight: "0.5rem" }} /> Desvincular
+              </Button>
+            )}
+          </div>
         </div>
-        
-        {/* Botón de vincular si no está lleno */}
-        {homeData.home.members.length < 4 && !homeData.pendingRequest && (
-          <Button size="sm" variant="outline" onClick={() => setIsLinkModalOpen(true)}>
-            <UserPlus size={16} style={{ marginRight: "0.5rem" }} /> Invitar Miembro
-          </Button>
-        )}
 
-        {homeData.home.members.length > 1 && (
-          <Button size="sm" variant="outline" style={{ borderColor: "var(--color-danger)", color: "var(--color-danger)" }} onClick={handleLeaveHome}>
-            <UserMinus size={16} style={{ marginRight: "0.5rem" }} /> Desvincular
-          </Button>
-        )}
-      </div>
-
-      {/* Notificación de solicitud pendiente */}
-      {homeData.pendingRequest && (
-        <div style={{ backgroundColor: "var(--color-warning-bg)", padding: "1rem", borderRadius: "var(--radius-md)", marginBottom: "1.5rem", border: "1px solid var(--color-warning-border)" }}>
-          <h3 style={{ fontWeight: "bold", color: "var(--color-warning-text)", marginBottom: "0.5rem", fontSize: "0.875rem" }}>Solicitud de Vinculación</h3>
-          {homeData.pendingRequest.toUser._id === JSON.parse(localStorage.getItem("user"))._id ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <p style={{ fontSize: "0.875rem" }}>
-                <strong>{homeData.pendingRequest.fromUser.name}</strong> quiere compartir hogar contigo. Al aceptar, tus datos se fusionarán con los suyos.
-              </p>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                <Button size="sm" onClick={() => handleRespondRequest(homeData.pendingRequest._id, "accept")}>Aceptar y Fusionar</Button>
-                <Button size="sm" variant="ghost" onClick={() => handleRespondRequest(homeData.pendingRequest._id, "reject")}>Rechazar</Button>
+        {/* Notificación de solicitud pendiente */}
+        {homeData.pendingRequest && (
+          <div style={{ backgroundColor: "var(--color-warning-bg)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--color-warning-border)" }}>
+            <h3 style={{ fontWeight: "bold", color: "var(--color-warning-text)", marginBottom: "0.5rem", fontSize: "0.875rem" }}>Solicitud de Vinculación</h3>
+            {homeData.pendingRequest.toUser._id === JSON.parse(localStorage.getItem("user"))._id ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <p style={{ fontSize: "0.875rem" }}>
+                  <strong>{homeData.pendingRequest.fromUser.name}</strong> quiere compartir hogar contigo. Al aceptar, tus datos se fusionarán con los suyos.
+                </p>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <Button size="sm" onClick={() => handleRespondRequest(homeData.pendingRequest._id, "accept")}>Aceptar y Fusionar</Button>
+                  <Button size="sm" variant="ghost" onClick={() => handleRespondRequest(homeData.pendingRequest._id, "reject")}>Rechazar</Button>
+                </div>
               </div>
-            </div>
-          ) : (
-            <p style={{ fontSize: "0.875rem" }}>Esperando respuesta de <strong>{homeData.pendingRequest.toUser.name}</strong>...</p>
-          )}
-        </div>
-      )}
+            ) : (
+              <p style={{ fontSize: "0.875rem" }}>Esperando respuesta de <strong>{homeData.pendingRequest.toUser.name}</strong>...</p>
+            )}
+          </div>
+        )}
 
-      {/* Tabs */}
-      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", overflowX: "auto", paddingBottom: "0.5rem" }}>
-        <Button 
-          variant={activeTab === "list" ? "primary" : "ghost"} 
-          onClick={() => setActiveTab("list")}
-          size="sm"
-        >
-          <ShoppingCart size={16} style={{ marginRight: "0.5rem" }} /> Lista Compra
-        </Button>
-        <Button 
-          variant={activeTab === "inventory" ? "primary" : "ghost"} 
-          onClick={() => setActiveTab("inventory")}
-          size="sm"
-        >
-          <Package size={16} style={{ marginRight: "0.5rem" }} /> Inventario
-        </Button>
-        <Button 
-          variant={activeTab === "history" ? "primary" : "ghost"} 
-          onClick={() => setActiveTab("history")}
-          size="sm"
-        >
-          <History size={16} style={{ marginRight: "0.5rem" }} /> Historial
-        </Button>
+        {/* Tabs - Debajo de todo lo anterior */}
+        <div style={{ display: "flex", gap: "0.5rem", overflowX: "auto", paddingBottom: "0.5rem", marginTop: "0.5rem" }}>
+          <Button 
+            variant={activeTab === "list" ? "primary" : "ghost"} 
+            onClick={() => setActiveTab("list")}
+            size="sm"
+          >
+            <ShoppingCart size={16} style={{ marginRight: "0.5rem" }} /> Lista Compra
+          </Button>
+          <Button 
+            variant={activeTab === "inventory" ? "primary" : "ghost"} 
+            onClick={() => setActiveTab("inventory")}
+            size="sm"
+          >
+            <Package size={16} style={{ marginRight: "0.5rem" }} /> Inventario
+          </Button>
+          <Button 
+            variant={activeTab === "history" ? "primary" : "ghost"} 
+            onClick={() => setActiveTab("history")}
+            size="sm"
+          >
+            <History size={16} style={{ marginRight: "0.5rem" }} /> Historial
+          </Button>
+        </div>
       </div>
 
       {/* VISTAS */}
