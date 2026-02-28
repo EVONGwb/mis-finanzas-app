@@ -38,6 +38,14 @@ export const verifyBiometric = async () => {
     rpId: window.location.hostname
   };
 
+  // Check if we have successfully registered a credential before
+  const isRegistered = localStorage.getItem("bio_registered") === "true";
+
+  if (!isRegistered) {
+    console.log("No registered credential found, registering new one...");
+    return await registerDummyCredential();
+  }
+
   try {
     // Intentamos obtener. Si falla porque no hay credenciales, significa que necesitamos registrar una primero.
     // Pero como no tenemos backend de WebAuthn, este enfoque puro fallará.
@@ -82,6 +90,9 @@ const registerDummyCredential = async () => {
 
   try {
     const credential = await navigator.credentials.create({ publicKey });
+    if (credential) {
+      localStorage.setItem("bio_registered", "true");
+    }
     return !!credential;
   } catch (e) {
     console.error("Falló el registro dummy:", e);
