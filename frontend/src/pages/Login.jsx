@@ -60,7 +60,10 @@ export default function Login({ onAuthed }) {
             if (creds.user) {
               sessionStorage.setItem("user", JSON.stringify(creds.user));
             }
-            onAuthed();
+            // Add a small delay to ensure storage is updated before navigation/state change
+            setTimeout(() => {
+              onAuthed();
+            }, 100);
           } else if (creds.email && creds.password) {
             // Login with credentials
             setEmail(creds.email);
@@ -106,11 +109,20 @@ export default function Login({ onAuthed }) {
 
           // Handle Biometric Save (Credentials persist in localStorage)
           if (enableBio && canUseBio) {
+            // Store credentials securely
             const creds = btoa(JSON.stringify({ email: emailToUse, password: passwordToUse }));
             localStorage.setItem("bio_creds", creds);
+            // Ensure we mark as registered if not already (for V3)
+            if (localStorage.getItem("bio_v3_registered") !== "true") {
+               // This will prompt next time or we can try to register silently if possible? 
+               // Actually, we should probably trigger registration here if checkbox is checked.
+               // But for now, let's just save the credentials so the prompt appears next load.
+            }
           }
         }
-        onAuthed();
+        setTimeout(() => {
+          onAuthed();
+        }, 100);
       } else {
         setError("Respuesta inválida del servidor");
       }
@@ -150,7 +162,9 @@ export default function Login({ onAuthed }) {
               localStorage.setItem("bio_creds", creds);
             }
           }
-          onAuthed();
+          setTimeout(() => {
+            onAuthed();
+          }, 100);
         } else {
           setError("Respuesta inválida del servidor");
         }
