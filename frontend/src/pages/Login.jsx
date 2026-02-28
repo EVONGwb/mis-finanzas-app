@@ -60,10 +60,8 @@ export default function Login({ onAuthed }) {
             if (creds.user) {
               sessionStorage.setItem("user", JSON.stringify(creds.user));
             }
-            // Add a small delay to ensure storage is updated before navigation/state change
-            setTimeout(() => {
-              onAuthed();
-            }, 100);
+            // Trigger auth callback immediately
+            onAuthed();
           } else if (creds.email && creds.password) {
             // Login with credentials
             setEmail(creds.email);
@@ -120,9 +118,7 @@ export default function Login({ onAuthed }) {
             }
           }
         }
-        setTimeout(() => {
-          onAuthed();
-        }, 100);
+        onAuthed();
       } else {
         setError("Respuesta inválida del servidor");
       }
@@ -162,9 +158,7 @@ export default function Login({ onAuthed }) {
               localStorage.setItem("bio_creds", creds);
             }
           }
-          setTimeout(() => {
-            onAuthed();
-          }, 100);
+          onAuthed();
         } else {
           setError("Respuesta inválida del servidor");
         }
