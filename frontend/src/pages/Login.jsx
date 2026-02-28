@@ -1,18 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiFetch } from "../lib/api";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
-import { Mail, Lock, Eye, EyeOff, TrendingUp } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, TrendingUp, Fingerprint } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
+import { isBiometricsAvailable, verifyBiometric } from "../lib/biometrics";
 
 export default function Login({ onAuthed }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [enableBio, setEnableBio] = useState(false);
+  const [canUseBio, setCanUseBio] = useState(false);
+  const [hasSavedBio, setHasSavedBio] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Check biometrics availability
+  useEffect(() => {
+    isBiometricsAvailable().then(available => {
+      setCanUseBio(available);
+      const saved = localStorage.getItem("bio_creds");
+      if (saved) setHasSavedBio(true);
+    });
+  }, []);
 
   // Cargar email guardado si existe
   useState(() => {
@@ -22,6 +35,69 @@ export default function Login({ onAuthed }) {
       setRememberMe(true);
     }
   }, []);
+
+  const handleBiometricLogin = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const success = await verifyBiometric();
+      if (success) {
+        const saved = localStorage.getItem("bio_creds");
+        if (saved) {
+          const creds = JSON.parse(atob(saved));
+          // Auto-fill and submit
+          setEmail(creds.email);
+          setPassword(creds.password);
+          await performLogin(creds.email, creds.password);
+        } else {
+          setError("No hay credenciales biométricas guardadas. Inicia sesión normal primero.");
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo verificar la huella/FaceID");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  async function performLogin(emailToUse, passwordToUse) {
+    try {
+      const res = await apiFetch("/auth/login", {
+        method: "POST",
+        body: { email: emailToUse, password: passwordToUse }
+      });
+      
+      const token = res.data?.token;
+      const user = res.data?.user;
+
+      if (token) {
+        localStorage.setItem("token", token);
+          if (user) {
+            localStorage.setItem("user", JSON.stringify(user));
+            
+            // Handle Remember Me
+            if (rememberMe) {
+              localStorage.setItem("rememberedEmail", emailToUse);
+            } else {
+              localStorage.removeItem("rememberedEmail");
+            }
+
+            // Handle Biometric Save
+            if (enableBio && canUseBio) {
+              const creds = btoa(JSON.stringify({ email: emailToUse, password: passwordToUse }));
+              localStorage.setItem("bio_creds", creds);
+            }
+          }
+          onAuthed();
+      } else {
+        setError("Respuesta inválida del servidor");
+      }
+    } catch (err) {
+      setError(err.message);
+      // If login fails, maybe clear bad bio creds? No, let user decide.
+    }
+  }
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -40,7 +116,6 @@ export default function Login({ onAuthed }) {
           localStorage.setItem("token", token);
           if (user) {
             localStorage.setItem("user", JSON.stringify(user));
-            // Guardar o eliminar email recordado
             if (rememberMe) {
               localStorage.setItem("rememberedEmail", email);
             } else {
@@ -64,35 +139,8 @@ export default function Login({ onAuthed }) {
     e.preventDefault();
     setError("");
     setLoading(true);
-    try {
-      const res = await apiFetch("/auth/login", {
-        method: "POST",
-        body: { email, password }
-      });
-      
-      const token = res.data?.token;
-      const user = res.data?.user;
-
-      if (token) {
-        localStorage.setItem("token", token);
-          if (user) {
-            localStorage.setItem("user", JSON.stringify(user));
-            // Guardar o eliminar email recordado
-            if (rememberMe) {
-              localStorage.setItem("rememberedEmail", email);
-            } else {
-              localStorage.removeItem("rememberedEmail");
-            }
-          }
-          onAuthed();
-      } else {
-        setError("Respuesta inválida del servidor");
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    await performLogin(email, password);
+    setLoading(false);
   }
 
   return (
@@ -151,6 +199,42 @@ export default function Login({ onAuthed }) {
             Ingresa a tu cuenta para continuar
           </p>
         </div>
+
+        {/* Biometric Quick Login */}
+        {hasSavedBio && canUseBio && (
+          <div style={{ width: "100%", marginBottom: "1.5rem" }}>
+            <button
+              onClick={handleBiometricLogin}
+              type="button"
+              style={{
+                width: "100%",
+                padding: "1rem",
+                borderRadius: "14px",
+                border: "2px solid #10B981",
+                backgroundColor: "rgba(16, 185, 129, 0.05)",
+                color: "#059669",
+                fontSize: "1rem",
+                fontWeight: 600,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.75rem",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(16, 185, 129, 0.1)"}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "rgba(16, 185, 129, 0.05)"}
+            >
+              <Fingerprint size={24} />
+              Ingresar con Huella / FaceID
+            </button>
+            <div style={{ display: "flex", alignItems: "center", width: "100%", margin: "1.5rem 0 0.5rem 0" }}>
+              <div style={{ flex: 1, height: "1px", backgroundColor: "#E5E7EB" }}></div>
+              <span style={{ padding: "0 0.5rem", fontSize: "0.875rem", color: "#6B7280" }}>o usa tu contraseña</span>
+              <div style={{ flex: 1, height: "1px", backgroundColor: "#E5E7EB" }}></div>
+            </div>
+          </div>
+        )}
 
         {/* Form Section */}
         <form onSubmit={submit} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -239,6 +323,27 @@ export default function Login({ onAuthed }) {
                   Recordar usuario
                 </label>
               </div>
+
+              {canUseBio && !hasSavedBio && (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
+                  <input 
+                    type="checkbox" 
+                    id="enableBio" 
+                    checked={enableBio}
+                    onChange={(e) => setEnableBio(e.target.checked)}
+                    style={{ 
+                      width: "16px", 
+                      height: "16px", 
+                      accentColor: "#10B981",
+                      cursor: "pointer",
+                      borderRadius: "4px"
+                    }} 
+                  />
+                  <label htmlFor="enableBio" style={{ fontSize: "0.875rem", color: "#6B7280", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                    <Fingerprint size={14} /> Activar inicio con huella
+                  </label>
+                </div>
+              )}
 
               <button
                 type="button"
