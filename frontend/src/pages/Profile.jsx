@@ -8,10 +8,12 @@ import { User, Lock, Mail, Save, LogOut, Copy, Check, DollarSign } from "lucide-
 import { Card } from "../components/ui/Card";
 import { useCurrency, CURRENCIES } from "../context/CurrencyContext";
 
+import { useAuth } from "../context/AuthContext";
+
 export default function Profile() {
   const navigate = useNavigate();
   const { currency, setCurrency } = useCurrency();
-  const [user, setUser] = useState(null);
+  const { user, logout, fetchUser } = useAuth(); // Use auth context for consistent logout
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -26,24 +28,13 @@ export default function Profile() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          const userData = JSON.parse(storedUser);
-          setUser(userData);
-          setName(userData.name);
-          setEmail(userData.email);
-          setSelectedCurrency(userData.currency || currency);
-        }
-      } catch (e) {
-        setError("Error al cargar perfil");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUser();
-  }, [currency]);
+    if (user) {
+      setName(user.name || "");
+      setEmail(user.email || "");
+      setSelectedCurrency(user.currency || currency);
+      setLoading(false);
+    }
+  }, [user, currency]);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -60,13 +51,11 @@ export default function Profile() {
       });
 
       if (res.data) {
-        const updatedUser = { ...user, name, currency: selectedCurrency };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
+        // Actualizamos contexto y sesión
+        await fetchUser();
         setCurrency(selectedCurrency); // Update context
         setSuccess("Perfil actualizado correctamente");
         
-        // Clear success message after 3 seconds
         setTimeout(() => setSuccess(""), 3000);
       }
     } catch (err) {
@@ -103,8 +92,7 @@ export default function Profile() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    logout();
     navigate("/login");
   };
 

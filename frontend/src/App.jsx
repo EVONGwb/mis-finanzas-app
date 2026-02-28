@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { Layout } from "./components/layout/Layout";
+import { AdminLayout } from "./components/layout/AdminLayout";
 import { getToken, clearToken } from "./lib/auth";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CurrencyProvider } from "./context/CurrencyContext";
@@ -21,6 +22,8 @@ const Goals = lazy(() => import("./pages/Goals"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Bank = lazy(() => import("./pages/Bank"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminAudit = lazy(() => import("./pages/admin/AdminAudit"));
 const Profile = lazy(() => import("./pages/Profile"));
 
 // Loading Component
@@ -55,6 +58,18 @@ function AppLayout({ children }) {
   return <Layout onLogout={onLogout} user={user}>{children}</Layout>;
 }
 
+function AdminAppLayout({ children }) {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const onLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
+  return <AdminLayout onLogout={onLogout} user={user}>{children}</AdminLayout>;
+}
+
 function Protected({ children }) {
   const { user, loading } = useAuth();
   const token = getToken();
@@ -72,7 +87,7 @@ function AdminRoute({ children }) {
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== "admin") return <Navigate to="/dashboard" replace />;
 
-  return <AppLayout>{children}</AppLayout>;
+  return <AdminAppLayout>{children}</AdminAppLayout>;
 }
 
 function LoginRoute() {
@@ -216,13 +231,29 @@ export default function App() {
           {/* Admin Routes */}
           <Route 
             path="/admin" 
-            element={<Navigate to="/admin/users" replace />} 
+            element={<Navigate to="/admin/dashboard" replace />} 
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
           />
           <Route
             path="/admin/users"
             element={
               <AdminRoute>
                 <AdminUsers />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/audit"
+            element={
+              <AdminRoute>
+                <AdminAudit />
               </AdminRoute>
             }
           />

@@ -12,7 +12,7 @@ export function Sidebar({ isOpen, onClose, onLogout, user }) {
   ];
 
   if (user?.role === "admin") {
-    links.push({ to: "/admin/users", label: "Panel Admin", icon: Shield });
+    links.push({ to: "/admin/dashboard", label: "Admin", icon: Shield });
   }
 
   return (

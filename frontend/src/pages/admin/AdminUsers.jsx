@@ -7,13 +7,14 @@ import { Badge } from "../../components/ui/Badge";
 import { Input } from "../../components/ui/Input";
 import { Modal } from "../../components/ui/Modal";
 import { Table, TableRow, TableCell } from "../../components/ui/Table";
-import { Plus, Trash2, Edit2, Key } from "lucide-react";
+import { Plus, Trash2, Edit2, Key, Search, UserCheck, UserX } from "lucide-react";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   
   // Create User Form
   const [formData, setFormData] = useState({
@@ -100,42 +101,81 @@ export default function AdminUsers() {
     }
   };
 
+  const filteredUsers = users.filter(u => 
+    (u.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="animate-fade-in">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.875rem" }}>Gestión de Usuarios</h1>
-          <p style={{ color: "var(--color-text-secondary)" }}>Administración del sistema</p>
+          <h1 style={{ fontSize: "1.875rem", fontWeight: 700, color: "#1e293b", margin: 0 }}>Gestión de Usuarios</h1>
+          <p style={{ color: "#64748b", marginTop: "0.25rem" }}>Administración de cuentas y permisos</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>
-          <Plus size={18} style={{ marginRight: "0.5rem" }} />
+        <Button onClick={() => setIsModalOpen(true)} style={{ gap: "0.5rem" }}>
+          <Plus size={18} />
           Nuevo Usuario
         </Button>
       </div>
 
-      {error && <div style={{ color: "red", marginBottom: "1rem" }}>{error}</div>}
+      <Card style={{ marginBottom: "1.5rem", padding: "1rem" }}>
+        <div style={{ position: "relative", maxWidth: "400px" }}>
+          <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+          <input 
+            type="text" 
+            placeholder="Buscar usuario..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "0.625rem 1rem 0.625rem 2.5rem",
+              borderRadius: "0.5rem",
+              border: "1px solid #cbd5e1",
+              outline: "none",
+              fontSize: "0.875rem"
+            }}
+          />
+        </div>
+      </Card>
 
-      <Card>
+      {error && <div style={{ color: "#ef4444", marginBottom: "1rem", padding: "1rem", backgroundColor: "#fef2f2", borderRadius: "0.5rem" }}>{error}</div>}
+
+      <Card style={{ padding: 0, overflow: "hidden" }}>
         {loading ? (
-          <p>Cargando...</p>
+          <div style={{ padding: "3rem", textAlign: "center", color: "#64748b" }}>Cargando usuarios...</div>
         ) : (
           <Table>
-            <thead>
+            <thead style={{ backgroundColor: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
               <tr>
-                <th style={{ textAlign: "left", padding: "1rem" }}>Nombre</th>
-                <th style={{ textAlign: "left", padding: "1rem" }}>Email</th>
-                <th style={{ textAlign: "left", padding: "1rem" }}>Rol</th>
-                <th style={{ textAlign: "right", padding: "1rem" }}>Acciones</th>
+                <th style={{ textAlign: "left", padding: "1rem", color: "#64748b", fontWeight: 600, fontSize: "0.75rem", textTransform: "uppercase" }}>Nombre</th>
+                <th style={{ textAlign: "left", padding: "1rem", color: "#64748b", fontWeight: 600, fontSize: "0.75rem", textTransform: "uppercase" }}>Email</th>
+                <th style={{ textAlign: "left", padding: "1rem", color: "#64748b", fontWeight: 600, fontSize: "0.75rem", textTransform: "uppercase" }}>Rol</th>
+                <th style={{ textAlign: "right", padding: "1rem", color: "#64748b", fontWeight: 600, fontSize: "0.75rem", textTransform: "uppercase" }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
+              {filteredUsers.map((u) => (
                 <TableRow key={u._id}>
-                  <TableCell>{u.name || "-"}</TableCell>
-                  <TableCell>{u.email}</TableCell>
+                  <TableCell style={{ fontWeight: 500 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                      <div style={{ 
+                        width: "32px", height: "32px", 
+                        borderRadius: "50%", 
+                        backgroundColor: u.role === "admin" ? "#dbeafe" : "#f1f5f9",
+                        color: u.role === "admin" ? "#2563eb" : "#64748b",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: "0.875rem", fontWeight: 600
+                      }}>
+                        {u.name?.charAt(0).toUpperCase() || "U"}
+                      </div>
+                      {u.name || <span style={{ color: "#94a3b8", fontStyle: "italic" }}>Sin nombre</span>}
+                    </div>
+                  </TableCell>
+                  <TableCell style={{ color: "#64748b" }}>{u.email}</TableCell>
                   <TableCell>
                     <Badge variant={u.role === "admin" ? "primary" : "neutral"}>
-                      {u.role}
+                      {u.role === "admin" ? "Administrador" : "Usuario"}
                     </Badge>
                   </TableCell>
                   <TableCell style={{ textAlign: "right" }}>
@@ -144,15 +184,17 @@ export default function AdminUsers() {
                         size="sm" 
                         variant="ghost" 
                         onClick={() => handleChangeRole(u._id, u.role)}
-                        title="Cambiar Rol"
+                        title={u.role === "admin" ? "Quitar Admin" : "Hacer Admin"}
+                        style={{ color: u.role === "admin" ? "#ef4444" : "#3b82f6" }}
                       >
-                        <Edit2 size={16} />
+                        {u.role === "admin" ? <UserX size={16} /> : <UserCheck size={16} />}
                       </Button>
                       <Button 
                         size="sm" 
                         variant="ghost" 
                         onClick={() => handleResetPassword(u._id)}
-                        title="Reset Password"
+                        title="Cambiar Contraseña"
+                        style={{ color: "#f59e0b" }}
                       >
                         <Key size={16} />
                       </Button>
@@ -160,8 +202,8 @@ export default function AdminUsers() {
                         size="sm" 
                         variant="ghost" 
                         onClick={() => handleDelete(u._id)}
-                        style={{ color: "var(--color-danger)" }}
-                        title="Eliminar"
+                        style={{ color: "#ef4444" }}
+                        title="Eliminar Usuario"
                       >
                         <Trash2 size={16} />
                       </Button>
@@ -169,6 +211,13 @@ export default function AdminUsers() {
                   </TableCell>
                 </TableRow>
               ))}
+              {filteredUsers.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} style={{ textAlign: "center", padding: "3rem", color: "#94a3b8" }}>
+                    No se encontraron usuarios
+                  </TableCell>
+                </TableRow>
+              )}
             </tbody>
           </Table>
         )}
@@ -180,6 +229,7 @@ export default function AdminUsers() {
             label="Nombre" 
             value={formData.name} 
             onChange={(e) => setFormData({...formData, name: e.target.value})}
+            placeholder="Ej. Juan Pérez"
           />
           <Input 
             label="Email" 
@@ -187,6 +237,7 @@ export default function AdminUsers() {
             required
             value={formData.email} 
             onChange={(e) => setFormData({...formData, email: e.target.value})}
+            placeholder="usuario@ejemplo.com"
           />
           <Input 
             label="Contraseña" 
@@ -194,21 +245,29 @@ export default function AdminUsers() {
             required
             value={formData.password} 
             onChange={(e) => setFormData({...formData, password: e.target.value})}
+            placeholder="Mínimo 6 caracteres"
           />
           <div>
-            <label style={{ display: "block", fontSize: "0.875rem", marginBottom: "0.5rem" }}>Rol</label>
+            <label style={{ display: "block", fontSize: "0.875rem", marginBottom: "0.5rem", fontWeight: 500, color: "#334155" }}>Rol</label>
             <select 
               value={formData.role}
               onChange={(e) => setFormData({...formData, role: e.target.value})}
-              style={{ width: "100%", padding: "0.75rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)" }}
+              style={{ 
+                width: "100%", 
+                padding: "0.75rem", 
+                borderRadius: "0.5rem", 
+                border: "1px solid #cbd5e1",
+                backgroundColor: "white",
+                fontSize: "0.875rem"
+              }}
             >
-              <option value="user">Usuario</option>
-              <option value="admin">Administrador</option>
+              <option value="user">Usuario Estándar</option>
+              <option value="admin">Administrador del Sistema</option>
             </select>
           </div>
           <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
             <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} style={{ flex: 1 }}>Cancelar</Button>
-            <Button type="submit" style={{ flex: 1 }}>Crear</Button>
+            <Button type="submit" style={{ flex: 1 }}>Crear Usuario</Button>
           </div>
         </form>
       </Modal>
