@@ -1,7 +1,34 @@
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 export function Modal({ isOpen, onClose, title, children }) {
+  const contentRef = useRef(null);
+
+  // Auto-scroll to focused input to prevent keyboard from covering it
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleFocus = (e) => {
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName)) {
+        setTimeout(() => {
+          e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 300);
+      }
+    };
+
+    const contentEl = contentRef.current;
+    if (contentEl) {
+      contentEl.addEventListener("focus", handleFocus, true);
+    }
+
+    return () => {
+      if (contentEl) {
+        contentEl.removeEventListener("focus", handleFocus, true);
+      }
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return createPortal(
@@ -10,29 +37,26 @@ export function Modal({ isOpen, onClose, title, children }) {
       inset: 0,
       backgroundColor: "rgba(0,0,0,0.5)",
       display: "flex",
-      alignItems: "flex-end", // Align to bottom on mobile
+      alignItems: "center", // Changed from flex-end to center to avoid keyboard issues
       justifyContent: "center",
-      zIndex: 9999, // Super high z-index to cover everything
-      padding: 0 // Remove padding to allow full width/height
+      zIndex: 9999,
+      padding: "1rem" // Added padding for mobile spacing
     }}>
       <div 
+        ref={contentRef}
         className="modal-content"
         style={{
           backgroundColor: "var(--color-surface)",
-          borderTopLeftRadius: "1.5rem", // Rounded top only
-          borderTopRightRadius: "1.5rem",
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0,
+          borderRadius: "1.5rem", // Fully rounded
           width: "100%",
-          maxWidth: "500px", // Keep desktop constraint
-          maxHeight: "100dvh", // Allow full screen height if needed
-          height: "auto", // Auto height up to max
+          maxWidth: "500px",
+          maxHeight: "90dvh", // Slightly less than 100 to allow margins
+          height: "auto",
           display: "flex",
           flexDirection: "column",
           boxShadow: "var(--shadow-lg)",
           animation: "slideUp 0.3s ease-out",
-          margin: 0, // Flush with bottom
-          paddingBottom: "env(safe-area-inset-bottom, 20px)" // Safe area for iPhone home bar
+          margin: "0 auto",
         }}
       >
         <div style={{ 
@@ -59,7 +83,7 @@ export function Modal({ isOpen, onClose, title, children }) {
         </div>
         <div style={{ 
           padding: "1.5rem",
-          overflowY: "auto", // Internal scroll only if needed
+          overflowY: "auto",
           overscrollBehavior: "contain",
           flex: 1
         }}>
@@ -68,21 +92,8 @@ export function Modal({ isOpen, onClose, title, children }) {
       </div>
       <style>{`
         @keyframes slideUp {
-          from { transform: translateY(100%); }
-          to { transform: translateY(0); }
-        }
-        @media (min-width: 640px) {
-          .modal-content {
-            border-radius: var(--radius-lg) !important;
-            margin: 1rem !important;
-            align-self: center !important;
-            max-height: 85vh !important;
-            padding-bottom: 0 !important;
-          }
-          div[style*="align-items: flex-end"] {
-            align-items: center !important;
-            padding: 1rem !important;
-          }
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
         }
       `}</style>
     </div>,
