@@ -110,6 +110,9 @@ export default function Home() {
   const [buyForm, setBuyForm] = useState({ quantity: "", pricePerUnit: "" });
   const [isBuying, setIsBuying] = useState(false);
 
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
   // Forms
   const [productForm, setProductForm] = useState({
     name: "", category: "General", unit: "ud", stock: 0, targetStock: 1, minStock: 1, note: ""
@@ -279,6 +282,23 @@ export default function Home() {
     } catch (error) {
       alert(error.message);
     }
+  };
+
+  const handleProductInputChange = (value) => {
+    setItemForm({...itemForm, productName: value});
+    if (value.length > 0) {
+      const lowerVal = value.toLowerCase();
+      const matched = Object.keys(FOOD_IMAGES).filter(k => k.includes(lowerVal));
+      setSuggestions(matched.slice(0, 5));
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  const selectSuggestion = (name) => {
+    setItemForm({...itemForm, productName: name.charAt(0).toUpperCase() + name.slice(1)});
+    setShowSuggestions(false);
   };
 
   const openBuyModal = (item) => {
@@ -566,7 +586,61 @@ export default function Home() {
       {/* Modals */}
       <Modal isOpen={isItemModalOpen} onClose={() => setIsItemModalOpen(false)} title="Añadir a la Lista">
         <form onSubmit={handleAddItem} style={{ display: "grid", gap: "1rem" }}>
-          <Input label="Producto" required value={itemForm.productName} onChange={e => setItemForm({...itemForm, productName: e.target.value})} />
+          <div style={{ position: "relative" }}>
+            <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)", marginLeft: "0.25rem", marginBottom: "0.25rem", display: "block" }}>Producto</label>
+            <input 
+              required 
+              value={itemForm.productName} 
+              onChange={e => handleProductInputChange(e.target.value)} 
+              onFocus={() => itemForm.productName && setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+              style={{
+                width: "100%",
+                padding: "0.75rem 1rem",
+                borderRadius: "var(--radius-md)",
+                border: "1px solid var(--color-border)",
+                fontSize: "1rem",
+                outline: "none",
+                backgroundColor: "var(--color-surface)",
+                height: "50px"
+              }}
+            />
+            {showSuggestions && suggestions.length > 0 && (
+              <div style={{ 
+                position: "absolute", 
+                top: "100%", 
+                left: 0, 
+                right: 0, 
+                backgroundColor: "var(--color-surface)", 
+                border: "1px solid var(--color-border)", 
+                borderRadius: "0 0 8px 8px", 
+                zIndex: 10,
+                maxHeight: "200px",
+                overflowY: "auto",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+              }}>
+                {suggestions.map(s => (
+                  <div 
+                    key={s} 
+                    onClick={() => selectSuggestion(s)}
+                    style={{ 
+                      padding: "0.75rem 1rem", 
+                      cursor: "pointer", 
+                      display: "flex", 
+                      alignItems: "center", 
+                      gap: "0.75rem",
+                      borderBottom: "1px solid var(--color-border)",
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = "var(--color-surface-hover)"}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+                  >
+                    <img src={FOOD_IMAGES[s]} alt={s} style={{ width: "24px", height: "24px", objectFit: "contain" }} />
+                    <span style={{ textTransform: "capitalize" }}>{s}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <div style={{ display: "flex", gap: "1rem" }}>
             <Input label="Cantidad" type="number" required value={itemForm.quantity} onChange={e => setItemForm({...itemForm, quantity: e.target.value})} />
             <Input label="Unidad" required value={itemForm.unit} onChange={e => setItemForm({...itemForm, unit: e.target.value})} />
