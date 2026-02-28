@@ -19,6 +19,7 @@ import {
   Trash2, 
   Edit2, 
   UserPlus,
+  UserMinus,
   AlertCircle
 } from "lucide-react";
 
@@ -119,6 +120,16 @@ export default function Home() {
         token: getToken(),
         body: { requestId, action }
       });
+      fetchHomeData();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleLeaveHome = async () => {
+    if (!confirm("¿Seguro que quieres desvincularte? Se creará un nuevo hogar vacío para ti.")) return;
+    try {
+      await apiFetch("/home/leave", { method: "POST", token: getToken() });
       fetchHomeData();
     } catch (error) {
       alert(error.message);
@@ -265,6 +276,12 @@ export default function Home() {
         {homeData.home.members.length === 1 && !homeData.pendingRequest && (
           <Button size="sm" variant="outline" onClick={() => setIsLinkModalOpen(true)}>
             <UserPlus size={16} style={{ marginRight: "0.5rem" }} /> Invitar Pareja
+          </Button>
+        )}
+
+        {homeData.home.members.length > 1 && (
+          <Button size="sm" variant="outline" style={{ borderColor: "var(--color-danger)", color: "var(--color-danger)" }} onClick={handleLeaveHome}>
+            <UserMinus size={16} style={{ marginRight: "0.5rem" }} /> Desvincular
           </Button>
         )}
       </div>

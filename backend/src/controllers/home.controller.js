@@ -141,6 +141,33 @@ export const respondHomeRequest = async (req, res, next) => {
   }
 };
 
+export const leaveHome = async (req, res, next) => {
+  try {
+    const home = await Home.findOne({ members: req.user._id });
+    if (!home) throw new HttpError(404, "No tienes un hogar vinculado");
+
+    // Remove user from members
+    home.members = home.members.filter(m => m.toString() !== req.user._id.toString());
+
+    if (home.members.length === 0) {
+      // If no members left, delete the home and its data
+      await Promise.all([
+        Home.findByIdAndDelete(home._id),
+        HomeProduct.deleteMany({ home: home._id }),
+        HomeShoppingItem.deleteMany({ home: home._id }),
+        HomePurchase.deleteMany({ home: home._id })
+      ]);
+    } else {
+      // If other members remain, just save the home
+      await home.save();
+    }
+
+    res.json({ ok: true, message: "Te has desvinculado del hogar" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // === INVENTARIO ===
 
 export const getInventory = async (req, res, next) => {

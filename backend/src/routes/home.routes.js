@@ -4,6 +4,7 @@ import {
   getHome,
   sendHomeRequest,
   respondHomeRequest,
+  leaveHome,
   getInventory,
   addProduct,
   updateProduct,
@@ -23,6 +24,7 @@ router.use(requireAuth);
 router.get("/home", getHome);
 router.post("/home/request", sendHomeRequest);
 router.post("/home/respond", respondHomeRequest);
+router.post("/home/leave", leaveHome);
 
 // Inventario
 router.get("/home/inventory", getInventory);
