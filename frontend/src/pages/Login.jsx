@@ -75,10 +75,14 @@ export default function Login({ onAuthed }) {
             await performLogin(creds.email, creds.password);
           } else {
              setError("Credenciales biométricas inválidas. Inicia sesión de nuevo.");
+             setLoading(false); // Stop loading if invalid creds
           }
         } else {
           setError("No hay credenciales biométricas guardadas. Inicia sesión normal primero.");
+          setLoading(false); // Stop loading if no creds
         }
+      } else {
+        setLoading(false); // Stop loading if verifyBiometric returns false/null (cancelled)
       }
     } catch (err) {
       console.error(err);
@@ -88,8 +92,7 @@ export default function Login({ onAuthed }) {
       }
       // If it failed/cancelled, mark as 'just_logged_out' to prevent immediate loop re-trigger
       sessionStorage.setItem("just_logged_out", "true");
-    } finally {
-      setLoading(false);
+      setLoading(false); // Ensure loading stops on error
     }
   };
 
