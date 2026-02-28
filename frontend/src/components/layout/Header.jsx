@@ -1,4 +1,4 @@
-import { Menu, Bell, ChevronDown, RefreshCw, Globe } from "lucide-react";
+import { Menu, Bell, ChevronDown, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useCurrency, CURRENCIES } from "../../context/CurrencyContext";
@@ -7,21 +7,12 @@ export function Header({ onMenuClick, user }) {
   const navigate = useNavigate();
   const { currency, setCurrency } = useCurrency();
   const [logoError, setLogoError] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Capitalize month properly
   const date = new Date();
   const monthName = date.toLocaleString('es-ES', { month: 'long' });
   const year = date.getFullYear();
   const currentMonth = `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${year}`;
-
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    // Small delay to show animation
-    setTimeout(() => {
-      window.location.reload();
-    }, 300);
-  };
 
   const handleCurrencyChange = (e) => {
     setCurrency(e.target.value);
@@ -113,31 +104,6 @@ export function Header({ onMenuClick, user }) {
           </select>
           <ChevronDown size={12} style={{ position: "absolute", right: "6px", pointerEvents: "none", color: "#6B7280" }} />
         </div>
-
-        {/* Refresh Button - Small & Subtle */}
-        <button 
-          onClick={handleRefresh}
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            width: "32px", height: "32px", // Smaller
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "var(--color-text-tertiary)", // Very subtle gray
-            transition: "all 0.2s ease",
-            marginRight: "0.25rem"
-          }}
-          title="Actualizar"
-        >
-          <RefreshCw 
-            size={16} 
-            className={isRefreshing ? "animate-spin" : ""} 
-            strokeWidth={2}
-          />
-        </button>
 
         {/* User Avatar */}
         <div 
