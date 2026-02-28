@@ -283,8 +283,16 @@ export default function Home() {
         {/* Cabecera con Nombre y Botones */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
           <div>
-            <h1 style={{ fontSize: "1.875rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <HomeIcon className="text-primary" /> {homeData.home.name}
+            <h1 style={{ 
+              fontWeight: "bold", 
+              display: "flex", 
+              alignItems: "center", 
+              gap: "0.5rem",
+              fontSize: homeData.home.name.length > 15 ? "1.25rem" : "1.875rem",
+              whiteSpace: "nowrap"
+            }}>
+              <HomeIcon className="text-primary" /> 
+              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{homeData.home.name}</span>
               <Button size="icon" variant="ghost" onClick={() => { setNewName(homeData.home.name); setIsNameModalOpen(true); }} title="Editar nombre">
                 <Edit2 size={16} />
               </Button>
