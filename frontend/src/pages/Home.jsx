@@ -23,6 +23,70 @@ import {
   AlertCircle
 } from "lucide-react";
 
+const FOOD_IMAGES = {
+  // Frutas y Verduras
+  "manzana": "https://cdn-icons-png.flaticon.com/512/415/415733.png",
+  "platano": "https://cdn-icons-png.flaticon.com/512/2909/2909787.png",
+  "naranja": "https://cdn-icons-png.flaticon.com/512/135/135620.png",
+  "limon": "https://cdn-icons-png.flaticon.com/512/6033/6033703.png",
+  "tomate": "https://cdn-icons-png.flaticon.com/512/1202/1202125.png",
+  "lechuga": "https://cdn-icons-png.flaticon.com/512/765/765618.png",
+  "patata": "https://cdn-icons-png.flaticon.com/512/765/765584.png",
+  "cebolla": "https://cdn-icons-png.flaticon.com/512/765/765551.png",
+  "zanahoria": "https://cdn-icons-png.flaticon.com/512/2909/2909841.png",
+  "ajo": "https://cdn-icons-png.flaticon.com/512/5029/5029236.png",
+  
+  // Lácteos y Huevos
+  "leche": "https://cdn-icons-png.flaticon.com/512/970/970929.png",
+  "huevo": "https://cdn-icons-png.flaticon.com/512/837/837560.png",
+  "queso": "https://cdn-icons-png.flaticon.com/512/305/305978.png",
+  "yogur": "https://cdn-icons-png.flaticon.com/512/2935/2935394.png",
+  "mantequilla": "https://cdn-icons-png.flaticon.com/512/2674/2674062.png",
+
+  // Panadería y Cereales
+  "pan": "https://cdn-icons-png.flaticon.com/512/3014/3014520.png",
+  "arroz": "https://cdn-icons-png.flaticon.com/512/3014/3014527.png",
+  "pasta": "https://cdn-icons-png.flaticon.com/512/2515/2515139.png",
+  "harina": "https://cdn-icons-png.flaticon.com/512/3348/3348079.png",
+  "cereal": "https://cdn-icons-png.flaticon.com/512/2674/2674066.png",
+
+  // Carnes y Pescados
+  "pollo": "https://cdn-icons-png.flaticon.com/512/1046/1046774.png",
+  "carne": "https://cdn-icons-png.flaticon.com/512/3143/3143643.png",
+  "pescado": "https://cdn-icons-png.flaticon.com/512/2515/2515183.png",
+  "jamon": "https://cdn-icons-png.flaticon.com/512/2312/2312297.png",
+  "salchicha": "https://cdn-icons-png.flaticon.com/512/3082/3082008.png",
+
+  // Bebidas
+  "agua": "https://cdn-icons-png.flaticon.com/512/3105/3105807.png",
+  "cafe": "https://cdn-icons-png.flaticon.com/512/3054/3054889.png",
+  "te": "https://cdn-icons-png.flaticon.com/512/3054/3054898.png",
+  "jugo": "https://cdn-icons-png.flaticon.com/512/2405/2405597.png",
+  "cerveza": "https://cdn-icons-png.flaticon.com/512/931/931949.png",
+  "vino": "https://cdn-icons-png.flaticon.com/512/2405/2405451.png",
+
+  // Otros
+  "aceite": "https://cdn-icons-png.flaticon.com/512/1202/1202058.png",
+  "sal": "https://cdn-icons-png.flaticon.com/512/3348/3348092.png",
+  "azucar": "https://cdn-icons-png.flaticon.com/512/2674/2674116.png",
+  "salsa": "https://cdn-icons-png.flaticon.com/512/859/859344.png",
+  "chocolate": "https://cdn-icons-png.flaticon.com/512/2553/2553691.png"
+};
+
+const getFoodImage = (name) => {
+  const lowerName = name.toLowerCase();
+  // Búsqueda exacta
+  if (FOOD_IMAGES[lowerName]) return FOOD_IMAGES[lowerName];
+  
+  // Búsqueda parcial
+  for (const [key, url] of Object.entries(FOOD_IMAGES)) {
+    if (lowerName.includes(key)) return url;
+  }
+  
+  // Default fallback icon based on first letter or generic
+  return "https://cdn-icons-png.flaticon.com/512/2927/2927347.png"; // Caja genérica
+};
+
 export default function Home() {
   const { formatCurrency } = useCurrency();
   const [activeTab, setActiveTab] = useState("list"); // 'list', 'inventory', 'history', 'settings'
@@ -376,10 +440,15 @@ export default function Home() {
             {shoppingList.map(item => (
               <Card key={item._id} padding="1rem">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>{item.productName}</span>
-                    <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
-                      {item.quantity} {item.unit} • Por: {item.addedBy?.name}
+                  <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                    <div style={{ width: "40px", height: "40px", flexShrink: 0 }}>
+                      <img src={getFoodImage(item.productName)} alt={item.productName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                    </div>
+                    <div>
+                      <span style={{ fontWeight: 600, fontSize: "1.1rem" }}>{item.productName}</span>
+                      <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
+                        {item.quantity} {item.unit} • Por: {item.addedBy?.name}
+                      </div>
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -410,8 +479,13 @@ export default function Home() {
               const isLow = prod.stock <= prod.minStock;
               return (
                 <Card key={prod._id} padding="1rem">
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                    <span style={{ fontWeight: 600, cursor: "pointer" }} onClick={() => handleEditProduct(prod)}>{prod.name}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                      <div style={{ width: "32px", height: "32px", flexShrink: 0 }}>
+                        <img src={getFoodImage(prod.name)} alt={prod.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                      </div>
+                      <span style={{ fontWeight: 600, cursor: "pointer" }} onClick={() => handleEditProduct(prod)}>{prod.name}</span>
+                    </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                       <input 
                         type="number" 
@@ -470,9 +544,14 @@ export default function Home() {
 
       {activeTab === "history" && (
         <div className="animate-fade-in">
-          <Table headers={["Producto", "Cant.", "Precio", "Comprador", "Fecha"]}>
+          <Table headers={["", "Producto", "Cant.", "Precio", "Comprador", "Fecha"]}>
             {history.map(h => (
               <TableRow key={h._id}>
+                <TableCell>
+                  <div style={{ width: "24px", height: "24px" }}>
+                    <img src={getFoodImage(h.productName)} alt={h.productName} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  </div>
+                </TableCell>
                 <TableCell>{h.productName}</TableCell>
                 <TableCell>{h.quantity} {h.unit}</TableCell>
                 <TableCell>{formatCurrency(h.price)}</TableCell>
