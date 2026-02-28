@@ -45,10 +45,23 @@ export default function Login({ onAuthed }) {
         const saved = localStorage.getItem("bio_creds");
         if (saved) {
           const creds = JSON.parse(atob(saved));
-          // Auto-fill and submit
-          setEmail(creds.email);
-          setPassword(creds.password);
-          await performLogin(creds.email, creds.password);
+          
+          if (creds.type === 'token' && creds.token) {
+            // Login with stored token (Google flow)
+            // Verify token validity first? For now, trust it and let AuthContext handle 401
+            localStorage.setItem("token", creds.token);
+            if (creds.user) {
+              localStorage.setItem("user", JSON.stringify(creds.user));
+            }
+            onAuthed();
+          } else if (creds.email && creds.password) {
+            // Login with credentials
+            setEmail(creds.email);
+            setPassword(creds.password);
+            await performLogin(creds.email, creds.password);
+          } else {
+             setError("Credenciales biométricas inválidas. Inicia sesión de nuevo.");
+          }
         } else {
           setError("No hay credenciales biométricas guardadas. Inicia sesión normal primero.");
         }
@@ -116,10 +129,17 @@ export default function Login({ onAuthed }) {
           localStorage.setItem("token", token);
           if (user) {
             localStorage.setItem("user", JSON.stringify(user));
+            
             if (rememberMe) {
               localStorage.setItem("rememberedEmail", email);
             } else {
               localStorage.removeItem("rememberedEmail");
+            }
+
+            // Handle Biometric Save for Google
+            if (enableBio && canUseBio) {
+              const creds = btoa(JSON.stringify({ type: 'token', token, user }));
+              localStorage.setItem("bio_creds", creds);
             }
           }
           onAuthed();
