@@ -46,7 +46,11 @@ export const verifyBiometric = async () => {
     return await navigator.credentials.get({ publicKey });
   } catch (error) {
     console.warn("Error verifying biometric:", error);
-    // If it fails (e.g. invalid ID), try re-registering
+    // If user cancelled, DO NOT retry with registration to avoid double prompt
+    if (error.name === "NotAllowedError" || error.name === "AbortError") {
+      throw error; 
+    }
+    // If it fails for other reasons (e.g. invalid ID), try re-registering
     return await registerDummyCredential();
   }
 };

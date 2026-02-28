@@ -15,7 +15,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
 export async function apiFetch(path, { token, method = "GET", body } = {}) {
   const headers = { "Content-Type": "application/json" };
-  const authToken = token || localStorage.getItem("token"); 
+  const authToken = token || getToken(); 
   
   if (authToken) {
     headers.Authorization = `Bearer ${authToken}`;
@@ -35,11 +35,25 @@ export async function apiFetch(path, { token, method = "GET", body } = {}) {
     }
   }
 
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal
+    });
+  } catch (err) {
+    if (err.name === "AbortError") {
+      throw new Error("Tiempo de espera agotado (15s). Revisa tu conexión.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const text = await res.text();
   let data = null;
