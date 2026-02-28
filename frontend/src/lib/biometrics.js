@@ -72,7 +72,11 @@ const registerDummyCredential = async () => {
       displayName: "Usuario Local"
     },
     pubKeyCredParams: [{ alg: -7, type: "public-key" }],
-    authenticatorSelection: { userVerification: "required" },
+    authenticatorSelection: { 
+      userVerification: "required",
+      authenticatorAttachment: "platform", // Fuerza a usar el dispositivo local (FaceID/TouchID) y evita preguntas extra
+      requireResidentKey: false
+    },
     timeout: 60000
   };
 
