@@ -96,10 +96,10 @@ export default function DeliveriesDashboard() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
       
-      // Start of month in UTC with 2 days buffer to catch timezone spillovers
-      const from = new Date(Date.UTC(year, month, 1) - 2 * 24 * 60 * 60 * 1000).toISOString();
-      // End of month in UTC with 2 days buffer
-      const to = new Date(Date.UTC(year, month + 1, 0) + 2 * 24 * 60 * 60 * 1000).toISOString();
+      // Start of month in UTC
+      const from = new Date(Date.UTC(year, month, 1)).toISOString();
+      // End of month in UTC (last millisecond of the month)
+      const to = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999)).toISOString();
       
       const token = getToken();
 
