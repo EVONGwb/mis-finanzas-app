@@ -1,8 +1,6 @@
 import mongoose from "mongoose";
 import { User } from "../src/models/user.model.js";
 import { env } from "../src/config/env.js";
-
-// Cargar variables de entorno
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -11,9 +9,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
-async function makeUserAdmin(email) {
+async function listUsers() {
   const uri = process.env.MONGODB_URI || env.MONGODB_URI;
-  
   if (!uri) {
     console.error("❌ MONGODB_URI no encontrada");
     process.exit(1);
@@ -23,17 +20,13 @@ async function makeUserAdmin(email) {
     await mongoose.connect(uri);
     console.log("✅ Conectado a MongoDB");
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const users = await User.find({}, { email: 1, name: 1, role: 1 });
     
-    if (!user) {
-      console.log(`❌ Usuario no encontrado: ${email}`);
-      process.exit(1);
-    }
-
-    user.role = "admin";
-    await user.save();
-
-    console.log(`✅ ¡Éxito! El usuario ${user.name} (${user.email}) ahora es ADMIN.`);
+    console.log(`\n📋 Encontrados ${users.length} usuarios:`);
+    users.forEach(u => {
+      console.log(`- ${u.email} | Role: ${u.role} | Name: ${u.name}`);
+    });
+    console.log("\n");
 
   } catch (error) {
     console.error("❌ Error:", error);
@@ -43,5 +36,4 @@ async function makeUserAdmin(email) {
   }
 }
 
-// Ejecutar con el email proporcionado
-makeUserAdmin("prudenciomadjokembula@gmail.com");
+listUsers();

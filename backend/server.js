@@ -21,9 +21,6 @@ import homeRoutes from "./src/routes/home.routes.js";
 import creditRoutes from "./src/routes/credit.routes.js";
 import bankRoutes from "./src/routes/bank.routes.js";
 import monthlyExpensesRoutes from "./src/routes/monthlyExpenses.routes.js";
-import billingRoutes from "./src/routes/billing.routes.js";
-import { handleWebhook } from "./src/controllers/billing.controller.js";
-import { requireActiveSubscription } from "./src/middlewares/requireActiveSubscription.js";
 import { notFound } from "./src/middlewares/notFound.js";
 import { errorHandler } from "./src/middlewares/errorHandler.js";
 
@@ -57,9 +54,6 @@ app.use(cors({
 // Using a middleware for OPTIONS instead:
 app.options(/.*/, cors()); 
 
-// Webhook Stripe (antes de express.json)
-app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), handleWebhook);
-
 app.use(express.json()); app.use(helmet());
 
 app.use(
@@ -74,57 +68,22 @@ app.use(
 // Logs de cada request
 app.use(httpLogger);
 
-// Rutas Públicas y Auth
+// Rutas
 app.use("/api", healthRoutes);
+app.use("/api", usersRoutes);
 app.use("/api", authRoutes);
-app.use("/api/billing", billingRoutes); // Checkout y Portal (tienen requireAuth interno)
+app.use("/api/admin", adminRoutes);
+app.use("/api", auditRoutes);
+app.use("/api", deliveriesRoutes);
+app.use("/api", debtsRoutes);
+app.use("/api", homeRoutes);
+app.use("/api", creditRoutes);
+app.use("/api/bank", bankRoutes);
+app.use("/api/monthly-expenses", monthlyExpensesRoutes);
 
-// Rutas Protegidas por Suscripción
-// Aplicar requireActiveSubscription a todas las rutas de negocio
-// Nota: requireAuth ya debería estar aplicado en cada ruta o aquí globalmente si se desea.
-// Asumiendo que las rutas ya tienen requireAuth, añadimos requireActiveSubscription
-// Pero requireActiveSubscription requiere req.user, así que debe ir DESPUÉS de requireAuth.
-// Como requireAuth está DENTRO de cada router (ej: users.routes.js), 
-// no podemos poner requireActiveSubscription aquí globalmente FÁCILMENTE sin requireAuth antes.
-//
-// Sin embargo, podemos hacer un middleware wrapper o aplicarlo ruta por ruta.
-// O mejor, modificar los routers para incluirlo. 
-// Pero el usuario pidió "Proteger rutas con requireActiveSubscription" y "Indicar dónde añadir".
-//
-// Opción: Aplicar middleware a nivel de app.use para grupos de rutas, PERO asegurando que requireAuth se ejecute.
-// Si los routers ya tienen requireAuth, requireActiveSubscription fallará si no hay user.
-//
-// Vamos a inyectarlo en los routers que lo necesiten.
-// O mejor, agrupamos las rutas de negocio bajo un router común o middleware.
-
-// Solución: Middleware que verifica user. Si no hay user, pasa (deja que requireAuth lo capture en el router).
-// Si hay user, verifica suscripción.
-// Pero requireActiveSubscription lanza 401 si no hay user.
-//
-// Vamos a asumir que las rutas de negocio SIEMPRE requieren auth.
-// Así que podemos hacer:
-// app.use("/api", requireAuth, requireActiveSubscription, businessRoutes);
-// Pero requireAuth está importado de middlewares/auth.js (necesito importarlo).
-
-import { requireAuth } from "./src/middlewares/auth.js";
-
-const businessMiddleware = [requireAuth, requireActiveSubscription];
-
-app.use("/api", usersRoutes); // Users puede ser mixto (profile vs admin), dejémoslo fuera o protejamos solo ciertas partes?
-// El usuario dijo: "Protege home, finanzas, expenses, incomes, bank, debts, credits, deliveries, admin"
-// Admin routes también? Sí.
-
-app.use("/api/admin", ...businessMiddleware, adminRoutes);
-app.use("/api", ...businessMiddleware, auditRoutes);
-app.use("/api", ...businessMiddleware, deliveriesRoutes);
-app.use("/api", ...businessMiddleware, debtsRoutes);
-app.use("/api", ...businessMiddleware, homeRoutes);
-app.use("/api", ...businessMiddleware, creditRoutes);
-app.use("/api/bank", ...businessMiddleware, bankRoutes);
-app.use("/api/monthly-expenses", ...businessMiddleware, monthlyExpensesRoutes);
-app.use("/api", ...businessMiddleware, incomesRoutes);
-app.use("/api", ...businessMiddleware, expensesRoutes);
-app.use("/api", ...businessMiddleware, summaryRoutes);
+app.use("/api", incomesRoutes);
+app.use("/api", expensesRoutes);
+app.use("/api", summaryRoutes);
 
 // 404 + errores
 app.use(notFound);
