@@ -19,6 +19,7 @@ export const listAuditLogs = async (req, res, next) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
+        .populate("actor.userId", "name email")
         .lean(),
       AuditLog.countDocuments(query)
     ]);

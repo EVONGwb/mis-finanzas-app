@@ -8,7 +8,14 @@ const UserSchema = new mongoose.Schema(
     passwordHash: { type: String, select: false },
     googleId: { type: String, unique: true, sparse: true },
     avatar: { type: String },
-    currency: { type: String, default: "EUR" }
+    currency: { type: String, default: "EUR" },
+    
+    // Stripe Subscription Fields
+    stripeCustomerId: { type: String, default: null },
+    stripeSubscriptionId: { type: String, default: null },
+    subscriptionStatus: { type: String, default: "inactive" }, // active, trialing, past_due, canceled, unpaid, incomplete
+    currentPeriodEnd: { type: Date, default: null },
+    promoUsed: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

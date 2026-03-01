@@ -1,7 +1,52 @@
 import { User } from "../models/user.model.js";
+import { Income } from "../models/income.model.js";
+import { Expense } from "../models/expense.model.js";
+import { AuditLog } from "../models/auditLog.model.js";
 import { HttpError } from "../utils/httpError.js";
 import { writeAuditLog } from "../utils/audit.js";
 import bcrypt from "bcryptjs";
+
+
+// GET /api/admin/dashboard
+export const getDashboardStats = async (req, res, next) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalIncomes = await Income.countDocuments();
+    const totalExpenses = await Expense.countDocuments();
+    
+    const incomeAgg = await Income.aggregate([
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]);
+    const expenseAgg = await Expense.aggregate([
+      { $group: { _id: null, total: { $sum: "$amount" } } }
+    ]);
+
+    const recentUsers = await User.find().sort({ createdAt: -1 }).limit(5).select("-passwordHash");
+    const recentLogs = await AuditLog.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("actor.userId", "name email");
+
+    res.json({
+      ok: true,
+      data: {
+        counts: {
+          users: totalUsers,
+          incomes: totalIncomes,
+          expenses: totalExpenses
+        },
+        financials: {
+          totalIncomeAmount: incomeAgg[0]?.total || 0,
+          totalExpenseAmount: expenseAgg[0]?.total || 0
+        },
+        recentUsers,
+        recentLogs
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // GET /api/admin/users
 export const getUsers = async (req, res, next) => {

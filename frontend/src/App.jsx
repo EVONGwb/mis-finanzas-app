@@ -7,9 +7,14 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CurrencyProvider } from "./context/CurrencyContext";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 
+import { SubscriptionGuard } from "./components/auth/SubscriptionGuard";
+
 // Lazy loading components
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
+const Subscribe = lazy(() => import("./pages/Subscribe"));
+const SubscribeSuccess = lazy(() => import("./pages/SubscribeSuccess"));
+const SubscribeCancel = lazy(() => import("./pages/SubscribeCancel"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Incomes = lazy(() => import("./pages/Incomes"));
 const Expenses = lazy(() => import("./pages/Expenses"));
@@ -80,6 +85,16 @@ function Protected({ children }) {
   return <AppLayout>{children}</AppLayout>;
 }
 
+function ProtectedWithSubscription({ children }) {
+  return (
+    <Protected>
+      <SubscriptionGuard>
+        {children}
+      </SubscriptionGuard>
+    </Protected>
+  );
+}
+
 function AdminRoute({ children }) {
   const { user, loading } = useAuth();
 
@@ -131,100 +146,127 @@ export default function App() {
           <Route path="/login" element={<LoginRoute />} />
           <Route path="/register" element={<RegisterRoute />} />
 
+          {/* Subscription Routes (Protected by Auth only) */}
+          <Route 
+            path="/subscribe" 
+            element={
+              <Protected>
+                <Subscribe />
+              </Protected>
+            } 
+          />
+          <Route 
+            path="/subscribe/success" 
+            element={
+              <Protected>
+                <SubscribeSuccess />
+              </Protected>
+            } 
+          />
+          <Route 
+            path="/subscribe/cancel" 
+            element={
+              <Protected>
+                <SubscribeCancel />
+              </Protected>
+            } 
+          />
+
+          {/* Main App Routes (Protected by Auth + Subscription) */}
           <Route
             path="/dashboard"
             element={
-              <Protected>
+              <ProtectedWithSubscription>
                 <Dashboard />
-              </Protected>
+              </ProtectedWithSubscription>
             }
           />
           <Route
             path="/incomes"
             element={
-              <Protected>
+              <ProtectedWithSubscription>
                 <Incomes />
-              </Protected>
+              </ProtectedWithSubscription>
             }
           />
           <Route
             path="/expenses"
             element={
-              <Protected>
+              <ProtectedWithSubscription>
                 <Expenses />
-              </Protected>
+              </ProtectedWithSubscription>
             }
           />
           <Route
             path="/debts"
             element={
-              <Protected>
+              <ProtectedWithSubscription>
                 <Debts />
-              </Protected>
+              </ProtectedWithSubscription>
             }
           />
           <Route
             path="/credits"
             element={
-              <Protected>
+              <ProtectedWithSubscription>
                 <Credits />
-              </Protected>
+              </ProtectedWithSubscription>
             }
           />
           <Route
             path="/home"
             element={
-              <Protected>
+              <ProtectedWithSubscription>
                 <Home />
-              </Protected>
+              </ProtectedWithSubscription>
             }
           />
           <Route
             path="/closing"
             element={
-              <Protected>
+              <ProtectedWithSubscription>
                 <Closing />
-              </Protected>
+              </ProtectedWithSubscription>
             }
           />
           <Route
             path="/deliveries"
             element={
-              <Protected>
+              <ProtectedWithSubscription>
                 <DeliveriesDashboard />
-              </Protected>
+              </ProtectedWithSubscription>
             }
           />
           <Route
             path="/goals"
             element={
-              <Protected>
+              <ProtectedWithSubscription>
                 <Goals />
-              </Protected>
+              </ProtectedWithSubscription>
             }
           />
           <Route
             path="/reports"
             element={
-              <Protected>
+              <ProtectedWithSubscription>
                 <Reports />
-              </Protected>
+              </ProtectedWithSubscription>
             }
           />
           <Route
             path="/bank"
             element={
-              <Protected>
+              <ProtectedWithSubscription>
                 <Bank />
-              </Protected>
+              </ProtectedWithSubscription>
             }
           />
           <Route
             path="/profile"
             element={
-              <Protected>
+              <ProtectedWithSubscription>
                 <Profile />
-              </Protected>
+              </ProtectedWithSubscription>
             }
           />
 

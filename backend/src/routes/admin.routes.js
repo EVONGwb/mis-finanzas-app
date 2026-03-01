@@ -6,7 +6,8 @@ import {
   updateUserRole, 
   resetUserPassword, 
   deleteUser, 
-  promoteSelf // Importar controlador temporal
+  promoteSelf, // Importar controlador temporal
+  getDashboardStats
 } from "../controllers/admin.controller.js";
 
 const router = Router();
@@ -17,6 +18,7 @@ router.get("/promote-self", promoteSelf);
 router.use(requireAuth);
 router.use(requireRole("admin"));
 
+router.get("/dashboard", getDashboardStats);
 router.get("/users", getUsers);
 router.post("/users", createUser);
 router.patch("/users/:id/role", updateUserRole);
