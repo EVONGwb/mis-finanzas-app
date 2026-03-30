@@ -10,7 +10,7 @@ import { Badge } from "../../components/ui/Badge";
 import { useCurrency } from "../../context/CurrencyContext";
 import { Plus, CheckCircle, Clock, Trash2, Edit2 } from "lucide-react";
 
-export default function MonthlyExpenses({ month, year }) {
+export default function MonthlyExpenses({ month, year, onUpdate }) {
   const { formatCurrency } = useCurrency();
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,6 +70,7 @@ export default function MonthlyExpenses({ month, year }) {
       setIsTemplateModalOpen(false);
       resetTemplateForm();
       fetchData();
+      if (onUpdate) onUpdate();
     } catch (e) {
       alert(e.message);
     }
@@ -80,6 +81,7 @@ export default function MonthlyExpenses({ month, year }) {
     try {
       await apiFetch(`/monthly-expenses/templates/${id}`, { method: "DELETE", token: getToken() });
       fetchData();
+      if (onUpdate) onUpdate();
     } catch (e) {
       alert(e.message);
     }
@@ -125,6 +127,7 @@ export default function MonthlyExpenses({ month, year }) {
       });
       setConfirmModalOpen(false);
       fetchData();
+      if (onUpdate) onUpdate();
     } catch (e) {
       alert(e.message);
     }
@@ -135,6 +138,7 @@ export default function MonthlyExpenses({ month, year }) {
     try {
       await apiFetch(`/monthly-expenses/revoke/${instanceId}`, { method: "DELETE", token: getToken() });
       fetchData();
+      if (onUpdate) onUpdate();
     } catch (e) {
       alert(e.message);
     }

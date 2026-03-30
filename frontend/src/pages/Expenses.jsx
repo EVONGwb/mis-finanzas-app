@@ -26,15 +26,15 @@ export default function Expenses() {
     try {
       // Fetch monthly expenses total
       const resMonthly = await apiFetch(`/monthly-expenses/status?month=${month}&year=${year}`, { token: getToken() });
-      const monthlyPlanned = resMonthly.data?.reduce((sum, item) => sum + item.amount, 0) || 0;
-      const monthlyPaid = resMonthly.data?.reduce((sum, item) => sum + (item.status === 'confirmed' ? item.amount : 0), 0) || 0;
+      const monthlyPlanned = resMonthly.data?.reduce((sum, item) => sum + Number(item.amount || 0), 0) || 0;
+      const monthlyPaid = resMonthly.data?.reduce((sum, item) => sum + (item.status === 'confirmed' ? Number(item.amount || 0) : 0), 0) || 0;
 
       // Fetch daily expenses total
       const resDaily = await apiFetch("/expenses", { token: getToken() });
       const dailyTotal = resDaily.data?.filter(item => {
         const d = new Date(item.date);
         return d.getMonth() + 1 === month && d.getFullYear() === year && (item.type || "daily") === "daily";
-      }).reduce((sum, item) => sum + item.amount, 0) || 0;
+      }).reduce((sum, item) => sum + Number(item.amount || 0), 0) || 0;
 
       setTotals({
         monthlyPlanned,
@@ -180,9 +180,9 @@ export default function Expenses() {
 
       {/* Content */}
       {viewType === "monthly" ? (
-        <MonthlyExpenses month={month} year={year} />
+        <MonthlyExpenses month={month} year={year} onUpdate={fetchTotals} />
       ) : (
-        <DailyExpenses month={month} year={year} />
+        <DailyExpenses month={month} year={year} onUpdate={fetchTotals} />
       )}
     </div>
   );

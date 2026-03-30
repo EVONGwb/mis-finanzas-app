@@ -10,7 +10,7 @@ import { Badge } from "../../components/ui/Badge";
 import { useCurrency } from "../../context/CurrencyContext";
 import { Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 
-export default function DailyExpenses({ month, year }) {
+export default function DailyExpenses({ month, year, onUpdate }) {
   const { formatCurrency } = useCurrency();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +60,7 @@ export default function DailyExpenses({ month, year }) {
       setIsModalOpen(false);
       setFormData({ ...formData, amount: "", concept: "" });
       fetchItems();
+      if (onUpdate) onUpdate();
     } catch (e) {
       alert(e.message);
     }
@@ -73,6 +74,7 @@ export default function DailyExpenses({ month, year }) {
         token: getToken()
       });
       setItems(items.filter(item => item._id !== id));
+      if (onUpdate) onUpdate();
     } catch (e) {
       alert(e.message);
     } finally {
