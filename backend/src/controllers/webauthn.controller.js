@@ -1,5 +1,5 @@
 import { generateAuthenticationOptions, generateRegistrationOptions, verifyAuthenticationResponse, verifyRegistrationResponse } from "@simplewebauthn/server";
-import { isoBase64URL } from "@simplewebauthn/server/helpers";
+import { isoBase64URL, isoUint8Array } from "@simplewebauthn/server/helpers";
 import { env } from "../config/env.js";
 import { HttpError } from "../utils/httpError.js";
 import { User } from "../models/user.model.js";
@@ -39,17 +39,20 @@ export const getRegistrationOptions = async (req, res, next) => {
     const user = await User.findById(req.user._id);
     if (!user) throw new HttpError(401, "Usuario no válido");
 
-    const excludeCredentials = (user.webauthnCredentials || []).map((c) => ({
-      id: isoBase64URL.toBuffer(c.credentialID),
-      type: "public-key",
-      transports: c.transports
-    }));
+    const excludeCredentials = (user.webauthnCredentials || [])
+      .filter(c => c && c.credentialID)
+      .map((c) => ({
+        id: isoBase64URL.toBuffer(c.credentialID),
+        type: "public-key",
+        transports: c.transports || []
+      }));
 
     const options = await generateRegistrationOptions({
       rpName: "Mis Finanzas",
       rpID,
-      userID: Buffer.from(user._id.toString()),
-      userName: user.email,
+      userID: isoUint8Array.fromUTF8String(user._id.toString()),
+      userName: user.email || "user@misfinanzas.es",
+      userDisplayName: user.name || "Usuario",
       attestationType: "none",
       authenticatorSelection: {
         authenticatorAttachment: "platform",
@@ -64,6 +67,7 @@ export const getRegistrationOptions = async (req, res, next) => {
 
     res.json({ ok: true, data: options });
   } catch (error) {
+    console.error("WebAuthn Options Error:", error);
     next(error);
   }
 };
@@ -125,11 +129,13 @@ export const getAuthenticationOptions = async (req, res, next) => {
     const options = await generateAuthenticationOptions({
       rpID: getRpID(req),
       userVerification: "preferred",
-      allowCredentials: user.webauthnCredentials.map((c) => ({
-        id: isoBase64URL.toBuffer(c.credentialID),
-        type: "public-key",
-        transports: c.transports
-      }))
+      allowCredentials: (user.webauthnCredentials || [])
+        .filter(c => c && c.credentialID)
+        .map((c) => ({
+          id: isoBase64URL.toBuffer(c.credentialID),
+          type: "public-key",
+          transports: c.transports || []
+        }))
     });
 
     user.webauthnCurrentChallenge = options.challenge;
