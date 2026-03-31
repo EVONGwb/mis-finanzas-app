@@ -86,13 +86,15 @@ function Protected({ children }) {
 }
 
 function ProtectedWithSubscription({ children }) {
-  return (
-    <Protected>
-      <SubscriptionGuard>
-        {children}
-      </SubscriptionGuard>
-    </Protected>
-  );
+  // Desactivado temporalmente según petición
+  // return (
+  //   <Protected>
+  //     <SubscriptionGuard>
+  //       {children}
+  //     </SubscriptionGuard>
+  //   </Protected>
+  // );
+  return <Protected>{children}</Protected>;
 }
 
 function AdminRoute({ children }) {

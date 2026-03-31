@@ -2,6 +2,10 @@ import { HttpError } from "../utils/httpError.js";
 
 export const requireActiveSubscription = async (req, res, next) => {
   try {
+    // DESACTIVADO TEMPORALMENTE: Se permite el acceso a todos
+    return next();
+    
+    /* CÓDIGO ORIGINAL COMENTADO
     const user = req.user;
     
     // Si no hay usuario (aunque requireAuth debería haberlo validado antes)
@@ -29,7 +33,7 @@ export const requireActiveSubscription = async (req, res, next) => {
         blocked: true
       }
     });
-
+    */
   } catch (error) {
     next(error);
   }
