@@ -11,8 +11,13 @@ export async function requireAuth(req, res, next) {
       throw new HttpError(401, "No autenticado (falta Bearer token)");
     }
 
-    const decoded = verifyToken(token); // { sub: userId, ... }
-    const user = await User.findById(decoded.sub).select("-passwordHash");
+    let decoded;
+    try {
+      decoded = verifyToken(token); // { sub: userId, ... }
+    } catch (e) {
+      throw new HttpError(401, "Token inválido o expirado");
+    }
+    const user = await User.findById(decoded.sub).select("-passwordHash -webauthnCredentials -webauthnCurrentChallenge");
     if (!user) throw new HttpError(401, "Usuario no válido");
 
     req.user = user;

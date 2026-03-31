@@ -13,23 +13,7 @@ function isEmailValid(email) {
 
 export async function register(req, res, next) {
   try {
-    const { email, password, name = "" } = req.body;
-
-    if (!email || !password) throw new HttpError(400, "Falta email o password");
-    if (!isEmailValid(email)) throw new HttpError(400, "Email inválido");
-    if (String(password).length < 6) throw new HttpError(400, "Password mínimo 6 caracteres");
-
-    const exists = await User.findOne({ email: email.toLowerCase() });
-    if (exists) throw new HttpError(409, "Ese email ya existe");
-
-    const passwordHash = await bcrypt.hash(String(password), 10);
-    const user = await User.create({ email, name, role: "user", passwordHash });
-
-    const token = signToken({ sub: user._id.toString() });
-    return res.status(201).json({
-      ok: true,
-      data: { token, user: { _id: user._id, email: user.email, name: user.name, role: user.role } }
-    });
+    throw new HttpError(410, "Registro con email/contraseña deshabilitado. Usa Google.");
   } catch (err) {
     return next(err);
   }
@@ -61,20 +45,7 @@ export async function registerAdmin(req, res, next) {
 
 export async function login(req, res, next) {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) throw new HttpError(400, "Falta email o password");
-
-    const user = await User.findOne({ email: String(email).toLowerCase() }).select("+passwordHash");
-    if (!user) throw new HttpError(401, "Credenciales incorrectas");
-
-    const ok = await bcrypt.compare(String(password), user.passwordHash);
-    if (!ok) throw new HttpError(401, "Credenciales incorrectas");
-
-    const token = signToken({ sub: user._id.toString() });
-    return res.json({
-      ok: true,
-      data: { token, user: { _id: user._id, email: user.email, name: user.name, role: user.role, currency: user.currency } }
-    });
+    throw new HttpError(410, "Login con email/contraseña deshabilitado. Usa Google.");
   } catch (err) {
     return next(err);
   }
@@ -170,4 +141,3 @@ export async function googleLogin(req, res, next) {
     return next(err);
   }
 }
-

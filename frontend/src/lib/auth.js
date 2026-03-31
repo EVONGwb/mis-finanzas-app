@@ -1,13 +1,15 @@
 const KEY = "token";
 
 export function getToken() {
-  return sessionStorage.getItem(KEY) || "";
+  return localStorage.getItem(KEY) || sessionStorage.getItem(KEY) || "";
 }
 
 export function setToken(token) {
-  sessionStorage.setItem(KEY, token);
+  localStorage.setItem(KEY, token);
+  sessionStorage.removeItem(KEY);
 }
 
 export function clearToken() {
+  localStorage.removeItem(KEY);
   sessionStorage.removeItem(KEY);
 }

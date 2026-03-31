@@ -1,146 +1,47 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { apiFetch } from "../lib/api";
 import { Button } from "../components/ui/Button";
-import { Input } from "../components/ui/Input";
-import { Mail, Lock, Eye, EyeOff, TrendingUp, Fingerprint } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Fingerprint } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
-import { isBiometricsAvailable, verifyBiometric } from "../lib/biometrics";
+import { getToken, setToken } from "../lib/auth";
+import { useAuth } from "../context/AuthContext";
+import { authenticateWithPasskey, isWebAuthnAvailable, registerPasskey, clearSessionAndBiometrics, disableBiometricsLocally } from "../lib/webauthn";
 
 export default function Login({ onAuthed }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [enableBio, setEnableBio] = useState(false);
-  const [canUseBio, setCanUseBio] = useState(false);
-  const [hasSavedBio, setHasSavedBio] = useState(false);
+  const { loading: authLoading, unlocked, unlock, fetchUser } = useAuth();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Check biometrics availability
-  useEffect(() => {
-    isBiometricsAvailable().then(available => {
-      setCanUseBio(available);
-      const saved = localStorage.getItem("bio_creds");
-      if (saved) {
-        setHasSavedBio(true);
-        // Only auto-trigger if NOT already loading to prevent loops
-        // and add a small check to see if we just failed/logout
-        if (!sessionStorage.getItem("just_logged_out")) {
-           handleBiometricLogin();
-        }
-      }
-    });
-  }, []);
+  const token = getToken();
+  const biometricEnabled = localStorage.getItem("biometricEnabled") === "true";
+  const biometricRegistered = localStorage.getItem("biometricRegistered") === "true";
+  const canUsePasskey = useMemo(() => isWebAuthnAvailable(), []);
+  
+  // Show biometric IF they enabled it OR if they have a valid token + capability
+  const shouldShowBiometric = (biometricEnabled || Boolean(token)) && canUsePasskey && !unlocked;
 
-  // Cargar email guardado si existe
-  useState(() => {
-    const savedEmail = localStorage.getItem("rememberedEmail");
-    if (savedEmail) {
-      setEmail(savedEmail);
-      setRememberMe(true);
-    }
-  }, []);
-
-  const handleBiometricLogin = async () => {
-    // Prevent double invocation
+  const handlePasskeyEnter = async () => {
     if (loading) return;
-
     try {
       setLoading(true);
       setError("");
-      const success = await verifyBiometric();
-      if (success) {
-        // Clear logout flag on success
-        sessionStorage.removeItem("just_logged_out");
-        
-        const saved = localStorage.getItem("bio_creds");
-        if (saved) {
-          const creds = JSON.parse(atob(saved));
-          
-          if (creds.type === 'token' && creds.token) {
-            // Login with stored token (Google flow)
-            // Save to sessionStorage for this session
-            sessionStorage.setItem("token", creds.token);
-            if (creds.user) {
-              sessionStorage.setItem("user", JSON.stringify(creds.user));
-            }
-            // Trigger auth callback immediately
-            onAuthed();
-          } else if (creds.email && creds.password) {
-            // Login with credentials
-            setEmail(creds.email);
-            setPassword(creds.password);
-            await performLogin(creds.email, creds.password);
-          } else {
-             setError("Credenciales biométricas inválidas. Inicia sesión de nuevo.");
-             setLoading(false); // Stop loading if invalid creds
-          }
-        } else {
-          setError("No hay credenciales biométricas guardadas. Inicia sesión normal primero.");
-          setLoading(false); // Stop loading if no creds
-        }
-      } else {
-        setLoading(false); // Stop loading if verifyBiometric returns false/null (cancelled)
+      if (!biometricRegistered) {
+        await registerPasskey();
+        localStorage.setItem("biometricRegistered", "true");
       }
-    } catch (err) {
-      console.error(err);
-      // Don't show error for cancelled biometric prompt to avoid noise
-      if (err.message && !err.message.includes("cancel") && !err.message.includes("abort")) {
-         setError("No se pudo verificar la huella/FaceID");
-      }
-      // If it failed/cancelled, mark as 'just_logged_out' to prevent immediate loop re-trigger
-      sessionStorage.setItem("just_logged_out", "true");
-      setLoading(false); // Ensure loading stops on error
+      await authenticateWithPasskey();
+      await fetchUser();
+      unlock();
+      onAuthed();
+    } catch (e) {
+      const msg = e?.message || "No se pudo acceder con huella";
+      setError(msg);
+      // Removed disableBiometricsLocally() here so it doesn't break future attempts
+      clearSessionAndBiometrics();
+    } finally {
+      setLoading(false);
     }
   };
-
-  async function performLogin(emailToUse, passwordToUse) {
-    try {
-      const res = await apiFetch("/auth/login", {
-        method: "POST",
-        body: { email: emailToUse, password: passwordToUse }
-      });
-      
-      const token = res.data?.token;
-      const user = res.data?.user;
-
-      if (token) {
-        // Guardamos el token en sessionStorage (sesión volátil)
-        sessionStorage.setItem("token", token);
-        if (user) {
-          sessionStorage.setItem("user", JSON.stringify(user));
-          
-          // Handle Remember Me (Email only)
-          if (rememberMe) {
-            localStorage.setItem("rememberedEmail", emailToUse);
-          } else {
-            localStorage.removeItem("rememberedEmail");
-          }
-
-          // Handle Biometric Save (Credentials persist in localStorage)
-          if (enableBio && canUseBio) {
-            // Store credentials securely
-            const creds = btoa(JSON.stringify({ email: emailToUse, password: passwordToUse }));
-            localStorage.setItem("bio_creds", creds);
-            // Ensure we mark as registered if not already (for V3)
-            if (localStorage.getItem("bio_v3_registered") !== "true") {
-               // This will prompt next time or we can try to register silently if possible? 
-               // Actually, we should probably trigger registration here if checkbox is checked.
-               // But for now, let's just save the credentials so the prompt appears next load.
-            }
-          }
-        }
-        onAuthed();
-      } else {
-        setError("Respuesta inválida del servidor");
-      }
-    } catch (err) {
-      setError(err.message);
-      // If login fails, maybe clear bad bio creds? No, let user decide.
-    }
-  }
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -153,23 +54,14 @@ export default function Login({ onAuthed }) {
         });
 
         const token = res.data?.token;
-        const user = res.data?.user;
-
         if (token) {
-          sessionStorage.setItem("token", token);
-          if (user) {
-            sessionStorage.setItem("user", JSON.stringify(user));
-            
-            if (rememberMe) {
-              localStorage.setItem("rememberedEmail", email);
-            } else {
-              localStorage.removeItem("rememberedEmail");
-            }
-
-            // Handle Biometric Save for Google
-            if (enableBio && canUseBio) {
-              const creds = btoa(JSON.stringify({ type: 'token', token, user }));
-              localStorage.setItem("bio_creds", creds);
+          setToken(token);
+          localStorage.setItem("biometricEnabled", "true");
+          if (canUsePasskey && localStorage.getItem("biometricRegistered") !== "true") {
+            try {
+              await registerPasskey();
+              localStorage.setItem("biometricRegistered", "true");
+            } catch {
             }
           }
           onAuthed();
@@ -184,14 +76,6 @@ export default function Login({ onAuthed }) {
     },
     onError: () => setError("Error al conectar con Google")
   });
-
-  async function submit(e) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    await performLogin(email, password);
-    setLoading(false);
-  }
 
   return (
     <div style={{ 
@@ -234,186 +118,12 @@ export default function Login({ onAuthed }) {
             />
           </div>
           
-          <h1 style={{ 
-            fontSize: "1.75rem", 
-            fontWeight: 800, 
-            color: "#111827", 
-            marginBottom: "0.5rem",
-            letterSpacing: "-0.02em"
-          }}>
-            Bienvenido de nuevo
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#111827", letterSpacing: "-0.02em" }}>
+            Mis Finanzas
           </h1>
-          <p style={{ 
-            color: "#6B7280", 
-            fontSize: "0.95rem",
-            lineHeight: 1.5
-          }}>
-            Ingresa a tu cuenta para continuar
-          </p>
         </div>
 
-        {/* Biometric Quick Login */}
-        {hasSavedBio && canUseBio && (
-          <div style={{ width: "100%", marginBottom: "1.5rem" }}>
-            <button
-              onClick={handleBiometricLogin}
-              type="button"
-              style={{
-                width: "100%",
-                padding: "1rem",
-                borderRadius: "14px",
-                border: "2px solid #10B981",
-                backgroundColor: "rgba(16, 185, 129, 0.05)",
-                color: "#059669",
-                fontSize: "1rem",
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "0.75rem",
-                cursor: "pointer",
-                transition: "all 0.2s"
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(16, 185, 129, 0.1)"}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "rgba(16, 185, 129, 0.05)"}
-            >
-              <Fingerprint size={24} />
-              Ingresar con Huella / FaceID
-            </button>
-            <div style={{ display: "flex", alignItems: "center", width: "100%", margin: "1.5rem 0 0.5rem 0" }}>
-              <div style={{ flex: 1, height: "1px", backgroundColor: "#E5E7EB" }}></div>
-              <span style={{ padding: "0 0.5rem", fontSize: "0.875rem", color: "#6B7280" }}>o usa tu contraseña</span>
-              <div style={{ flex: 1, height: "1px", backgroundColor: "#E5E7EB" }}></div>
-            </div>
-          </div>
-        )}
-
-        {/* Form Section */}
-        <form onSubmit={submit} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <label style={{ fontSize: "0.875rem", fontWeight: 600, color: "#374151", marginLeft: "0.25rem" }}>
-              Correo electrónico
-            </label>
-            <Input 
-              icon={Mail}
-              iconColor="#9CA3AF" // Icono gris sutil
-              type="email" 
-              placeholder="ejemplo@correo.com" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              required
-              style={{ 
-                height: "60px", // Increased height for better comfort
-                fontSize: "1.05rem", // Slightly larger font
-                borderRadius: "12px",
-                backgroundColor: "#F9FAFB", // Fondo gris muy claro
-                border: "1px solid #E5E7EB",
-                boxShadow: "none"
-              }}
-            />
-          </div>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <label style={{ fontSize: "0.875rem", fontWeight: 600, color: "#374151", marginLeft: "0.25rem" }}>
-              Contraseña
-            </label>
-            <Input 
-              icon={Lock}
-              iconColor="#9CA3AF"
-              type={showPassword ? "text" : "password"} 
-              placeholder="••••••••" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required
-              style={{ 
-                height: "60px", // Increased height for better comfort
-                fontSize: "1.05rem", // Slightly larger font
-                borderRadius: "12px",
-                backgroundColor: "#F9FAFB",
-                border: "1px solid #E5E7EB",
-                boxShadow: "none"
-              }}
-              rightElement={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "#9CA3AF",
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "0.25rem",
-                    transition: "color 0.2s"
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = "#4B5563"}
-                  onMouseLeave={(e) => e.currentTarget.style.color = "#9CA3AF"}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              }
-            />
-            
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <input 
-                  type="checkbox" 
-                  id="remember" 
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  style={{ 
-                    width: "16px", 
-                    height: "16px", 
-                    accentColor: "#10B981",
-                    cursor: "pointer",
-                    borderRadius: "4px"
-                  }} 
-                />
-                <label htmlFor="remember" style={{ fontSize: "0.875rem", color: "#6B7280", cursor: "pointer", userSelect: "none" }}>
-                  Recordar usuario
-                </label>
-              </div>
-
-              {canUseBio && !hasSavedBio && (
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
-                  <input 
-                    type="checkbox" 
-                    id="enableBio" 
-                    checked={enableBio}
-                    onChange={(e) => setEnableBio(e.target.checked)}
-                    style={{ 
-                      width: "16px", 
-                      height: "16px", 
-                      accentColor: "#10B981",
-                      cursor: "pointer",
-                      borderRadius: "4px"
-                    }} 
-                  />
-                  <label htmlFor="enableBio" style={{ fontSize: "0.875rem", color: "#6B7280", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                    <Fingerprint size={14} /> Activar inicio con huella
-                  </label>
-                </div>
-              )}
-
-              <button
-                type="button"
-                style={{
-                  fontSize: "0.8rem",
-                  color: "#10B981", // Enlace verde
-                  fontWeight: 600,
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0
-                }}
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
-            </div>
-          </div>
-
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
           {error && (
             <div style={{ 
               padding: "0.75rem", 
@@ -429,81 +139,93 @@ export default function Login({ onAuthed }) {
             </div>
           )}
 
-          <Button 
-            type="submit" 
-            isLoading={loading} 
-            style={{ 
-              width: "100%", 
-              marginTop: "0.5rem", 
-              height: "56px", 
-              fontSize: "1rem",
-              fontWeight: 600,
-              borderRadius: "14px", 
-              background: "#10B981", // Verde sólido vibrante
-              color: "white",
-              border: "none",
-              boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)", // Glow suave
-              transition: "transform 0.1s, box-shadow 0.2s",
-              cursor: "pointer"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-1px)";
-              e.currentTarget.style.boxShadow = "0 6px 16px rgba(16, 185, 129, 0.4)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)";
-            }}
-          >
-            Iniciar sesión
-          </Button>
+          {shouldShowBiometric ? (
+            <>
+              <div style={{ textAlign: "center", color: "#6B7280", fontWeight: 600 }}>
+                Acceder con huella
+              </div>
+              <Button
+                type="button"
+                isLoading={loading || authLoading}
+                onClick={handlePasskeyEnter}
+                style={{
+                  width: "100%",
+                  height: "64px",
+                  fontSize: "1.05rem",
+                  fontWeight: 800,
+                  borderRadius: "16px",
+                  background: "#10B981",
+                  color: "white",
+                  border: "none",
+                  boxShadow: "0 6px 18px rgba(16, 185, 129, 0.35)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.75rem"
+                }}
+              >
+                <Fingerprint size={22} />
+                Entrar
+              </Button>
+            </>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => googleLogin()}
+              disabled={loading}
+              style={{ 
+                width: "100%", 
+                height: "64px", 
+                fontSize: "1.05rem",
+                fontWeight: 700,
+                borderRadius: "16px", 
+                backgroundColor: "white",
+                color: "#374151",
+                border: "1px solid #E5E7EB",
+                boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.75rem",
+                transition: "all 0.2s"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#F9FAFB"}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "white"}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              Continuar con Google
+            </Button>
+          )}
 
-          <div style={{ display: "flex", alignItems: "center", width: "100%", margin: "1rem 0" }}>
-            <div style={{ flex: 1, height: "1px", backgroundColor: "#E5E7EB" }}></div>
-            <span style={{ padding: "0 0.5rem", fontSize: "0.875rem", color: "#6B7280" }}>O continúa con</span>
-            <div style={{ flex: 1, height: "1px", backgroundColor: "#E5E7EB" }}></div>
-          </div>
-
-          <Button 
-            type="button" 
-            variant="outline"
-            onClick={() => googleLogin()}
-            disabled={loading}
-            style={{ 
-              width: "100%", 
-              height: "56px", 
-              fontSize: "1rem",
-              fontWeight: 600,
-              borderRadius: "14px", 
-              backgroundColor: "white",
-              color: "#374151",
-              border: "1px solid #E5E7EB",
-              boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.75rem",
-              transition: "all 0.2s"
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#F9FAFB"}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "white"}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Google
-          </Button>
-        </form>
-
-        {/* Footer */}
-        <div style={{ marginTop: "2rem", fontSize: "0.9rem", color: "#6B7280" }}>
-          ¿No tienes cuenta?{" "}
-          <Link to="/register" style={{ color: "#10B981", fontWeight: 700, textDecoration: "none" }}>
-            Regístrate gratis
-          </Link>
+          {shouldShowBiometric && error && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                clearSessionAndBiometrics();
+                googleLogin();
+              }}
+              disabled={loading}
+              style={{
+                width: "100%",
+                height: "56px",
+                fontSize: "0.95rem",
+                fontWeight: 700,
+                borderRadius: "16px",
+                backgroundColor: "white",
+                color: "#374151",
+                border: "1px solid #E5E7EB"
+              }}
+            >
+              Usar Google
+            </Button>
+          )}
         </div>
 
       </div>
