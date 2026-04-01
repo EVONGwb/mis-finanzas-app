@@ -26,9 +26,10 @@ export async function apiFetch(path, { token, method = "GET", body } = {}) {
   
   // Cache Key para GET requests
   const cacheKey = `${url}|${authToken}`;
+  const shouldUseCache = method === "GET" && !normalizedPath.startsWith("/auth/webauthn/");
   
   // Si es GET y tenemos caché válida, devolvemos inmediatamente
-  if (method === "GET") {
+  if (shouldUseCache) {
     const cached = CACHE.get(cacheKey);
     if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
       return cached.data;
@@ -64,12 +65,13 @@ export async function apiFetch(path, { token, method = "GET", body } = {}) {
   }
 
   if (!res.ok) {
-    const msg = `${res.status} ${res.statusText} - ${url}`;
-    throw new Error(`Error API: ${msg}`);
+    const serverMsg = data?.error?.message || data?.message;
+    const msg = serverMsg ? `${res.status} - ${serverMsg}` : `${res.status} ${res.statusText}`;
+    throw new Error(`Error API: ${msg} - ${url}`);
   }
 
   // Guardar en caché si es GET exitoso
-  if (method === "GET") {
+  if (shouldUseCache) {
     CACHE.set(cacheKey, { data, timestamp: Date.now() });
   } else {
     // Si modificamos datos (POST, PUT, DELETE), invalidamos caché relacionada

@@ -11,14 +11,16 @@ export default function Login({ onAuthed }) {
   const { loading: authLoading, unlocked, unlock, fetchUser } = useAuth();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [refresh, setRefresh] = useState(0);
 
   const token = getToken();
-  const biometricEnabled = localStorage.getItem("biometricEnabled") === "true";
+  const biometricEnabled = localStorage.getItem("biometricEnabled") === "true" || Boolean(token);
   const biometricRegistered = localStorage.getItem("biometricRegistered") === "true";
   const canUsePasskey = useMemo(() => isWebAuthnAvailable(), []);
   
   // Show biometric IF they enabled it OR if they have a valid token + capability
   const shouldShowBiometric = (biometricEnabled || Boolean(token)) && canUsePasskey && !unlocked;
+  const isVerifying = loading || authLoading;
 
   const handlePasskeyEnter = async () => {
     if (loading) return;
@@ -43,6 +45,13 @@ export default function Login({ onAuthed }) {
     }
   };
 
+  const handleUseOtherAccount = () => {
+    setError("");
+    disableBiometricsLocally();
+    clearSessionAndBiometrics();
+    setRefresh((x) => x + 1);
+  };
+
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setLoading(true);
@@ -57,13 +66,6 @@ export default function Login({ onAuthed }) {
         if (token) {
           setToken(token);
           localStorage.setItem("biometricEnabled", "true");
-          if (canUsePasskey && localStorage.getItem("biometricRegistered") !== "true") {
-            try {
-              await registerPasskey();
-              localStorage.setItem("biometricRegistered", "true");
-            } catch {
-            }
-          }
           onAuthed();
         } else {
           setError("Respuesta inválida del servidor");
@@ -119,11 +121,14 @@ export default function Login({ onAuthed }) {
           </div>
           
           <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#111827", letterSpacing: "-0.02em" }}>
-            Mis Finanzas
+            {shouldShowBiometric ? "Hola de nuevo" : "Bienvenido"}
           </h1>
+          <p style={{ color: "#6B7280", fontSize: "0.95rem", lineHeight: 1.5, marginTop: "0.5rem" }}>
+            {shouldShowBiometric ? "Accede con tu huella" : "Accede rápido y seguro con tu cuenta de Google"}
+          </p>
         </div>
 
-        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1.25rem" }} key={refresh}>
           {error && (
             <div style={{ 
               padding: "0.75rem", 
@@ -139,14 +144,16 @@ export default function Login({ onAuthed }) {
             </div>
           )}
 
-          {shouldShowBiometric ? (
+          {isVerifying ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", padding: "1.25rem 0" }}>
+              <div className="animate-spin" style={{ width: 44, height: 44, border: "4px solid #E5E7EB", borderTopColor: "#10B981", borderRadius: "50%" }} />
+              <div style={{ color: "#6B7280", fontWeight: 600 }}>Verificando acceso...</div>
+            </div>
+          ) : shouldShowBiometric ? (
             <>
-              <div style={{ textAlign: "center", color: "#6B7280", fontWeight: 600 }}>
-                Acceder con huella
-              </div>
               <Button
                 type="button"
-                isLoading={loading || authLoading}
+                isLoading={loading}
                 onClick={handlePasskeyEnter}
                 style={{
                   width: "100%",
@@ -165,8 +172,22 @@ export default function Login({ onAuthed }) {
                 }}
               >
                 <Fingerprint size={22} />
-                Entrar
+                Entrar con huella
               </Button>
+              <button
+                type="button"
+                onClick={handleUseOtherAccount}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#6B7280",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  padding: 0
+                }}
+              >
+                Usar otra cuenta
+              </button>
             </>
           ) : (
             <Button
@@ -203,29 +224,16 @@ export default function Login({ onAuthed }) {
             </Button>
           )}
 
-          {shouldShowBiometric && error && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                clearSessionAndBiometrics();
-                googleLogin();
-              }}
-              disabled={loading}
-              style={{
-                width: "100%",
-                height: "56px",
-                fontSize: "0.95rem",
-                fontWeight: 700,
-                borderRadius: "16px",
-                backgroundColor: "white",
-                color: "#374151",
-                border: "1px solid #E5E7EB"
-              }}
-            >
-              Usar Google
-            </Button>
+          {!shouldShowBiometric && (
+            <div style={{ textAlign: "center", color: "#6B7280", fontSize: "0.85rem" }}>
+              Solo la primera vez necesitarás Google
+            </div>
           )}
+
+          <div style={{ marginTop: "0.75rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", color: "#9CA3AF", fontWeight: 600, fontSize: "0.85rem" }}>
+            <span style={{ width: 16, height: 16, borderRadius: 8, border: "1px solid #D1D5DB", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>✓</span>
+            Tus datos están protegidos
+          </div>
         </div>
 
       </div>

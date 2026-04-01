@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
   });
   const [loading, setLoading] = useState(true);
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem("biometricUnlocked") === "true");
-  const biometricEnabled = localStorage.getItem("biometricEnabled") === "true";
+  const biometricEnabled = localStorage.getItem("biometricEnabled") === "true" || Boolean(getToken());
   const biometricCapable =
     typeof window !== "undefined" &&
     "PublicKeyCredential" in window &&
