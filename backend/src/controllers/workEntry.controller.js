@@ -1,11 +1,64 @@
 import { WorkEntry } from "../models/workEntry.model.js";
 import { Company } from "../models/company.model.js";
+import { MonthlyClosing } from "../models/monthlyClosing.model.js";
 import { HttpError } from "../utils/httpError.js";
+
+function getMonthYearFromISO(iso) {
+  const d = new Date(iso);
+  return { month: d.getUTCMonth() + 1, year: d.getUTCFullYear() };
+}
+
+function getEffectiveRate(company, month, year) {
+  const override = company.monthlyOverrides?.find((o) => o.month === month && o.year === year);
+  const rate = override?.hourlyRateDefault ?? company.hourlyRateDefault;
+  return Number(rate);
+}
+
+async function syncWorkEntriesRates({ userId, from, to }) {
+  if (!from || !to) return;
+  const { month, year } = getMonthYearFromISO(from);
+  const locked = await MonthlyClosing.findOne({ user: userId, month, year, isLocked: true }).lean();
+  if (locked) return;
+
+  const companies = await Company.find({ user: userId }).select({ hourlyRateDefault: 1, monthlyOverrides: 1 }).lean();
+  const rateByCompanyId = new Map(
+    companies.map((c) => [String(c._id), getEffectiveRate(c, month, year)])
+  );
+
+  const start = new Date(from);
+  const end = new Date(to);
+
+  const entries = await WorkEntry.find({
+    user: userId,
+    date: { $gte: start, $lte: end }
+  }).select({ _id: 1, company: 1, hours: 1, hourlyRate: 1, total: 1 }).lean();
+
+  const ops = [];
+  for (const e of entries) {
+    const rate = rateByCompanyId.get(String(e.company));
+    if (!Number.isFinite(rate)) continue;
+    const newTotal = Number((Number(e.hours) * rate).toFixed(2));
+    if (Number(e.hourlyRate) === rate && Number(e.total) === newTotal) continue;
+    ops.push({
+      updateOne: {
+        filter: { _id: e._id, user: userId },
+        update: { $set: { hourlyRate: rate, total: newTotal } }
+      }
+    });
+  }
+
+  if (ops.length > 0) {
+    await WorkEntry.bulkWrite(ops, { ordered: false });
+  }
+}
 
 // GET /api/work-entries
 export const getWorkEntries = async (req, res, next) => {
   try {
-    const { from, to, companyId } = req.query;
+    const { from, to, companyId, syncRates } = req.query;
+    if (syncRates === "1") {
+      await syncWorkEntriesRates({ userId: req.user._id, from, to });
+    }
     
     const filter = { user: req.user._id };
     if (from && to) {
@@ -28,11 +81,15 @@ export const getWorkEntries = async (req, res, next) => {
 // GET /api/work-entries/dashboard
 export const getDashboardStats = async (req, res, next) => {
   try {
-    const { from, to } = req.query;
+    const { from, to, syncRates } = req.query;
     const filter = { user: req.user._id };
     
     if (from && to) {
       filter.date = { $gte: new Date(from), $lte: new Date(to) };
+    }
+
+    if (syncRates === "1") {
+      await syncWorkEntriesRates({ userId: req.user._id, from, to });
     }
 
     // Agregación para KPIs
@@ -96,8 +153,6 @@ export const getDashboardStats = async (req, res, next) => {
     next(error);
   }
 };
-
-import { MonthlyClosing } from "../models/monthlyClosing.model.js";
 
 // Check if month is closed helper
 async function isMonthClosed(userId, dateStr) {

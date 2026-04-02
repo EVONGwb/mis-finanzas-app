@@ -102,8 +102,8 @@ export default function DeliveriesDashboard() {
       const token = getToken();
 
       const [statsRes, entriesRes, bankRes] = await Promise.all([
-        apiFetch(`/work-entries/stats?from=${from}&to=${to}`, { token }),
-        apiFetch(`/work-entries?from=${from}&to=${to}`, { token }),
+        apiFetch(`/work-entries/stats?from=${from}&to=${to}&syncRates=1`, { token }),
+        apiFetch(`/work-entries?from=${from}&to=${to}&syncRates=1`, { token }),
         apiFetch(`/bank?month=${month + 1}&year=${year}`, { token }) // Check if month is closed
       ]);
 
@@ -1001,5 +1001,4 @@ export default function DeliveriesDashboard() {
     </div>
   );
 }
-
 
