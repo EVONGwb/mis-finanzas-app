@@ -1,5 +1,6 @@
 import { Company } from "../models/company.model.js";
 import { WorkEntry } from "../models/workEntry.model.js";
+import { MonthlyClosing } from "../models/monthlyClosing.model.js";
 import { HttpError } from "../utils/httpError.js";
 
 // GET /api/companies
@@ -98,8 +99,8 @@ export const updateCompany = async (req, res, next) => {
       }
 
       if (hourlyRateDefault !== undefined) {
-        // En aggregation pipelines de MongoDB, si hourlyRateDefault es string, multiply falla.
         const numericRate = Number(hourlyRateDefault);
+        if (!Number.isFinite(numericRate) || numericRate < 0) throw new HttpError(400, "Precio/hora inválido");
         override.hourlyRateDefault = numericRate;
       }
       if (deductions) override.deductions = { ...override.deductions, ...deductions };
@@ -109,6 +110,7 @@ export const updateCompany = async (req, res, next) => {
     } else {
       if (hourlyRateDefault !== undefined) {
         const numericRate = Number(hourlyRateDefault);
+        if (!Number.isFinite(numericRate) || numericRate < 0) throw new HttpError(400, "Precio/hora inválido");
         company.hourlyRateDefault = numericRate;
       }
       if (deductions) {
@@ -127,38 +129,65 @@ export const updateCompany = async (req, res, next) => {
     // Actualizar registros previos si se modifica el precio por hora
     if (hourlyRateDefault !== undefined) {
       const numericRate = Number(hourlyRateDefault);
+      if (!Number.isFinite(numericRate) || numericRate < 0) throw new HttpError(400, "Precio/hora inválido");
       if (month && year) {
         const m = parseInt(month);
         const y = parseInt(year);
+        if (!Number.isFinite(m) || m < 1 || m > 12 || !Number.isFinite(y) || y < 1970) {
+          throw new HttpError(400, "Mes/año inválido");
+        }
+
+        const locked = await MonthlyClosing.findOne({ user: req.user._id, month: m, year: y, isLocked: true });
+        if (locked) throw new HttpError(403, "El mes está cerrado y no se puede modificar.");
+
         // Rango del mes exacto
         const startDate = new Date(Date.UTC(y, m - 1, 1));
         const endDate = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
-        
-        await WorkEntry.updateMany(
-          { company: company._id, user: req.user._id, date: { $gte: startDate, $lte: endDate } },
-          [
-            {
-              $set: {
-                hourlyRate: numericRate,
-                total: { $round: [{ $multiply: ["$hours", numericRate] }, 2] }
+
+        const entries = await WorkEntry.find({
+          company: company._id,
+          user: req.user._id,
+          date: { $gte: startDate, $lte: endDate }
+        }).select({ _id: 1, hours: 1 }).lean();
+
+        if (entries.length > 0) {
+          await WorkEntry.bulkWrite(
+            entries.map(e => ({
+              updateOne: {
+                filter: { _id: e._id, user: req.user._id },
+                update: {
+                  $set: {
+                    hourlyRate: numericRate,
+                    total: Number((Number(e.hours) * numericRate).toFixed(2))
+                  }
+                }
               }
-            }
-          ]
-        );
+            })),
+            { ordered: false }
+          );
+        }
       } else {
-        // Si se cambia en la empresa base (sin mes/año), actualizamos todos los que no estén en un mes con override
-        // Por simplicidad, y como el usuario pidió "todos los registros del mes", si no hay mes, actualizamos todos.
-        await WorkEntry.updateMany(
-          { company: company._id, user: req.user._id },
-          [
-            {
-              $set: {
-                hourlyRate: numericRate,
-                total: { $round: [{ $multiply: ["$hours", numericRate] }, 2] }
+        const entries = await WorkEntry.find({
+          company: company._id,
+          user: req.user._id
+        }).select({ _id: 1, hours: 1 }).lean();
+
+        if (entries.length > 0) {
+          await WorkEntry.bulkWrite(
+            entries.map(e => ({
+              updateOne: {
+                filter: { _id: e._id, user: req.user._id },
+                update: {
+                  $set: {
+                    hourlyRate: numericRate,
+                    total: Number((Number(e.hours) * numericRate).toFixed(2))
+                  }
+                }
               }
-            }
-          ]
-        );
+            })),
+            { ordered: false }
+          );
+        }
       }
     }
     
@@ -168,12 +197,14 @@ export const updateCompany = async (req, res, next) => {
       const m = parseInt(month);
       const y = parseInt(year);
       const override = merged.monthlyOverrides.find(o => o.month === m && o.year === y);
-      Object.assign(merged, {
-        hourlyRateDefault: override.hourlyRateDefault,
-        deductions: override.deductions,
-        supplements: override.supplements,
-        limitRule: override.limitRule
-      });
+      if (override) {
+        Object.assign(merged, {
+          hourlyRateDefault: override.hourlyRateDefault,
+          deductions: override.deductions,
+          supplements: override.supplements,
+          limitRule: override.limitRule
+        });
+      }
     }
 
     res.json({ ok: true, data: merged });
