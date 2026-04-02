@@ -79,14 +79,12 @@ export default function DeliveriesDashboard() {
     }
   });
 
-  // Initial Load
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
+  // Initial Load (removed to prevent duplicate with currentDate effect)
 
   // Fetch Data when Month Changes
   useEffect(() => {
     fetchData();
+    fetchCompanies();
   }, [currentDate]);
 
   const fetchData = async () => {
@@ -126,7 +124,9 @@ export default function DeliveriesDashboard() {
 
   const fetchCompanies = async () => {
     try {
-      const res = await apiFetch("/companies", { token: getToken() });
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const res = await apiFetch(`/companies?month=${month + 1}&year=${year}`, { token: getToken() });
       setCompanies(res.data);
     } catch (error) {
       console.error("Error loading companies:", error);
@@ -174,7 +174,11 @@ export default function DeliveriesDashboard() {
     e.preventDefault();
     try {
       const isEdit = !!companyForm.id;
-      const url = isEdit ? `/companies/${companyForm.id}` : "/companies";
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const url = isEdit 
+        ? `/companies/${companyForm.id}?month=${month + 1}&year=${year}` 
+        : `/companies`;
       const method = isEdit ? "PATCH" : "POST";
 
       const payload = {

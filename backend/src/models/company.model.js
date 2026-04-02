@@ -44,7 +44,31 @@ const companySchema = new mongoose.Schema({
     type: String,
     trim: true,
     maxlength: [500, "La descripción es demasiado larga"]
-  }
+  },
+  monthlyOverrides: [{
+    month: { type: Number, required: true },
+    year: { type: Number, required: true },
+    hourlyRateDefault: Number,
+    deductions: {
+      commonContingencies: Number,
+      unemploymentAccident: Number,
+      irpf: Number,
+      other: Number,
+      otherConcept: String
+    },
+    supplements: {
+      benefits: Number,
+      agreementBonus: Number,
+      proratedPayments: Number,
+      voluntaryImprovement: Number,
+      other: Number,
+      otherConcept: String
+    },
+    limitRule: {
+      enabled: Boolean,
+      amount: Number
+    }
+  }]
 }, {
   timestamps: true,
   versionKey: false

@@ -4,8 +4,29 @@ import { HttpError } from "../utils/httpError.js";
 // GET /api/companies
 export const getCompanies = async (req, res, next) => {
   try {
-    const companies = await Company.find({ user: req.user._id })
-      .sort({ name: 1 });
+    const { month, year } = req.query;
+    let companies = await Company.find({ user: req.user._id })
+      .sort({ name: 1 })
+      .lean();
+
+    if (month && year) {
+      const m = parseInt(month);
+      const y = parseInt(year);
+      companies = companies.map(company => {
+        const override = company.monthlyOverrides?.find(o => o.month === m && o.year === y);
+        if (override) {
+          return {
+            ...company,
+            hourlyRateDefault: override.hourlyRateDefault ?? company.hourlyRateDefault,
+            deductions: { ...company.deductions, ...override.deductions },
+            supplements: { ...company.supplements, ...override.supplements },
+            limitRule: { ...company.limitRule, ...override.limitRule }
+          };
+        }
+        return company;
+      });
+    }
+
     res.json({ ok: true, data: companies });
   } catch (error) {
     next(error);
@@ -45,30 +66,71 @@ export const createCompany = async (req, res, next) => {
 export const updateCompany = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const { month, year } = req.query;
     const { name, hourlyRateDefault, isActive, description, deductions, supplements, limitRule } = req.body;
 
     const company = await Company.findOne({ _id: id, user: req.user._id });
     if (!company) throw new HttpError(404, "Empresa no encontrada");
 
+    // Estos campos base siempre se aplican
     if (name) company.name = name;
-    if (hourlyRateDefault !== undefined) company.hourlyRateDefault = hourlyRateDefault;
     if (isActive !== undefined) company.isActive = isActive;
     if (description !== undefined) company.description = description;
     
-    if (deductions) {
-      company.deductions = { ...company.deductions.toObject(), ...deductions };
-    }
+    if (month && year) {
+      const m = parseInt(month);
+      const y = parseInt(year);
+      
+      let override = company.monthlyOverrides?.find(o => o.month === m && o.year === y);
+      if (!override) {
+        if (!company.monthlyOverrides) company.monthlyOverrides = [];
+        const baseObj = company.toObject();
+        company.monthlyOverrides.push({
+          month: m,
+          year: y,
+          hourlyRateDefault: baseObj.hourlyRateDefault,
+          deductions: { ...baseObj.deductions },
+          supplements: { ...baseObj.supplements },
+          limitRule: { ...baseObj.limitRule }
+        });
+        override = company.monthlyOverrides[company.monthlyOverrides.length - 1];
+      }
 
-    if (supplements) {
-      company.supplements = { ...company.supplements.toObject(), ...supplements };
-    }
-    
-    if (limitRule) {
-      company.limitRule = { ...company.limitRule.toObject(), ...limitRule };
+      if (hourlyRateDefault !== undefined) override.hourlyRateDefault = hourlyRateDefault;
+      if (deductions) override.deductions = { ...override.deductions, ...deductions };
+      if (supplements) override.supplements = { ...override.supplements, ...supplements };
+      if (limitRule) override.limitRule = { ...override.limitRule, ...limitRule };
+
+    } else {
+      if (hourlyRateDefault !== undefined) company.hourlyRateDefault = hourlyRateDefault;
+      if (deductions) {
+        company.deductions = { ...company.toObject().deductions, ...deductions };
+      }
+      if (supplements) {
+        company.supplements = { ...company.toObject().supplements, ...supplements };
+      }
+      if (limitRule) {
+        company.limitRule = { ...company.toObject().limitRule, ...limitRule };
+      }
     }
 
     await company.save();
-    res.json({ ok: true, data: company });
+    
+    // Devolvemos la versión mergeada para que el frontend no note la diferencia
+    const merged = company.toObject();
+    if (month && year) {
+      const m = parseInt(month);
+      const y = parseInt(year);
+      const override = merged.monthlyOverrides.find(o => o.month === m && o.year === y);
+      Object.assign(merged, {
+        hourlyRateDefault: override.hourlyRateDefault,
+        deductions: override.deductions,
+        supplements: override.supplements,
+        limitRule: override.limitRule
+      });
+    }
+
+    res.json({ ok: true, data: merged });
   } catch (error) {
     if (error.code === 11000) {
       return next(new HttpError(409, "Ya tienes una empresa con ese nombre"));
