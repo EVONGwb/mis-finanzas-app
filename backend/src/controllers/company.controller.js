@@ -97,13 +97,20 @@ export const updateCompany = async (req, res, next) => {
         override = company.monthlyOverrides[company.monthlyOverrides.length - 1];
       }
 
-      if (hourlyRateDefault !== undefined) override.hourlyRateDefault = hourlyRateDefault;
+      if (hourlyRateDefault !== undefined) {
+        // En aggregation pipelines de MongoDB, si hourlyRateDefault es string, multiply falla.
+        const numericRate = Number(hourlyRateDefault);
+        override.hourlyRateDefault = numericRate;
+      }
       if (deductions) override.deductions = { ...override.deductions, ...deductions };
       if (supplements) override.supplements = { ...override.supplements, ...supplements };
       if (limitRule) override.limitRule = { ...override.limitRule, ...limitRule };
 
     } else {
-      if (hourlyRateDefault !== undefined) company.hourlyRateDefault = hourlyRateDefault;
+      if (hourlyRateDefault !== undefined) {
+        const numericRate = Number(hourlyRateDefault);
+        company.hourlyRateDefault = numericRate;
+      }
       if (deductions) {
         company.deductions = { ...company.toObject().deductions, ...deductions };
       }
@@ -119,6 +126,7 @@ export const updateCompany = async (req, res, next) => {
     
     // Actualizar registros previos si se modifica el precio por hora
     if (hourlyRateDefault !== undefined) {
+      const numericRate = Number(hourlyRateDefault);
       if (month && year) {
         const m = parseInt(month);
         const y = parseInt(year);
@@ -131,8 +139,8 @@ export const updateCompany = async (req, res, next) => {
           [
             {
               $set: {
-                hourlyRate: hourlyRateDefault,
-                total: { $round: [{ $multiply: ["$hours", hourlyRateDefault] }, 2] }
+                hourlyRate: numericRate,
+                total: { $round: [{ $multiply: ["$hours", numericRate] }, 2] }
               }
             }
           ]
@@ -145,8 +153,8 @@ export const updateCompany = async (req, res, next) => {
           [
             {
               $set: {
-                hourlyRate: hourlyRateDefault,
-                total: { $round: [{ $multiply: ["$hours", hourlyRateDefault] }, 2] }
+                hourlyRate: numericRate,
+                total: { $round: [{ $multiply: ["$hours", numericRate] }, 2] }
               }
             }
           ]
