@@ -4,7 +4,7 @@ const RAW = import.meta.env.VITE_API_BASE || "";
 // Detectar si estamos en producción (dominio real) o desarrollo
 const IS_PROD = window.location.hostname !== "localhost";
 // IMPORTANTE: Render a veces tarda en despertar, usamos una URL segura
-const BASE = RAW || (IS_PROD ? "https://mis-finanzas-app.onrender.com" : "http://localhost:5050");
+const BASE = RAW || (IS_PROD ? "https://mis-finanzas-app.onrender.com" : "http://localhost:5051");
 const BASE_NO_API = BASE.replace(/\/+$/, "").replace(/\/api$/, "");
 const API_ROOT = `${BASE_NO_API}/api`;
 

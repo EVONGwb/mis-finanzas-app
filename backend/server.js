@@ -39,6 +39,8 @@ const allowedOrigins = [
 app.use(cors({
   origin: function(origin, cb) {
     if (!origin) return cb(null, true);
+    // Permitir localhost en cualquier puerto (desarrollo)
+    if (/^https?:\/\/localhost:\d+$/.test(origin) || /^https?:\/\/127\.0\.0\.1:\d+$/.test(origin)) return cb(null, true);
     // Permitir subdominios de vercel.app automáticamente
     if (origin.endsWith(".vercel.app") || origin.endsWith(".onrender.com")) return cb(null, true);
     if (allowedOrigins.includes(origin)) return cb(null, true);
