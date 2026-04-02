@@ -3,6 +3,15 @@ import { WorkEntry } from "../models/workEntry.model.js";
 import { MonthlyClosing } from "../models/monthlyClosing.model.js";
 import { HttpError } from "../utils/httpError.js";
 
+function parseRate(value) {
+  if (value === undefined || value === null) return undefined;
+  const str = String(value).trim();
+  if (!str) return NaN;
+  const match = str.match(/-?\d+(?:[.,]\d+)?/);
+  if (!match) return NaN;
+  return Number(match[0].replace(",", "."));
+}
+
 // GET /api/companies
 export const getCompanies = async (req, res, next) => {
   try {
@@ -99,7 +108,7 @@ export const updateCompany = async (req, res, next) => {
       }
 
       if (hourlyRateDefault !== undefined) {
-        const numericRate = Number(hourlyRateDefault);
+        const numericRate = parseRate(hourlyRateDefault);
         if (!Number.isFinite(numericRate) || numericRate < 0) throw new HttpError(400, "Precio/hora inválido");
         override.hourlyRateDefault = numericRate;
       }
@@ -109,7 +118,7 @@ export const updateCompany = async (req, res, next) => {
 
     } else {
       if (hourlyRateDefault !== undefined) {
-        const numericRate = Number(hourlyRateDefault);
+        const numericRate = parseRate(hourlyRateDefault);
         if (!Number.isFinite(numericRate) || numericRate < 0) throw new HttpError(400, "Precio/hora inválido");
         company.hourlyRateDefault = numericRate;
       }
@@ -128,7 +137,7 @@ export const updateCompany = async (req, res, next) => {
     
     // Actualizar registros previos si se modifica el precio por hora
     if (hourlyRateDefault !== undefined) {
-      const numericRate = Number(hourlyRateDefault);
+      const numericRate = parseRate(hourlyRateDefault);
       if (!Number.isFinite(numericRate) || numericRate < 0) throw new HttpError(400, "Precio/hora inválido");
       if (month && year) {
         const m = parseInt(month);
