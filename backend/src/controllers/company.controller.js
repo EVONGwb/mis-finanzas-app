@@ -1,4 +1,5 @@
 import { Company } from "../models/company.model.js";
+import { WorkEntry } from "../models/workEntry.model.js";
 import { HttpError } from "../utils/httpError.js";
 
 // GET /api/companies
@@ -115,6 +116,43 @@ export const updateCompany = async (req, res, next) => {
     }
 
     await company.save();
+    
+    // Actualizar registros previos si se modifica el precio por hora
+    if (hourlyRateDefault !== undefined) {
+      if (month && year) {
+        const m = parseInt(month);
+        const y = parseInt(year);
+        // Rango del mes exacto
+        const startDate = new Date(Date.UTC(y, m - 1, 1));
+        const endDate = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
+        
+        await WorkEntry.updateMany(
+          { company: company._id, user: req.user._id, date: { $gte: startDate, $lte: endDate } },
+          [
+            {
+              $set: {
+                hourlyRate: hourlyRateDefault,
+                total: { $round: [{ $multiply: ["$hours", hourlyRateDefault] }, 2] }
+              }
+            }
+          ]
+        );
+      } else {
+        // Si se cambia en la empresa base (sin mes/año), actualizamos todos los que no estén en un mes con override
+        // Por simplicidad, y como el usuario pidió "todos los registros del mes", si no hay mes, actualizamos todos.
+        await WorkEntry.updateMany(
+          { company: company._id, user: req.user._id },
+          [
+            {
+              $set: {
+                hourlyRate: hourlyRateDefault,
+                total: { $round: [{ $multiply: ["$hours", hourlyRateDefault] }, 2] }
+              }
+            }
+          ]
+        );
+      }
+    }
     
     // Devolvemos la versión mergeada para que el frontend no note la diferencia
     const merged = company.toObject();

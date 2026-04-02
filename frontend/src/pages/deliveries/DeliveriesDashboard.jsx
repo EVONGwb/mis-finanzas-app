@@ -195,6 +195,7 @@ export default function DeliveriesDashboard() {
       setIsCompanyModalOpen(false);
       resetCompanyForm();
       fetchCompanies();
+      fetchData(); // Recargar los registros para reflejar el nuevo precio/hora
     } catch (error) {
       alert(error.message);
     }
