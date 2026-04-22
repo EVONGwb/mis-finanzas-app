@@ -17,9 +17,10 @@ export default function Login({ onAuthed }) {
   const biometricEnabled = localStorage.getItem("biometricEnabled") === "true" || Boolean(token);
   const biometricRegistered = localStorage.getItem("biometricRegistered") === "true";
   const canUsePasskey = useMemo(() => isWebAuthnAvailable(), []);
-  
-  // Show biometric IF they enabled it OR if they have a valid token + capability
-  const shouldShowBiometric = (biometricEnabled || Boolean(token)) && canUsePasskey && !unlocked;
+
+  // Mostrar huella si hay token Y el navegador soporta WebAuthn Y no está ya desbloqueado
+  // (No dependemos solo de biometricEnabled para cubrir el caso de usuarios que ya tienen token)
+  const shouldShowBiometric = Boolean(token) && canUsePasskey && !unlocked;
   const isVerifying = loading || authLoading;
 
   const handlePasskeyEnter = async () => {
@@ -30,6 +31,7 @@ export default function Login({ onAuthed }) {
       if (!biometricRegistered) {
         await registerPasskey();
         localStorage.setItem("biometricRegistered", "true");
+        setRefresh((x) => x + 1);
       }
       await authenticateWithPasskey();
       await fetchUser();

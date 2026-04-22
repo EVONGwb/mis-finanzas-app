@@ -24,7 +24,6 @@ export function AuthProvider({ children }) {
     const token = getToken();
     
     if (!token) {
-      // Don't clear biometrics when logging out or no token, just user data
       setUser(null);
       setLoading(false);
       localStorage.removeItem("user");
@@ -32,9 +31,8 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    if (localStorage.getItem("biometricEnabled") !== "true") {
-      localStorage.setItem("biometricEnabled", "true");
-    }
+    // Si hay token, asegurar que biometricEnabled esté activo para próximas sesiones
+    localStorage.setItem("biometricEnabled", "true");
 
     try {
       const res = await apiFetch("/auth/me");
