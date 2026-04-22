@@ -45,7 +45,39 @@ export async function registerAdmin(req, res, next) {
 
 export async function login(req, res, next) {
   try {
-    throw new HttpError(410, "Login con email/contraseña deshabilitado. Usa Google.");
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      throw new HttpError(400, "Falta email o contraseña");
+    }
+
+    // Buscamos el usuario y pedimos explícitamente el passwordHash que está oculto por defecto
+    const user = await User.findOne({ email: String(email).toLowerCase() }).select("+passwordHash");
+
+    if (!user || !user.passwordHash) {
+      throw new HttpError(401, "Credenciales inválidas");
+    }
+
+    const isMatch = await bcrypt.compare(String(password), user.passwordHash);
+    if (!isMatch) {
+      throw new HttpError(401, "Credenciales inválidas");
+    }
+
+    const token = signToken({ sub: user._id.toString() });
+
+    return res.json({
+      ok: true,
+      data: {
+        token,
+        user: {
+          _id: user._id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          avatar: user.avatar
+        }
+      }
+    });
   } catch (err) {
     return next(err);
   }
