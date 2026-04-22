@@ -30,7 +30,7 @@ export async function registerPasskey() {
 
 export async function authenticateWithPasskey() {
   const token = getToken();
-  if (!token) throw new Error("No hay sesión");
+  if (!token) throw new Error("No hay sesión - inicia con Google primero");
 
   const optionsRes = await apiFetch("/auth/webauthn/login/options", { token });
   const asseResp = await startAuthentication(optionsRes.data);

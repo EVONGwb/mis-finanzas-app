@@ -38,8 +38,6 @@ export default function Login({ onAuthed }) {
     } catch (e) {
       const msg = e?.message || "No se pudo acceder con huella";
       setError(msg);
-      // Removed disableBiometricsLocally() here so it doesn't break future attempts
-      clearSessionAndBiometrics();
     } finally {
       setLoading(false);
     }
@@ -48,7 +46,6 @@ export default function Login({ onAuthed }) {
   const handleUseOtherAccount = () => {
     setError("");
     disableBiometricsLocally();
-    clearSessionAndBiometrics();
     setRefresh((x) => x + 1);
   };
 
