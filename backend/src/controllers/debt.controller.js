@@ -145,6 +145,14 @@ export const deletePayment = async (req, res, next) => {
     if (!debt) throw new HttpError(404, "Deuda no encontrada");
 
     debt.payments = debt.payments.filter(p => p._id.toString() !== paymentId);
+
+    const totalPaid = debt.payments.reduce((sum, p) => sum + p.amount, 0);
+    if (debt.totalAmount > totalPaid) {
+      debt.status = "active";
+    } else {
+      debt.status = "paid";
+    }
+
     await debt.save();
 
     res.json({ ok: true, data: debt });

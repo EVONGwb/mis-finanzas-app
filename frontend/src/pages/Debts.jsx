@@ -148,6 +148,25 @@ export default function Debts() {
     }
   };
 
+  const handleDeletePayment = async (paymentId) => {
+    if (!window.confirm("¿Eliminar este pago?")) return;
+    try {
+      await apiFetch(`/debts/${selectedDebt._id}/payments/${paymentId}`, {
+        method: "DELETE",
+        token: getToken()
+      });
+      fetchDebts();
+      // Refresh detail modal
+      const updated = data.list.find(d => d._id === selectedDebt._id);
+      if (updated) {
+        setSelectedDebt(updated);
+        setDebtDetails(updated);
+      }
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
   const resetDebtForm = () => {
     setDebtForm({
       id: null,
@@ -527,12 +546,35 @@ export default function Debts() {
                </Button>
             </div>
 
-            {/* Timeline Placeholder (Future) */}
+            {/* Timeline / Historial de Pagos */}
             <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1.5rem" }}>
               <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Historial</h3>
-              <div style={{ padding: "1rem", textAlign: "center", color: "var(--color-text-secondary)", fontStyle: "italic" }}>
-                 (Historial de pagos detallado próximamente)
-              </div>
+              {(!selectedDebt.payments || selectedDebt.payments.length === 0) ? (
+                <div style={{ padding: "1rem", textAlign: "center", color: "var(--color-text-secondary)", fontStyle: "italic" }}>
+                   Sin pagos registrados
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  {[...selectedDebt.payments].reverse().map((payment, idx) => (
+                    <div key={payment._id || idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                        <span style={{ fontWeight: 600, color: "var(--color-success)" }}>+{formatCurrency(payment.amount)}</span>
+                        <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
+                          {new Date(payment.date).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                          {payment.note && ` — ${payment.note}`}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleDeletePayment(payment._id)}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-danger)", padding: "0.25rem", display: "flex", alignItems: "center" }}
+                        title="Eliminar pago"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
           </div>
