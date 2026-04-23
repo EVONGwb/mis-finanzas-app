@@ -40,12 +40,17 @@ export function AuthProvider({ children }) {
       localStorage.setItem("user", JSON.stringify(res.data));
     } catch (error) {
       console.error("Error fetching user", error);
-      clearToken();
-      setUser(null);
-      localStorage.removeItem("user");
-      sessionStorage.removeItem("user");
-      sessionStorage.removeItem("biometricUnlocked");
-      setUnlocked(false);
+      const msg = String(error?.message || "");
+      const m = msg.match(/Error API:\s*(\d{3})\s*-/);
+      const status = m ? Number(m[1]) : null;
+      if (status === 401 || status === 403) {
+        clearToken();
+        setUser(null);
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("biometricUnlocked");
+        setUnlocked(false);
+      }
     } finally {
       setLoading(false);
     }
