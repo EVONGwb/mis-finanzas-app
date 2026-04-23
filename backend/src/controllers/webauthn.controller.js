@@ -24,22 +24,29 @@ function sanitizeUserCredentials(user) {
   return false;
 }
 
+function normalizeRpID(hostname) {
+  if (!hostname) return hostname;
+  const h = String(hostname).toLowerCase();
+  if (h.startsWith("www.")) return h.slice(4);
+  return h;
+}
+
 function getRpID(req) {
   const origin = req?.headers?.origin;
   if (origin) {
     try {
-      return new URL(origin).hostname;
+      return normalizeRpID(new URL(origin).hostname);
     } catch {
     }
   }
 
   const host = req?.headers?.host;
   if (host) {
-    return String(host).split(":")[0];
+    return normalizeRpID(String(host).split(":")[0]);
   }
 
   try {
-    return new URL(env.FRONTEND_URL).hostname;
+    return normalizeRpID(new URL(env.FRONTEND_URL).hostname);
   } catch {
     return "localhost";
   }
@@ -90,8 +97,10 @@ export const getRegistrationOptions = async (req, res, next) => {
       excludeCredentials
     });
 
-    user.webauthnCurrentChallenge = options.challenge;
-    await user.save();
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { webauthnCurrentChallenge: options.challenge } }
+    );
 
     res.json({ ok: true, data: options });
   } catch (error) {
@@ -138,9 +147,29 @@ export const verifyRegistration = async (req, res, next) => {
       ];
     }
 
-    user.biometricEnabled = true;
-    user.webauthnCurrentChallenge = null;
-    await user.save();
+    if (!exists) {
+      await User.updateOne(
+        { _id: user._id },
+        {
+          $set: { biometricEnabled: true, webauthnCurrentChallenge: null },
+          $push: {
+            webauthnCredentials: {
+              credentialID,
+              publicKey,
+              counter: registrationInfo.counter,
+              transports: req.body?.response?.transports || [],
+              deviceType: registrationInfo.credentialDeviceType,
+              backedUp: registrationInfo.credentialBackedUp
+            }
+          }
+        }
+      );
+    } else {
+      await User.updateOne(
+        { _id: user._id },
+        { $set: { biometricEnabled: true, webauthnCurrentChallenge: null } }
+      );
+    }
 
     res.json({ ok: true, data: { biometricEnabled: true } });
   } catch (error) {
@@ -178,8 +207,10 @@ export const getAuthenticationOptions = async (req, res, next) => {
       allowCredentials
     });
 
-    user.webauthnCurrentChallenge = options.challenge;
-    await user.save();
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { webauthnCurrentChallenge: options.challenge } }
+    );
 
     res.json({ ok: true, data: options });
   } catch (error) {
@@ -226,9 +257,16 @@ export const verifyAuthentication = async (req, res, next) => {
     const { verified, authenticationInfo } = verification;
     if (!verified || !authenticationInfo) throw new HttpError(400, "Autenticación biométrica inválida");
 
-    device.counter = authenticationInfo.newCounter;
-    user.webauthnCurrentChallenge = null;
-    await user.save();
+    const upd = await User.updateOne(
+      { _id: user._id, "webauthnCredentials.credentialID": device.credentialID },
+      {
+        $set: {
+          "webauthnCredentials.$.counter": authenticationInfo.newCounter,
+          webauthnCurrentChallenge: null
+        }
+      }
+    );
+    if (!upd || upd.matchedCount === 0) throw new HttpError(400, "Dispositivo no reconocido");
 
     const token = signToken({ sub: user._id.toString() });
     res.json({ ok: true, data: { token } });

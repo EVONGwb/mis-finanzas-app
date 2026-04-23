@@ -8,6 +8,7 @@ import summaryRoutes from "./src/routes/summary.routes.js";
 import { env } from "./src/config/env.js";
 import { logger } from "./src/config/logger.js";
 import { httpLogger } from "./src/middlewares/httpLogger.js";
+import { HttpError } from "./src/utils/httpError.js";
 
 import { connectDB } from "./src/config/db.js";
 import healthRoutes from "./src/routes/health.routes.js";
@@ -44,7 +45,7 @@ app.use(cors({
     // Permitir subdominios de vercel.app automáticamente
     if (origin.endsWith(".vercel.app") || origin.endsWith(".onrender.com")) return cb(null, true);
     if (allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error("Not allowed by CORS: " + origin));
+    return cb(new HttpError(403, "Not allowed by CORS: " + origin));
   },
   methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
   allowedHeaders: ["Content-Type","Authorization"],
