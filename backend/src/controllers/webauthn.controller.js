@@ -40,12 +40,19 @@ export const getRegistrationOptions = async (req, res, next) => {
     if (!user) throw new HttpError(401, "Usuario no válido");
 
     const excludeCredentials = (user.webauthnCredentials || [])
-      .filter(c => c && c.credentialID)
-      .map((c) => ({
-        id: isoBase64URL.toBuffer(c.credentialID),
-        type: "public-key",
-        transports: c.transports || []
-      }));
+      .map((c) => {
+        if (!c || !c.credentialID) return null;
+        try {
+          return {
+            id: isoBase64URL.toBuffer(c.credentialID),
+            type: "public-key",
+            transports: c.transports || []
+          };
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
 
     const options = await generateRegistrationOptions({
       rpName: "Mis Finanzas",
@@ -122,20 +129,29 @@ export const getAuthenticationOptions = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) throw new HttpError(401, "Usuario no válido");
-    if (!user.webauthnCredentials || user.webauthnCredentials.length === 0) {
+    const allowCredentials = (user.webauthnCredentials || [])
+      .map((c) => {
+        if (!c || !c.credentialID) return null;
+        try {
+          return {
+            id: isoBase64URL.toBuffer(c.credentialID),
+            type: "public-key",
+            transports: c.transports || []
+          };
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    if (!allowCredentials || allowCredentials.length === 0) {
       throw new HttpError(400, "No hay huella configurada");
     }
 
     const options = await generateAuthenticationOptions({
       rpID: getRpID(req),
       userVerification: "preferred",
-      allowCredentials: (user.webauthnCredentials || [])
-        .filter(c => c && c.credentialID)
-        .map((c) => ({
-          id: isoBase64URL.toBuffer(c.credentialID),
-          type: "public-key",
-          transports: c.transports || []
-        }))
+      allowCredentials
     });
 
     user.webauthnCurrentChallenge = options.challenge;
@@ -162,16 +178,23 @@ export const verifyAuthentication = async (req, res, next) => {
     const device = (user.webauthnCredentials || []).find((c) => c.credentialID === credentialID);
     if (!device) throw new HttpError(400, "Dispositivo no reconocido");
 
+    let authenticator;
+    try {
+      authenticator = {
+        credentialID: isoBase64URL.toBuffer(device.credentialID),
+        credentialPublicKey: isoBase64URL.toBuffer(device.publicKey),
+        counter: device.counter
+      };
+    } catch {
+      throw new HttpError(400, "Dispositivo biométrico inválido");
+    }
+
     const verification = await verifyAuthenticationResponse({
       response: body,
       expectedChallenge: user.webauthnCurrentChallenge,
       expectedOrigin,
       expectedRPID: rpID,
-      authenticator: {
-        credentialID: isoBase64URL.toBuffer(device.credentialID),
-        credentialPublicKey: isoBase64URL.toBuffer(device.publicKey),
-        counter: device.counter
-      }
+      authenticator
     });
 
     const { verified, authenticationInfo } = verification;

@@ -14,7 +14,6 @@ export default function Login({ onAuthed }) {
   const [refresh, setRefresh] = useState(0);
 
   const token = getToken();
-  const biometricRegistered = localStorage.getItem("biometricRegistered") === "true";
   const canUsePasskey = useMemo(() => isWebAuthnAvailable(), []);
 
   const shouldShowBiometric = Boolean(token) && canUsePasskey && !unlocked;
@@ -25,12 +24,19 @@ export default function Login({ onAuthed }) {
     try {
       setLoading(true);
       setError("");
-      if (!biometricRegistered) {
-        await registerPasskey();
-        localStorage.setItem("biometricRegistered", "true");
-        setRefresh((x) => x + 1);
+      try {
+        await authenticateWithPasskey();
+      } catch (e) {
+        const msg = String(e?.message || "");
+        if (msg.includes("No hay huella configurada")) {
+          await registerPasskey();
+          localStorage.setItem("biometricRegistered", "true");
+          setRefresh((x) => x + 1);
+          await authenticateWithPasskey();
+        } else {
+          throw e;
+        }
       }
-      await authenticateWithPasskey();
       await fetchUser();
       unlock();
       onAuthed();
