@@ -5,6 +5,25 @@ import { HttpError } from "../utils/httpError.js";
 import { User } from "../models/user.model.js";
 import { signToken } from "../utils/jwt.js";
 
+function sanitizeUserCredentials(user) {
+  const current = Array.isArray(user.webauthnCredentials) ? user.webauthnCredentials : [];
+  const sanitized = current.filter((c) => {
+    return (
+      c &&
+      typeof c.credentialID === "string" &&
+      c.credentialID.length > 0 &&
+      typeof c.publicKey === "string" &&
+      c.publicKey.length > 0
+    );
+  });
+
+  if (sanitized.length !== current.length) {
+    user.webauthnCredentials = sanitized;
+    return true;
+  }
+  return false;
+}
+
 function getRpID(req) {
   const origin = req?.headers?.origin;
   if (origin) {
@@ -38,6 +57,8 @@ export const getRegistrationOptions = async (req, res, next) => {
     const rpID = getRpID(req);
     const user = await User.findById(req.user._id);
     if (!user) throw new HttpError(401, "Usuario no válido");
+
+    sanitizeUserCredentials(user);
 
     const excludeCredentials = (user.webauthnCredentials || [])
       .map((c) => {
@@ -87,6 +108,8 @@ export const verifyRegistration = async (req, res, next) => {
     if (!user) throw new HttpError(401, "Usuario no válido");
     if (!user.webauthnCurrentChallenge) throw new HttpError(400, "No hay challenge activo");
 
+    sanitizeUserCredentials(user);
+
     const verification = await verifyRegistrationResponse({
       response: req.body,
       expectedChallenge: user.webauthnCurrentChallenge,
@@ -129,6 +152,7 @@ export const getAuthenticationOptions = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) throw new HttpError(401, "Usuario no válido");
+    sanitizeUserCredentials(user);
     const allowCredentials = (user.webauthnCredentials || [])
       .map((c) => {
         if (!c || !c.credentialID) return null;
@@ -170,6 +194,8 @@ export const verifyAuthentication = async (req, res, next) => {
     const user = await User.findById(req.user._id);
     if (!user) throw new HttpError(401, "Usuario no válido");
     if (!user.webauthnCurrentChallenge) throw new HttpError(400, "No hay challenge activo");
+
+    sanitizeUserCredentials(user);
 
     const body = req.body;
     const credentialID = body?.id;
