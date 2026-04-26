@@ -30,15 +30,17 @@ export async function registerPasskey() {
 
 export async function authenticateWithPasskey() {
   const token = getToken();
-  if (!token) throw new Error("No hay sesión - inicia con Google primero");
+  const email = localStorage.getItem("lastLoginEmail");
+  const qs = token ? "" : (email ? `?email=${encodeURIComponent(email)}` : "");
+  if (!token && !email) throw new Error("No hay sesión guardada. Continúa con Google");
 
-  const optionsRes = await apiFetch("/auth/webauthn/login/options", { token });
+  const optionsRes = await apiFetch(`/auth/webauthn/login/options${qs}`, token ? { token } : undefined);
   const asseResp = await startAuthentication(optionsRes.data);
 
-  const verifyRes = await apiFetch("/auth/webauthn/login/verify", {
+  const verifyRes = await apiFetch(`/auth/webauthn/login/verify${qs}`, {
     method: "POST",
     token,
-    body: asseResp
+    body: token ? asseResp : { ...asseResp, email }
   });
 
   const newToken = verifyRes.data?.token;

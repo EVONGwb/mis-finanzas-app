@@ -30,7 +30,7 @@ export function PWAInstallPrompt() {
     deferredPrompt.prompt();
 
     // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice;
+    await deferredPrompt.userChoice;
     
     // We've used the prompt, and can't use it again, throw it away
     setDeferredPrompt(null);
@@ -46,29 +46,32 @@ export function PWAInstallPrompt() {
       left: '50%',
       transform: 'translateX(-50%)',
       zIndex: 1000,
-      backgroundColor: 'white',
+      backgroundColor: 'var(--color-glass-bg)',
       padding: '12px 20px',
       borderRadius: '16px',
-      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+      boxShadow: 'var(--shadow-md)',
       display: 'flex',
       alignItems: 'center',
       gap: '12px',
-      border: '1px solid #E5E7EB',
+      border: '1px solid var(--color-glass-border)',
       maxWidth: '90%',
-      width: 'max-content'
+      width: 'max-content',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
     }}>
       <div style={{
-        backgroundColor: '#ECFDF5',
+        background: 'var(--gradient-primary)',
         padding: '8px',
         borderRadius: '10px',
-        color: '#10B981'
+        color: 'var(--color-primary)',
+        border: '1px solid rgba(16, 185, 129, 0.25)',
       }}>
         <Download size={20} />
       </div>
       
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#111827' }}>Instalar App</span>
-        <span style={{ fontSize: '0.8rem', color: '#6B7280' }}>Añadir a pantalla de inicio</span>
+        <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--color-text)' }}>Instalar App</span>
+        <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>Añadir a pantalla de inicio</span>
       </div>
 
       <div style={{ display: 'flex', gap: '8px', marginLeft: '12px' }}>
@@ -84,7 +87,7 @@ export function PWAInstallPrompt() {
           style={{
             background: 'transparent',
             border: 'none',
-            color: '#9CA3AF',
+            color: 'var(--color-text-tertiary)',
             cursor: 'pointer',
             padding: '4px',
             display: 'flex',

@@ -1,4 +1,4 @@
-import { Menu, Bell, ChevronDown, Globe } from "lucide-react";
+import { Menu, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useCurrency, CURRENCIES } from "../../context/CurrencyContext";
@@ -7,12 +7,6 @@ export function Header({ onMenuClick, user }) {
   const navigate = useNavigate();
   const { currency, setCurrency } = useCurrency();
   const [logoError, setLogoError] = useState(false);
-  
-  // Capitalize month properly
-  const date = new Date();
-  const monthName = date.toLocaleString('es-ES', { month: 'long' });
-  const year = date.getFullYear();
-  const currentMonth = `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${year}`;
 
   const handleCurrencyChange = (e) => {
     setCurrency(e.target.value);
@@ -21,7 +15,7 @@ export function Header({ onMenuClick, user }) {
   return (
     <header style={{
       height: "80px",
-      backgroundColor: "var(--color-surface)",
+      backgroundColor: "var(--color-glass-bg)",
       borderBottom: "none", // Remove border for cleaner look
       display: "flex",
       alignItems: "center",
@@ -30,13 +24,37 @@ export function Header({ onMenuClick, user }) {
       position: "sticky",
       top: 0,
       zIndex: 30,
-      boxShadow: "0 4px 20px rgba(0,0,0,0.03)" // Softer shadow
+      backdropFilter: "blur(16px)",
+      WebkitBackdropFilter: "blur(16px)",
+      borderBottom: "1px solid var(--color-glass-border)",
+      boxShadow: "var(--shadow-sm)"
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-        {/* Logo and App Name (Mobile) */}
+        <button
+          type="button"
+          onClick={onMenuClick}
+          className="md-hidden"
+          style={{
+            background: "transparent",
+            border: "1px solid var(--color-glass-border)",
+            color: "var(--color-text)",
+            borderRadius: "12px",
+            width: 42,
+            height: 42,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)"
+          }}
+        >
+          <Menu size={22} />
+        </button>
+
+        {/* Logo and App Name */}
         {!logoError ? (
           <img 
-            src="/logo.png?v=1" 
+            src="/logo.png?v=2" 
             alt="Mis Finanzas" 
             style={{ 
               height: "40px", 
@@ -61,7 +79,7 @@ export function Header({ onMenuClick, user }) {
           </div>
         )}
         <div>
-          <h1 style={{ fontSize: "1.25rem", fontWeight: 900, color: "#111827", lineHeight: 1.1, letterSpacing: "-0.5px" }}>Mis Finanzas</h1>
+          <h1 style={{ fontSize: "1.25rem", fontWeight: 900, color: "var(--color-text)", lineHeight: 1.1, letterSpacing: "-0.5px" }}>Mis Finanzas</h1>
         </div>
       </div>
 
@@ -71,15 +89,15 @@ export function Header({ onMenuClick, user }) {
           position: "relative", 
           display: "flex", 
           alignItems: "center", 
-          backgroundColor: "#F3F4F6", 
+          backgroundColor: "var(--color-surface)", 
           borderRadius: "8px", 
           padding: "4px 8px",
-          border: "1px solid #E5E7EB"
+          border: "1px solid var(--color-border)"
         }}>
           <span style={{ 
             fontSize: "0.8rem", 
             fontWeight: "bold", 
-            color: "#374151", 
+            color: "var(--color-text)", 
             marginRight: "4px" 
           }}>
             {CURRENCIES.find(c => c.code === currency)?.symbol}
@@ -93,7 +111,7 @@ export function Header({ onMenuClick, user }) {
               border: "none",
               fontSize: "0.8rem",
               fontWeight: 600,
-              color: "#374151",
+              color: "var(--color-text)",
               cursor: "pointer",
               paddingRight: "14px", // Space for chevron
               outline: "none"
@@ -103,7 +121,7 @@ export function Header({ onMenuClick, user }) {
               <option key={c.code} value={c.code}>{c.code}</option>
             ))}
           </select>
-          <ChevronDown size={12} style={{ position: "absolute", right: "6px", pointerEvents: "none", color: "#6B7280" }} />
+          <ChevronDown size={12} style={{ position: "absolute", right: "6px", pointerEvents: "none", color: "var(--color-text-tertiary)" }} />
         </div>
 
         {/* User Avatar */}
@@ -114,17 +132,17 @@ export function Header({ onMenuClick, user }) {
             alignItems: "center", 
             gap: "0.75rem", 
             cursor: "pointer",
-            backgroundColor: "#F3F4F6", // Light grey circle background
+            backgroundColor: "var(--color-surface)", 
             borderRadius: "50%",
             padding: "2px",
-            border: "1px solid #E5E7EB",
+            border: "1px solid var(--color-border)",
             marginLeft: "0.5rem"
           }}
         >
           <div style={{
             width: "36px", height: "36px", borderRadius: "50%",
-            backgroundColor: "#E5E7EB", display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#374151", fontWeight: "bold", fontSize: "0.9rem"
+            backgroundColor: "var(--color-surface-strong)", display: "flex", alignItems: "center", justifyContent: "center",
+            color: "var(--color-text)", fontWeight: "bold", fontSize: "0.9rem"
           }}>
              {user?.name ? user.name.substring(0, 2).toUpperCase() : "PM"}
           </div>

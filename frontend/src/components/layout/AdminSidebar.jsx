@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Users, FileText, LogOut, X, Shield, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Users, FileText, LogOut, X, ArrowLeft } from "lucide-react";
 
 export function AdminSidebar({ isOpen, onClose, onLogout, user }) {
   const links = [
@@ -30,33 +30,31 @@ export function AdminSidebar({ isOpen, onClose, onLogout, user }) {
           left: 0,
           bottom: 0,
           width: "280px",
-          backgroundColor: "#1e293b", // Darker background for Admin
-          color: "white",
+          backgroundColor: "rgba(6, 15, 23, 0.92)",
+          color: "var(--color-text)",
           zIndex: 50,
           transform: isOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 0.3s ease-in-out",
           display: "flex",
           flexDirection: "column",
-          padding: "1.5rem"
+          padding: "1.5rem",
+          borderRight: "1px solid var(--color-glass-border)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)"
         }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "3rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <div style={{ 
-              width: "40px", height: "40px", 
-              borderRadius: "12px", 
-              background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "white", fontWeight: "bold",
-              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
-            }}>
-              <Shield size={24} />
-            </div>
-            <span style={{ fontSize: "1.25rem", fontWeight: 700, color: "white", letterSpacing: "-0.5px" }}>
+            <img
+              src="/logo.png?v=2"
+              alt="Mis Finanzas"
+              style={{ width: 42, height: 42, objectFit: "contain" }}
+            />
+            <span style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--color-text)", letterSpacing: "-0.5px" }}>
               Admin
             </span>
           </div>
-          <button onClick={onClose} className="md-hidden" style={{ background: "none", border: "none", cursor: "pointer", color: "white" }}>
+          <button onClick={onClose} className="md-hidden" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text)" }}>
             <X size={20} />
           </button>
         </div>
@@ -65,7 +63,7 @@ export function AdminSidebar({ isOpen, onClose, onLogout, user }) {
           <p style={{ 
             fontSize: "0.75rem", 
             fontWeight: 600, 
-            color: "#94a3b8", 
+            color: "var(--color-text-tertiary)", 
             textTransform: "uppercase", 
             letterSpacing: "0.05em",
             marginBottom: "0.5rem",
@@ -84,8 +82,9 @@ export function AdminSidebar({ isOpen, onClose, onLogout, user }) {
                 gap: "0.75rem",
                 padding: "0.875rem 1rem",
                 borderRadius: "0.5rem",
-                color: isActive ? "white" : "#94a3b8",
-                backgroundColor: isActive ? "#334155" : "transparent",
+                color: isActive ? "var(--color-text)" : "var(--color-text-secondary)",
+                backgroundColor: isActive ? "var(--color-surface-strong)" : "transparent",
+                border: isActive ? "1px solid var(--color-glass-border)" : "1px solid transparent",
                 fontWeight: isActive ? 600 : 500,
                 textDecoration: "none",
                 transition: "all 0.2s",
@@ -96,7 +95,7 @@ export function AdminSidebar({ isOpen, onClose, onLogout, user }) {
             </NavLink>
           ))}
 
-          <div style={{ marginTop: "2rem", borderTop: "1px solid #334155", paddingTop: "1rem" }}>
+          <div style={{ marginTop: "2rem", borderTop: "1px solid var(--color-glass-border)", paddingTop: "1rem" }}>
             <NavLink
               to="/dashboard"
               style={{
@@ -105,7 +104,7 @@ export function AdminSidebar({ isOpen, onClose, onLogout, user }) {
                 gap: "0.75rem",
                 padding: "0.875rem 1rem",
                 borderRadius: "0.5rem",
-                color: "#94a3b8",
+                color: "var(--color-text-secondary)",
                 fontWeight: 500,
                 textDecoration: "none",
                 transition: "all 0.2s",
@@ -117,21 +116,21 @@ export function AdminSidebar({ isOpen, onClose, onLogout, user }) {
           </div>
         </nav>
 
-        <div style={{ borderTop: "1px solid #334155", paddingTop: "1.5rem", marginTop: "auto" }}>
+        <div style={{ borderTop: "1px solid var(--color-glass-border)", paddingTop: "1.5rem", marginTop: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem", padding: "0 0.5rem" }}>
             <div style={{ 
               width: "40px", height: "40px", 
               borderRadius: "50%", 
-              backgroundColor: "#475569",
-              color: "white",
+              backgroundColor: "var(--color-surface-strong)",
+              color: "var(--color-text)",
               display: "flex", alignItems: "center", justifyContent: "center",
               fontWeight: "bold"
             }}>
               {user?.name?.charAt(0).toUpperCase() || "A"}
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "white" }}>{user?.name || "Admin"}</span>
-              <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{user?.email}</span>
+              <span style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--color-text)" }}>{user?.name || "Admin"}</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--color-text-tertiary)" }}>{user?.email}</span>
             </div>
           </div>
           
@@ -144,8 +143,8 @@ export function AdminSidebar({ isOpen, onClose, onLogout, user }) {
               width: "100%",
               padding: "0.75rem 1rem",
               background: "none",
-              border: "1px solid #334155",
-              color: "#94a3b8",
+              border: "1px solid var(--color-border)",
+              color: "var(--color-text-secondary)",
               cursor: "pointer",
               borderRadius: "0.5rem",
               transition: "all 0.2s",
@@ -153,14 +152,14 @@ export function AdminSidebar({ isOpen, onClose, onLogout, user }) {
               fontWeight: 500
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = "#ef4444";
-              e.currentTarget.style.borderColor = "#ef4444";
-              e.currentTarget.style.color = "white";
+              e.currentTarget.style.backgroundColor = "var(--color-danger)";
+              e.currentTarget.style.borderColor = "var(--color-danger)";
+              e.currentTarget.style.color = "rgba(255, 255, 255, 0.98)";
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.backgroundColor = "transparent";
-              e.currentTarget.style.borderColor = "#334155";
-              e.currentTarget.style.color = "#94a3b8";
+              e.currentTarget.style.borderColor = "var(--color-border)";
+              e.currentTarget.style.color = "var(--color-text-secondary)";
             }}
           >
             <LogOut size={18} />

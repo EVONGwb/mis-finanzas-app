@@ -1,8 +1,8 @@
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { Layout } from "./components/layout/Layout";
 import { AdminLayout } from "./components/layout/AdminLayout";
-import { getToken, clearToken } from "./lib/auth";
+import { getToken } from "./lib/auth";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { CurrencyProvider } from "./context/CurrencyContext";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
@@ -11,6 +11,7 @@ import { SubscriptionGuard } from "./components/auth/SubscriptionGuard";
 
 // Lazy loading components
 const Login = lazy(() => import("./pages/Login"));
+const Unlock = lazy(() => import("./pages/Unlock"));
 const Subscribe = lazy(() => import("./pages/Subscribe"));
 const SubscribeSuccess = lazy(() => import("./pages/SubscribeSuccess"));
 const SubscribeCancel = lazy(() => import("./pages/SubscribeCancel"));
@@ -75,11 +76,12 @@ function AdminAppLayout({ children }) {
 }
 
 function Protected({ children }) {
-  const { user, loading, biometricRequired, unlocked } = useAuth();
+  const location = useLocation();
+  const { loading, biometricRequired, unlocked } = useAuth();
   const token = getToken();
   
   if (!token) return <Navigate to="/login" replace />;
-  if (biometricRequired && !unlocked) return <Navigate to="/login" replace />;
+  if (biometricRequired && !unlocked) return <Navigate to="/unlock" state={{ from: location }} replace />;
   if (loading) return <LoadingFallback />;
   
   return <AppLayout>{children}</AppLayout>;
@@ -112,6 +114,7 @@ function LoginRoute() {
   const { fetchUser, biometricRequired, unlocked, unlock } = useAuth();
   const token = getToken();
   
+  if (token && biometricRequired && !unlocked) return <Navigate to="/unlock" replace />;
   if (token && (!biometricRequired || unlocked)) return <Navigate to="/dashboard" replace />;
 
   const handleAuthed = async () => {
@@ -123,6 +126,12 @@ function LoginRoute() {
   return <Login onAuthed={handleAuthed} />;
 }
 
+function UnlockRoute() {
+  const token = getToken();
+  if (!token) return <Navigate to="/login" replace />;
+  return <Unlock />;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -132,6 +141,7 @@ export default function App() {
           <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginRoute />} />
+          <Route path="/unlock" element={<UnlockRoute />} />
           <Route path="/register" element={<Navigate to="/login" replace />} />
 
           {/* Subscription Routes (Protected by Auth only) */}

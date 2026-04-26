@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { AdminSidebar } from "./AdminSidebar";
-import { Header } from "./Header"; // Reusing Header for consistency, or we can make a simpler one
 import { Menu } from "lucide-react";
 
 export function AdminLayout({ children, onLogout, user }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#f1f5f9" }}>
+    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "transparent" }}>
       {/* Admin Sidebar */}
       <AdminSidebar 
         isOpen={sidebarOpen} 
@@ -30,25 +29,27 @@ export function AdminLayout({ children, onLogout, user }) {
         {/* Simple Header for Admin */}
         <header style={{
           height: "64px",
-          backgroundColor: "white",
-          borderBottom: "1px solid #e2e8f0",
+          backgroundColor: "var(--color-glass-bg)",
+          borderBottom: "1px solid var(--color-glass-border)",
           display: "flex",
           alignItems: "center",
           padding: "0 2rem",
           justifyContent: "space-between",
           position: "sticky",
           top: 0,
-          zIndex: 30
+          zIndex: 30,
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)"
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
             <button 
               onClick={() => setSidebarOpen(true)}
               className="md-hidden"
-              style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b" }}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-secondary)" }}
             >
               <Menu size={24} />
             </button>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: 600, color: "#1e293b", margin: 0 }}>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--color-text)", margin: 0 }}>
               Panel de Administración
             </h2>
           </div>

@@ -51,7 +51,7 @@ export function Sidebar({ isOpen, onClose, onLogout, user }) {
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             {!logoError ? (
               <img 
-                src="/logo.png?v=1" 
+                src="/logo.png?v=2" 
                 alt="Mis Finanzas" 
                 style={{ 
                   height: "40px", 

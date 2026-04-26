@@ -104,7 +104,7 @@ export function Button({
           e.currentTarget.style.borderColor = "var(--color-text-tertiary)";
         }
         if (variant === 'ghost') {
-          e.currentTarget.style.backgroundColor = "rgba(0,0,0,0.05)";
+          e.currentTarget.style.backgroundColor = "var(--color-surface-hover)";
           e.currentTarget.style.color = "var(--color-text)";
         }
       }}

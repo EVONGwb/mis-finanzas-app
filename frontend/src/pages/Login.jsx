@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { apiFetch } from "../lib/api";
-import { Button } from "../components/ui/Button";
 import { Fingerprint } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { getToken, setToken } from "../lib/auth";
@@ -16,7 +15,8 @@ export default function Login({ onAuthed }) {
   const token = getToken();
   const canUsePasskey = useMemo(() => isWebAuthnAvailable(), []);
 
-  const shouldShowBiometric = Boolean(token) && canUsePasskey && !unlocked;
+  const lastLoginEmail = localStorage.getItem("lastLoginEmail");
+  const shouldShowBiometric = canUsePasskey && !unlocked && (Boolean(token) || Boolean(lastLoginEmail));
   const isVerifying = loading || authLoading;
 
   const handlePasskeyEnter = async () => {
@@ -29,6 +29,7 @@ export default function Login({ onAuthed }) {
       } catch (e) {
         const msg = String(e?.message || "");
         if (msg.includes("No hay huella configurada")) {
+          if (!getToken()) throw new Error("No hay huella configurada. Continúa con Google para activarla");
           await registerPasskey();
           localStorage.setItem("biometricRegistered", "true");
           setRefresh((x) => x + 1);
@@ -65,8 +66,11 @@ export default function Login({ onAuthed }) {
         });
 
         const token = res.data?.token;
+        const email = res.data?.user?.email;
         if (token) {
           setToken(token);
+          if (email) localStorage.setItem("lastLoginEmail", String(email).toLowerCase());
+          localStorage.setItem("userLoggedIn", "true");
           localStorage.setItem("biometricEnabled", "true");
           onAuthed();
         } else {
@@ -82,127 +86,90 @@ export default function Login({ onAuthed }) {
   });
 
   return (
-    <div style={{ 
-      minHeight: "100vh", 
-      display: "flex", 
-      alignItems: "center", 
-      justifyContent: "center", 
-      background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)", 
-      padding: "1rem",
-      fontFamily: "'Inter', sans-serif"
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "1.5rem",
+      fontFamily: "var(--font-family)"
     }}>
-      
-      <div style={{ 
-        width: "100%", 
-        maxWidth: "460px",
-        backgroundColor: "white", 
-        borderRadius: "32px",
-        padding: "2.5rem 2rem",
-        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.08)",
-        display: "flex", 
-        flexDirection: "column", 
-      }}>
-        
-        {/* Header Section */}
-        <div style={{ marginBottom: "2rem", textAlign: "center", width: "100%" }}>
-          <div style={{ 
-            height: "80px",
-            width: "auto",
-            display: "inline-flex", 
-            alignItems: "center", 
-            justifyContent: "center",
-            marginBottom: "1.5rem"
-          }}>
-            <img 
-              src="/logo.png?v=1" 
-              alt="Mis Finanzas" 
-              style={{ width: "100%", height: "100%", objectFit: "contain" }} 
-            />
+      <div style={{
+        width: "100%",
+        maxWidth: "420px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "1.25rem",
+        padding: "1.75rem 1.25rem",
+        borderRadius: "var(--radius-lg)",
+        backgroundColor: "rgba(6, 15, 23, 0.35)",
+        border: "1px solid var(--color-glass-border)",
+        boxShadow: "var(--shadow-lg)",
+        backdropFilter: "blur(18px)",
+        WebkitBackdropFilter: "blur(18px)"
+      }} key={refresh}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem" }}>
+          <img
+            src="/logo.png?v=2"
+            alt="Mis Finanzas"
+            style={{ width: 150, height: 150, objectFit: "contain" }}
+          />
+
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "1.75rem", fontWeight: 900, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
+              <span style={{ color: "var(--color-text)" }}>MIS </span>
+              <span style={{ color: "var(--color-primary)" }}>FINANZAS</span>
+            </div>
+            <div style={{ marginTop: "0.5rem", color: "var(--color-text-secondary)", fontSize: "1rem" }}>
+              Controla tu dinero <span style={{ color: "var(--color-primary)", fontWeight: 700 }}>al milímetro</span>
+            </div>
           </div>
         </div>
 
-        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1.5rem" }} key={refresh}>
-          {error && (
-            <div style={{ 
-              padding: "1rem", 
-              backgroundColor: "#FEF2F2", 
-              color: "#EF4444", 
-              borderRadius: "16px",
-              fontSize: "0.9rem",
-              textAlign: "center",
-              fontWeight: 600,
-              border: "1px solid #FEE2E2"
-            }}>
-              {error}
-            </div>
-          )}
+        {error && (
+          <div style={{
+            width: "100%",
+            padding: "0.9rem 1rem",
+            backgroundColor: "var(--color-danger-bg)",
+            color: "rgba(255, 255, 255, 0.92)",
+            borderRadius: "var(--radius-md)",
+            fontSize: "0.9rem",
+            textAlign: "center",
+            fontWeight: 600,
+            border: "1px solid rgba(239, 68, 68, 0.35)"
+          }}>
+            {error}
+          </div>
+        )}
 
-          {isVerifying ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1.5rem", padding: "2rem 0" }}>
-              <div className="animate-spin" style={{ width: 48, height: 48, border: "4px solid #E5E7EB", borderTopColor: "#111827", borderRadius: "50%" }} />
-              <div style={{ color: "#4B5563", fontWeight: 700, fontSize: "1.1rem" }}>Verificando acceso...</div>
-            </div>
-          ) : shouldShowBiometric ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#111827", textAlign: "center", marginBottom: "0.5rem" }}>Hola de nuevo</h2>
-              <Button
-                type="button"
-                isLoading={loading}
-                onClick={handlePasskeyEnter}
-                style={{
-                  width: "100%",
-                  height: "64px",
-                  fontSize: "1.1rem",
-                  fontWeight: 800,
-                  borderRadius: "18px",
-                  background: "#111827",
-                  color: "white",
-                  border: "none",
-                  boxShadow: "0 10px 25px -5px rgba(17, 24, 39, 0.3)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "0.75rem"
-                }}
-              >
-                <Fingerprint size={24} />
-                Entrar con huella
-              </Button>
-              <button
-                type="button"
-                onClick={handleUseOtherAccount}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  color: "#6B7280",
-                  fontWeight: 600,
-                  fontSize: "0.95rem",
-                  cursor: "pointer",
-                  marginTop: "0.5rem"
-                }}
-              >
-                Usar otra cuenta
-              </button>
-            </div>
-          ) : (
-            <Button
+        {isVerifying ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", padding: "1.5rem 0" }}>
+            <div className="animate-spin" style={{ width: 44, height: 44, border: "4px solid rgba(148, 163, 184, 0.22)", borderTopColor: "var(--color-primary)", borderRadius: "50%" }} />
+            <div style={{ color: "var(--color-text-secondary)", fontWeight: 700 }}>Verificando acceso...</div>
+          </div>
+        ) : (
+          <>
+            <button
               type="button"
-              variant="outline"
               onClick={() => googleLogin()}
               disabled={loading}
-              style={{ 
-                width: "100%", 
-                height: "64px", 
-                fontSize: "1.05rem",
-                fontWeight: 700,
-                borderRadius: "18px", 
-                backgroundColor: "white",
-                color: "#374151",
-                border: "1px solid #E5E7EB",
+              style={{
+                width: "100%",
+                height: "64px",
+                borderRadius: "var(--radius-full)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                backgroundColor: "rgba(255, 255, 255, 0.95)",
+                color: "rgba(17, 24, 39, 0.95)",
+                fontSize: "1rem",
+                fontWeight: 800,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "0.75rem"
+                gap: "0.85rem",
+                boxShadow: "0 18px 40px rgba(0, 0, 0, 0.35)",
+                cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.7 : 1
               }}
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -212,11 +179,74 @@ export default function Login({ onAuthed }) {
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
               Continuar con Google
-            </Button>
-          )}
+            </button>
 
-        </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "var(--color-text-tertiary)", fontSize: "0.9rem", fontWeight: 600 }}>
+              <span style={{ width: 18, height: 18, borderRadius: 9, border: "1px solid rgba(16, 185, 129, 0.55)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--color-primary)", fontSize: 12 }}>✓</span>
+              La primera vez inicia sesión con Google
+            </div>
 
+            {shouldShowBiometric && (
+              <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.8rem", paddingTop: "0.5rem" }}>
+                <button
+                  type="button"
+                  onClick={handlePasskeyEnter}
+                  disabled={loading}
+                  style={{
+                    width: "100%",
+                    padding: "1.2rem 1rem",
+                    borderRadius: "var(--radius-lg)",
+                    backgroundColor: "transparent",
+                    border: "1px solid var(--color-glass-border)",
+                    boxShadow: "var(--shadow-glow)",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "0.65rem",
+                    cursor: loading ? "not-allowed" : "pointer",
+                    opacity: loading ? 0.7 : 1
+                  }}
+                >
+                  <div style={{
+                    width: 92,
+                    height: 92,
+                    borderRadius: 46,
+                    background: "radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0) 65%)",
+                    border: "1px solid rgba(16, 185, 129, 0.35)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}>
+                    <Fingerprint size={42} color="var(--color-primary)" />
+                  </div>
+                  <div style={{ fontSize: "1rem", fontWeight: 800, color: "var(--color-text)" }}>
+                    Entrar con <span style={{ color: "var(--color-primary)" }}>huella</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleUseOtherAccount}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "var(--color-text-tertiary)",
+                    fontWeight: 700,
+                    fontSize: "0.95rem",
+                    cursor: "pointer",
+                    padding: 0
+                  }}
+                >
+                  Usar otra cuenta
+                </button>
+
+                <div style={{ color: "var(--color-text-tertiary)", fontWeight: 700, fontSize: "0.85rem", paddingTop: "0.25rem" }}>
+                  Tu información está 100% segura
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

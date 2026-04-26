@@ -9,7 +9,7 @@ export function Layout({ children, onLogout, user }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "var(--color-background)" }}>
+    <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "transparent" }}>
       {/* Sidebar - Always Rendered but acts as Drawer (controlled by sidebarOpen) */}
       <Sidebar 
         isOpen={sidebarOpen} 
@@ -46,7 +46,7 @@ export function Layout({ children, onLogout, user }) {
         bottom: "1rem", // Floating
         left: "1rem",
         right: "1rem",
-        backgroundColor: "rgba(255, 255, 255, 0.95)", // More solid
+        backgroundColor: "var(--color-glass-bg)",
         backdropFilter: "blur(16px)",
         borderRadius: "24px", // Rounded pill
         display: "flex",
@@ -54,7 +54,8 @@ export function Layout({ children, onLogout, user }) {
         alignItems: "center",
         padding: "0.5rem 2.5rem", // Adjusted padding
         zIndex: 50,
-        boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)",
+        border: "1px solid var(--color-glass-border)",
+        boxShadow: "var(--shadow-md)",
         maxWidth: "400px", // Limit width on large screens
         margin: "0 auto" // Center
       }}>
@@ -67,13 +68,13 @@ export function Layout({ children, onLogout, user }) {
         {/* 1. HORAS (Deliveries) - MOVED TO FIRST POSITION */}
         <NavLink to="/deliveries" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-          color: isActive ? "#374151" : "#374151", // Always dark
+          color: isActive ? "var(--color-text)" : "var(--color-text-tertiary)",
           fontSize: "0.75rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
         })}>
           {({ isActive }) => (
              <>
                 <div style={{ padding: "8px" }}>
-                   <Clock size={28} strokeWidth={2} color="#374151" />
+                   <Clock size={28} strokeWidth={2} color={isActive ? "var(--color-text)" : "var(--color-text-tertiary)"} />
                 </div>
                <span style={{ fontSize: "0.85rem" }}>Horas</span>
              </>
@@ -83,14 +84,14 @@ export function Layout({ children, onLogout, user }) {
         {/* 2. INICIO - MOVED TO CENTER POSITION */}
         <NavLink to="/dashboard" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "2px",
-          color: isActive ? "#10B981" : "#1F2937",
+          color: isActive ? "var(--color-primary)" : "var(--color-text-tertiary)",
           fontSize: "0.75rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
           position: "relative"
         })}>
           {({ isActive }) => (
             <>
                <div style={{
-                 backgroundColor: isActive ? "rgba(16, 185, 129, 0.1)" : "transparent", // Subtle green background
+                 background: isActive ? "var(--gradient-primary)" : "transparent",
                  borderRadius: "12px",
                  padding: "6px",
                  display: "flex", alignItems: "center", justifyContent: "center",
@@ -98,10 +99,10 @@ export function Layout({ children, onLogout, user }) {
                }}>
                  {isActive ? (
                     // Green filled-ish grid
-                    <LayoutGrid size={26} strokeWidth={2.5} color="#10B981" />
+                    <LayoutGrid size={26} strokeWidth={2.5} color="var(--color-primary)" />
                  ) : (
                     // Default grid
-                    <LayoutGrid size={26} strokeWidth={2} color="#1F2937" />
+                    <LayoutGrid size={26} strokeWidth={2} color="var(--color-text-tertiary)" />
                  )}
                </div>
                <span style={{ fontSize: "0.85rem", marginTop: "2px" }}>Inicio</span>
@@ -113,7 +114,7 @@ export function Layout({ children, onLogout, user }) {
                    bottom: "-8px", // Push it down
                    width: "30px",
                    height: "3px",
-                   backgroundColor: "#10B981",
+                   backgroundColor: "var(--color-primary)",
                    borderRadius: "2px"
                  }} />
                )}
@@ -124,7 +125,7 @@ export function Layout({ children, onLogout, user }) {
         {/* 3. GASTOS - KEPT IN LAST POSITION */}
         <NavLink to="/expenses" style={({ isActive }) => ({
           display: "flex", flexDirection: "column", alignItems: "center", gap: "4px",
-          color: isActive ? "#EF4444" : "#374151",
+          color: isActive ? "var(--color-danger)" : "var(--color-text-tertiary)",
           fontSize: "0.75rem", fontWeight: isActive ? 700 : 500, textDecoration: "none",
         })}>
           {({ isActive }) => (
@@ -132,9 +133,10 @@ export function Layout({ children, onLogout, user }) {
                 {/* Red Gradient Icon Container */}
                 <div style={{ 
                    padding: "6px 10px",
-                   background: "linear-gradient(135deg, #EF4444 0%, #DC2626 100%)",
+                   background: "var(--gradient-danger)",
                    borderRadius: "8px",
-                   boxShadow: "0 2px 5px rgba(239, 68, 68, 0.3)",
+                   border: "1px solid var(--color-border)",
+                   boxShadow: isActive ? "0 10px 25px rgba(239, 68, 68, 0.18)" : "var(--shadow-sm)",
                    display: "flex", alignItems: "center", justifyContent: "center"
                 }}>
                    {/* Dollar Sign or Wallet Icon in White */}

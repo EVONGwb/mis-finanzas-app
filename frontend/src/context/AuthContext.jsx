@@ -11,7 +11,8 @@ export function AuthProvider({ children }) {
   });
   const [loading, setLoading] = useState(true);
   const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem("biometricUnlocked") === "true");
-  const biometricEnabled = localStorage.getItem("biometricEnabled") === "true" || Boolean(getToken());
+  const userLoggedIn = localStorage.getItem("userLoggedIn") === "true" || Boolean(getToken());
+  const biometricEnabled = localStorage.getItem("biometricEnabled") === "true" || Boolean(getToken()) || userLoggedIn;
   const biometricCapable =
     typeof window !== "undefined" &&
     "PublicKeyCredential" in window &&
@@ -31,7 +32,7 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    // Si hay token, asegurar que biometricEnabled esté activo para próximas sesiones
+    localStorage.setItem("userLoggedIn", "true");
     localStorage.setItem("biometricEnabled", "true");
 
     try {
@@ -69,13 +70,16 @@ export function AuthProvider({ children }) {
     clearToken();
     setUser(null);
     localStorage.removeItem("user");
+    localStorage.removeItem("userLoggedIn");
+    localStorage.removeItem("biometricEnabled");
+    localStorage.removeItem("biometricRegistered");
     sessionStorage.removeItem("user");
     sessionStorage.removeItem("biometricUnlocked");
     setUnlocked(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, fetchUser, biometricRequired, unlocked, unlock }}>
+    <AuthContext.Provider value={{ user, loading, logout, fetchUser, biometricRequired, unlocked, unlock, userLoggedIn }}>
       {children}
     </AuthContext.Provider>
   );

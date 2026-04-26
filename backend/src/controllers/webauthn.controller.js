@@ -4,6 +4,7 @@ import { env } from "../config/env.js";
 import { HttpError } from "../utils/httpError.js";
 import { User } from "../models/user.model.js";
 import { signToken } from "../utils/jwt.js";
+import { verifyToken } from "../utils/jwt.js";
 
 function sanitizeUserCredentials(user) {
   const current = Array.isArray(user.webauthnCredentials) ? user.webauthnCredentials : [];
@@ -179,8 +180,21 @@ export const verifyRegistration = async (req, res, next) => {
 
 export const getAuthenticationOptions = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id);
-    if (!user) throw new HttpError(401, "Usuario no válido");
+    const email = String(req.query?.email || "").trim().toLowerCase();
+    let userId = req.user?._id;
+    if (!userId) {
+      const header = req.headers.authorization || "";
+      const [type, token] = header.split(" ");
+      if (type === "Bearer" && token) {
+        try {
+          const decoded = verifyToken(token);
+          userId = decoded?.sub;
+        } catch {
+        }
+      }
+    }
+    const user = userId ? await User.findById(userId) : (email ? await User.findOne({ email }) : null);
+    if (!user) throw new HttpError(400, "No hay huella configurada");
     sanitizeUserCredentials(user);
     const allowCredentials = (user.webauthnCredentials || [])
       .map((c) => {
@@ -222,8 +236,21 @@ export const verifyAuthentication = async (req, res, next) => {
   try {
     const rpID = getRpID(req);
     const expectedOrigin = getExpectedOrigins(req);
-    const user = await User.findById(req.user._id);
-    if (!user) throw new HttpError(401, "Usuario no válido");
+    const email = String(req.query?.email || req.body?.email || "").trim().toLowerCase();
+    let userId = req.user?._id;
+    if (!userId) {
+      const header = req.headers.authorization || "";
+      const [type, token] = header.split(" ");
+      if (type === "Bearer" && token) {
+        try {
+          const decoded = verifyToken(token);
+          userId = decoded?.sub;
+        } catch {
+        }
+      }
+    }
+    const user = userId ? await User.findById(userId) : (email ? await User.findOne({ email }) : null);
+    if (!user) throw new HttpError(400, "No hay huella configurada");
     if (!user.webauthnCurrentChallenge) throw new HttpError(400, "No hay challenge activo");
 
     sanitizeUserCredentials(user);

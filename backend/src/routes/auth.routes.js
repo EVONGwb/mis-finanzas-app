@@ -14,8 +14,8 @@ router.post("/auth/register-admin", requireAuth, requireRole("admin"), registerA
 
 router.get("/auth/webauthn/register/options", requireAuth, getRegistrationOptions);
 router.post("/auth/webauthn/register/verify", requireAuth, verifyRegistration);
-router.get("/auth/webauthn/login/options", requireAuth, getAuthenticationOptions);
-router.post("/auth/webauthn/login/verify", requireAuth, verifyAuthentication);
+router.get("/auth/webauthn/login/options", getAuthenticationOptions);
+router.post("/auth/webauthn/login/verify", verifyAuthentication);
 
 // Perfil del usuario logueado
 router.get("/auth/me", requireAuth, (req, res) => {
