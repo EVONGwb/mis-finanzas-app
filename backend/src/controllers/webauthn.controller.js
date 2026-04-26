@@ -131,7 +131,7 @@ export const getRegistrationOptions = async (req, res, next) => {
         if (!c || !c.credentialID) return null;
         try {
           return {
-            id: isoBase64URL.toBuffer(c.credentialID),
+            id: c.credentialID,
             type: "public-key",
             transports: c.transports || []
           };
@@ -259,7 +259,7 @@ export const getAuthenticationOptions = async (req, res, next) => {
         if (!c || !c.credentialID) return null;
         try {
           return {
-            id: isoBase64URL.toBuffer(c.credentialID),
+            id: c.credentialID,
             type: "public-key",
             transports: c.transports || []
           };
