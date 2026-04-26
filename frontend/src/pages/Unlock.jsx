@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Fingerprint } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { apiFetch } from "../lib/api";
-import { clearToken, setToken } from "../lib/auth";
+import { clearToken, getToken, setToken } from "../lib/auth";
 import { useAuth } from "../context/AuthContext";
 import { authenticateWithPasskey, disableBiometricsLocally, isWebAuthnAvailable, registerPasskey } from "../lib/webauthn";
 
@@ -13,6 +13,7 @@ export default function Unlock() {
   const location = useLocation();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [attemptedDeviceSetup, setAttemptedDeviceSetup] = useState(false);
 
   const canUsePasskey = useMemo(() => isWebAuthnAvailable(), []);
 
@@ -65,8 +66,20 @@ export default function Unlock() {
         }
 
         const name = String(e?.name || "");
-        if (name === "NotAllowedError" || msg.includes("timed out") || msg.includes("not allowed")) {
-          throw new Error("No se pudo usar la huella en este dispositivo. Pulsa “Continuar con Google” para activarla aquí.");
+        const isNotAllowed = name === "NotAllowedError" || msg.includes("timed out") || msg.includes("not allowed");
+        if (isNotAllowed) {
+          const token = getToken();
+          const alreadyRegistered = localStorage.getItem("biometricRegistered") === "true";
+          if (token && !alreadyRegistered && !attemptedDeviceSetup) {
+            setAttemptedDeviceSetup(true);
+            await registerPasskey();
+            localStorage.setItem("biometricRegistered", "true");
+            await authenticateWithPasskey();
+          } else if (!token) {
+            throw new Error("No se pudo usar la huella. Pulsa “Continuar con Google” para activarla en este dispositivo.");
+          } else {
+            throw new Error("No se pudo usar la huella. Si es la primera vez en este dispositivo, pulsa “Continuar con Google” y luego activa la huella.");
+          }
         }
 
         throw e;

@@ -11,6 +11,7 @@ export default function Login({ onAuthed }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  const [attemptedDeviceSetup, setAttemptedDeviceSetup] = useState(false);
 
   const token = getToken();
   const canUsePasskey = useMemo(() => isWebAuthnAvailable(), []);
@@ -37,8 +38,21 @@ export default function Login({ onAuthed }) {
         }
 
         const name = String(e?.name || "");
-        if (name === "NotAllowedError" || msg.includes("timed out") || msg.includes("not allowed")) {
-          throw new Error("No se pudo usar la huella en este dispositivo. Pulsa “Continuar con Google” para activarla aquí.");
+        const isNotAllowed = name === "NotAllowedError" || msg.includes("timed out") || msg.includes("not allowed");
+        if (isNotAllowed) {
+          const token = getToken();
+          const alreadyRegistered = localStorage.getItem("biometricRegistered") === "true";
+          if (token && !alreadyRegistered && !attemptedDeviceSetup) {
+            setAttemptedDeviceSetup(true);
+            await registerPasskey();
+            localStorage.setItem("biometricRegistered", "true");
+            setRefresh((x) => x + 1);
+            await authenticateWithPasskey();
+          } else if (!token) {
+            throw new Error("No se pudo usar la huella. Continúa con Google para activarla en este dispositivo.");
+          } else {
+            throw new Error("No se pudo usar la huella. Si es la primera vez en este dispositivo, vuelve a iniciar con Google para activar la huella.");
+          }
         }
 
         throw e;
