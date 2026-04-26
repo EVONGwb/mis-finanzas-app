@@ -332,11 +332,26 @@ export const verifyAuthentication = async (req, res, next) => {
       throw new HttpError(400, "Respuesta biométrica inválida");
     }
 
-    const normalizeCredentialID = (value) => String(value || "").replace(/=*$/g, "");
-    const incomingID = normalizeCredentialID(credentialID);
+    const canonicalCredentialID = (value) => {
+      if (typeof value !== "string" || value.length === 0) return "";
+      const raw = value.trim();
+      try {
+        if (isoBase64URL.isBase64URL(raw)) {
+          const buf = isoBase64URL.toBuffer(raw, "base64url");
+          return isoBase64URL.fromBuffer(buf, "base64url");
+        }
+        if (isoBase64URL.isBase64(raw)) {
+          const buf = isoBase64URL.toBuffer(raw, "base64");
+          return isoBase64URL.fromBuffer(buf, "base64url");
+        }
+      } catch {
+      }
+      return raw.replace(/=*$/g, "");
+    };
+    const incomingID = canonicalCredentialID(credentialID);
 
     const device = (user.webauthnCredentials || []).find((c) => {
-      return normalizeCredentialID(c?.credentialID) === incomingID;
+      return canonicalCredentialID(c?.credentialID) === incomingID;
     });
     if (!device) throw new HttpError(400, "Dispositivo no reconocido");
 
