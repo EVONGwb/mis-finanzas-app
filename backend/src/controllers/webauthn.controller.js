@@ -250,6 +250,16 @@ export const getAuthenticationOptions = async (req, res, next) => {
         }
       }
     }
+    if (!userId) {
+      const userHandle = req.body?.response?.userHandle;
+      if (typeof userHandle === "string" && userHandle.length > 0) {
+        try {
+          const decoded = isoBase64URL.toUTF8String(userHandle);
+          if (decoded) userId = decoded;
+        } catch {
+        }
+      }
+    }
     const user = userId ? await User.findById(userId) : (email ? await User.findOne({ email }) : null);
     if (!user) throw new HttpError(400, "No hay huella configurada");
     sanitizeUserCredentialsStrict(user);
