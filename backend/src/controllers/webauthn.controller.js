@@ -253,29 +253,14 @@ export const getAuthenticationOptions = async (req, res, next) => {
     const user = userId ? await User.findById(userId) : (email ? await User.findOne({ email }) : null);
     if (!user) throw new HttpError(400, "No hay huella configurada");
     sanitizeUserCredentialsStrict(user);
-    const allowCredentials = (user.webauthnCredentials || [])
-      .map((c) => {
-        if (!c || !c.credentialID) return null;
-        try {
-          return {
-            id: c.credentialID,
-            type: "public-key",
-            transports: c.transports || []
-          };
-        } catch {
-          return null;
-        }
-      })
-      .filter(Boolean);
-
-    if (!allowCredentials || allowCredentials.length === 0) {
+    const savedCount = Array.isArray(user.webauthnCredentials) ? user.webauthnCredentials.length : 0;
+    if (savedCount === 0) {
       throw new HttpError(400, "No hay huella configurada");
     }
 
     const options = await generateAuthenticationOptions({
       rpID: getRpID(req),
-      userVerification: "preferred",
-      allowCredentials
+      userVerification: "preferred"
     });
 
     await User.updateOne(
