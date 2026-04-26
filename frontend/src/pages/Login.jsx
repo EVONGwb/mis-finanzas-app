@@ -34,9 +34,14 @@ export default function Login({ onAuthed }) {
           localStorage.setItem("biometricRegistered", "true");
           setRefresh((x) => x + 1);
           await authenticateWithPasskey();
-        } else {
-          throw e;
         }
+
+        const name = String(e?.name || "");
+        if (name === "NotAllowedError" || msg.includes("timed out") || msg.includes("not allowed")) {
+          throw new Error("No se pudo usar la huella en este dispositivo. Pulsa “Continuar con Google” para activarla aquí.");
+        }
+
+        throw e;
       }
       await fetchUser();
       unlock();
