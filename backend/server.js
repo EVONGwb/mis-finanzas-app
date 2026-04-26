@@ -27,7 +27,7 @@ import { errorHandler } from "./src/middlewares/errorHandler.js";
 
 const app = express();
 
-const allowedOrigins = [
+const allowedOrigins = Array.from(new Set([
   "http://localhost:5173",
   "https://traec4kjypht.vercel.app",
   "https://mis-finanzas-app-nine.vercel.app",
@@ -35,7 +35,7 @@ const allowedOrigins = [
   "https://www.misfinanzas.es",
   "https://mis-finanzas-app.vercel.app",
   "https://mis-finanzas-app.onrender.com"
-];
+].concat(env.CORS_ORIGINS || [])));
 
 app.use(cors({
   origin: function(origin, cb) {

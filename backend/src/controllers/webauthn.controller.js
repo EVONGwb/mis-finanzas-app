@@ -25,6 +25,64 @@ function sanitizeUserCredentials(user) {
   return false;
 }
 
+function sanitizeTransports(value) {
+  const allowed = new Set([
+    "usb",
+    "nfc",
+    "ble",
+    "internal",
+    "hybrid",
+    "cable",
+    "smart-card"
+  ]);
+
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((t) => String(t || "").trim())
+    .filter((t) => allowed.has(t));
+}
+
+function normalizeCounter(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function sanitizeUserCredentialsStrict(user) {
+  const current = Array.isArray(user.webauthnCredentials) ? user.webauthnCredentials : [];
+  const sanitized = current
+    .filter((c) => {
+      return (
+        c &&
+        typeof c.credentialID === "string" &&
+        c.credentialID.length > 0 &&
+        typeof c.publicKey === "string" &&
+        c.publicKey.length > 0
+      );
+    })
+    .map((c) => ({
+      ...c,
+      counter: normalizeCounter(c.counter),
+      transports: sanitizeTransports(c.transports)
+    }));
+
+  const changed =
+    sanitized.length !== current.length ||
+    sanitized.some((c, i) => {
+      const prev = current[i];
+      if (!prev) return true;
+      return (
+        String(prev.counter) !== String(c.counter) ||
+        JSON.stringify(Array.isArray(prev.transports) ? prev.transports : []) !== JSON.stringify(c.transports)
+      );
+    });
+
+  if (changed) {
+    user.webauthnCredentials = sanitized;
+    return true;
+  }
+  return false;
+}
+
 function normalizeRpID(hostname) {
   if (!hostname) return hostname;
   const h = String(hostname).toLowerCase();
@@ -66,7 +124,7 @@ export const getRegistrationOptions = async (req, res, next) => {
     const user = await User.findById(req.user._id);
     if (!user) throw new HttpError(401, "Usuario no válido");
 
-    sanitizeUserCredentials(user);
+    sanitizeUserCredentialsStrict(user);
 
     const excludeCredentials = (user.webauthnCredentials || [])
       .map((c) => {
@@ -118,7 +176,7 @@ export const verifyRegistration = async (req, res, next) => {
     if (!user) throw new HttpError(401, "Usuario no válido");
     if (!user.webauthnCurrentChallenge) throw new HttpError(400, "No hay challenge activo");
 
-    sanitizeUserCredentials(user);
+    sanitizeUserCredentialsStrict(user);
 
     const verification = await verifyRegistrationResponse({
       response: req.body,
@@ -195,7 +253,7 @@ export const getAuthenticationOptions = async (req, res, next) => {
     }
     const user = userId ? await User.findById(userId) : (email ? await User.findOne({ email }) : null);
     if (!user) throw new HttpError(400, "No hay huella configurada");
-    sanitizeUserCredentials(user);
+    sanitizeUserCredentialsStrict(user);
     const allowCredentials = (user.webauthnCredentials || [])
       .map((c) => {
         if (!c || !c.credentialID) return null;
@@ -228,6 +286,13 @@ export const getAuthenticationOptions = async (req, res, next) => {
 
     res.json({ ok: true, data: options });
   } catch (error) {
+    if (
+      error &&
+      (error.name === "Error" || error.name === "TypeError") &&
+      String(error.message || "").toLowerCase().includes("transport")
+    ) {
+      return next(new HttpError(400, "Credencial biométrica inválida (transport). Vuelve a registrar la huella."));
+    }
     next(error);
   }
 };
@@ -253,7 +318,7 @@ export const verifyAuthentication = async (req, res, next) => {
     if (!user) throw new HttpError(400, "No hay huella configurada");
     if (!user.webauthnCurrentChallenge) throw new HttpError(400, "No hay challenge activo");
 
-    sanitizeUserCredentials(user);
+    sanitizeUserCredentialsStrict(user);
 
     const body = req.body;
     const credentialID = body?.id;
