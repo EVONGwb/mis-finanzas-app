@@ -149,8 +149,7 @@ export const getRegistrationOptions = async (req, res, next) => {
       userDisplayName: user.name || "Usuario",
       attestationType: "none",
       authenticatorSelection: {
-        authenticatorAttachment: "platform",
-        residentKey: "required",
+        residentKey: "preferred",
         userVerification: "preferred"
       },
       excludeCredentials
