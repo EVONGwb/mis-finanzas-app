@@ -14,10 +14,35 @@ export default function Unlock() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [attemptedDeviceSetup, setAttemptedDeviceSetup] = useState(false);
+  const [pendingSetup, setPendingSetup] = useState(false);
+  const [setupLoading, setSetupLoading] = useState(false);
 
   const canUsePasskey = useMemo(() => isWebAuthnAvailable(), []);
 
   const from = location.state?.from?.pathname || "/dashboard";
+
+  const shouldSuggestSetup = useMemo(() => {
+    if (!canUsePasskey) return false;
+    const alreadyRegistered = localStorage.getItem("biometricRegistered") === "true";
+    return !alreadyRegistered;
+  }, [canUsePasskey]);
+
+  const handleSetupPasskeyNow = async () => {
+    if (setupLoading) return;
+    setSetupLoading(true);
+    setError("");
+    try {
+      const token = getToken();
+      if (!token) throw new Error("Primero inicia sesión con Google");
+      await registerPasskey();
+      localStorage.setItem("biometricRegistered", "true");
+      navigate(from, { replace: true });
+    } catch (e) {
+      setError(e?.message || "No se pudo activar la huella");
+    } finally {
+      setSetupLoading(false);
+    }
+  };
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -37,7 +62,11 @@ export default function Unlock() {
         localStorage.setItem("biometricEnabled", "true");
         await fetchUser();
         unlock();
-        navigate(from, { replace: true });
+        if (shouldSuggestSetup) {
+          setPendingSetup(true);
+        } else {
+          navigate(from, { replace: true });
+        }
       } catch (e) {
         setError(e?.message || "Error al iniciar sesión con Google");
       } finally {
@@ -161,10 +190,25 @@ export default function Unlock() {
           </div>
         )}
 
+        {pendingSetup && shouldSuggestSetup && (
+          <div style={{
+            width: "100%",
+            padding: "0.95rem 1rem",
+            borderRadius: "var(--radius-md)",
+            backgroundColor: "rgba(16, 185, 129, 0.10)",
+            border: "1px solid rgba(16, 185, 129, 0.22)",
+            color: "rgba(255, 255, 255, 0.92)",
+            textAlign: "center",
+            fontWeight: 800
+          }}>
+            Sesión iniciada. ¿Activar huella en este dispositivo?
+          </div>
+        )}
+
         <button
           type="button"
           onClick={handlePasskey}
-          disabled={loading}
+          disabled={loading || setupLoading}
           style={{
             width: "100%",
             height: "64px",
@@ -178,17 +222,63 @@ export default function Unlock() {
             alignItems: "center",
             justifyContent: "center",
             gap: "0.7rem",
-            cursor: loading ? "not-allowed" : "pointer",
-            opacity: loading ? 0.7 : 1
+            cursor: loading || setupLoading ? "not-allowed" : "pointer",
+            opacity: loading || setupLoading ? 0.7 : 1
           }}
         >
           {loading ? "Verificando..." : "Usar huella"}
         </button>
 
+        {pendingSetup && shouldSuggestSetup && (
+          <>
+            <button
+              type="button"
+              onClick={handleSetupPasskeyNow}
+              disabled={loading || setupLoading}
+              style={{
+                width: "100%",
+                height: "56px",
+                borderRadius: "var(--radius-full)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                backgroundColor: "rgba(255, 255, 255, 0.95)",
+                color: "rgba(17, 24, 39, 0.95)",
+                fontSize: "0.95rem",
+                fontWeight: 900,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.75rem",
+                cursor: loading || setupLoading ? "not-allowed" : "pointer",
+                opacity: loading || setupLoading ? 0.7 : 1
+              }}
+            >
+              {setupLoading ? "Activando..." : "Activar huella ahora"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate(from, { replace: true })}
+              disabled={loading || setupLoading}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "var(--color-text-tertiary)",
+                fontWeight: 800,
+                fontSize: "0.95rem",
+                cursor: loading || setupLoading ? "not-allowed" : "pointer",
+                padding: 0,
+                opacity: loading || setupLoading ? 0.7 : 1
+              }}
+            >
+              Ahora no
+            </button>
+          </>
+        )}
+
         <button
           type="button"
           onClick={handleUseGoogle}
-          disabled={loading}
+          disabled={loading || setupLoading}
           style={{
             width: "100%",
             height: "56px",
@@ -202,8 +292,8 @@ export default function Unlock() {
             alignItems: "center",
             justifyContent: "center",
             gap: "0.75rem",
-            cursor: loading ? "not-allowed" : "pointer",
-            opacity: loading ? 0.7 : 1
+            cursor: loading || setupLoading ? "not-allowed" : "pointer",
+            opacity: loading || setupLoading ? 0.7 : 1
           }}
         >
           Continuar con Google

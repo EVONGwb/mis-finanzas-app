@@ -12,6 +12,8 @@ export default function Login({ onAuthed }) {
   const [loading, setLoading] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [attemptedDeviceSetup, setAttemptedDeviceSetup] = useState(false);
+  const [pendingSetup, setPendingSetup] = useState(false);
+  const [setupLoading, setSetupLoading] = useState(false);
 
   const token = getToken();
   const canUsePasskey = useMemo(() => isWebAuthnAvailable(), []);
@@ -19,6 +21,24 @@ export default function Login({ onAuthed }) {
   const lastLoginEmail = localStorage.getItem("lastLoginEmail");
   const shouldShowBiometric = canUsePasskey && !unlocked && (Boolean(token) || Boolean(lastLoginEmail));
   const isVerifying = loading || authLoading;
+  const shouldSuggestSetup = canUsePasskey && localStorage.getItem("biometricRegistered") !== "true";
+
+  const handleSetupPasskeyNow = async () => {
+    if (setupLoading) return;
+    setSetupLoading(true);
+    setError("");
+    try {
+      const token = getToken();
+      if (!token) throw new Error("Primero inicia sesión con Google");
+      await registerPasskey();
+      localStorage.setItem("biometricRegistered", "true");
+      onAuthed();
+    } catch (e) {
+      setError(e?.message || "No se pudo activar la huella");
+    } finally {
+      setSetupLoading(false);
+    }
+  };
 
   const handlePasskeyEnter = async () => {
     if (loading) return;
@@ -91,7 +111,11 @@ export default function Login({ onAuthed }) {
           if (email) localStorage.setItem("lastLoginEmail", String(email).toLowerCase());
           localStorage.setItem("userLoggedIn", "true");
           localStorage.setItem("biometricEnabled", "true");
-          onAuthed();
+          if (shouldSuggestSetup) {
+            setPendingSetup(true);
+          } else {
+            onAuthed();
+          }
         } else {
           setError("Respuesta inválida del servidor");
         }
@@ -172,7 +196,7 @@ export default function Login({ onAuthed }) {
             <button
               type="button"
               onClick={() => googleLogin()}
-              disabled={loading}
+              disabled={loading || setupLoading}
               style={{
                 width: "100%",
                 height: "64px",
@@ -187,8 +211,8 @@ export default function Login({ onAuthed }) {
                 justifyContent: "center",
                 gap: "0.85rem",
                 boxShadow: "0 18px 40px rgba(0, 0, 0, 0.35)",
-                cursor: loading ? "not-allowed" : "pointer",
-                opacity: loading ? 0.7 : 1
+                cursor: loading || setupLoading ? "not-allowed" : "pointer",
+                opacity: loading || setupLoading ? 0.7 : 1
               }}
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -199,6 +223,65 @@ export default function Login({ onAuthed }) {
               </svg>
               Continuar con Google
             </button>
+
+            {pendingSetup && shouldSuggestSetup && (
+              <>
+                <div style={{
+                  width: "100%",
+                  padding: "0.95rem 1rem",
+                  borderRadius: "var(--radius-md)",
+                  backgroundColor: "rgba(16, 185, 129, 0.10)",
+                  border: "1px solid rgba(16, 185, 129, 0.22)",
+                  color: "rgba(255, 255, 255, 0.92)",
+                  textAlign: "center",
+                  fontWeight: 800
+                }}>
+                  Sesión iniciada. ¿Activar huella en este dispositivo?
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSetupPasskeyNow}
+                  disabled={loading || setupLoading}
+                  style={{
+                    width: "100%",
+                    height: "56px",
+                    borderRadius: "var(--radius-full)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    backgroundColor: "rgba(16, 185, 129, 0.12)",
+                    color: "var(--color-text)",
+                    fontSize: "0.95rem",
+                    fontWeight: 900,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.75rem",
+                    cursor: loading || setupLoading ? "not-allowed" : "pointer",
+                    opacity: loading || setupLoading ? 0.7 : 1
+                  }}
+                >
+                  {setupLoading ? "Activando..." : "Activar huella ahora"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onAuthed()}
+                  disabled={loading || setupLoading}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    color: "var(--color-text-tertiary)",
+                    fontWeight: 800,
+                    fontSize: "0.95rem",
+                    cursor: loading || setupLoading ? "not-allowed" : "pointer",
+                    padding: 0,
+                    opacity: loading || setupLoading ? 0.7 : 1
+                  }}
+                >
+                  Ahora no
+                </button>
+              </>
+            )}
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "var(--color-text-tertiary)", fontSize: "0.9rem", fontWeight: 600 }}>
               <span style={{ width: 18, height: 18, borderRadius: 9, border: "1px solid rgba(16, 185, 129, 0.55)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--color-primary)", fontSize: 12 }}>✓</span>
