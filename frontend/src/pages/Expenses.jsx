@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Card, StatsCard } from "../components/ui/Card";
-import { Filter, DollarSign, Calendar, TrendingDown } from "lucide-react";
+import { Card } from "../components/ui/Card";
+import { Filter, DollarSign } from "lucide-react";
 import MonthlyExpenses from "./expenses/MonthlyExpenses";
 import DailyExpenses from "./expenses/DailyExpenses";
 import { apiFetch } from "../lib/api";
 import { getToken } from "../lib/auth";
 import { useCurrency } from "../context/CurrencyContext";
+import { Modal } from "../components/ui/Modal";
+import { Button } from "../components/ui/Button";
 
 export default function Expenses() {
   const { formatCurrency } = useCurrency();
@@ -14,6 +16,8 @@ export default function Expenses() {
   // Filter state (Shared between tabs)
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [yearDraft, setYearDraft] = useState(new Date().getFullYear());
 
   // Totals state
   const [totals, setTotals] = useState({ monthlyPlanned: 0, monthlyPaid: 0, daily: 0, totalPlanned: 0, totalPaid: 0 });
@@ -96,51 +100,64 @@ export default function Expenses() {
         </div>
       </Card>
 
-      {/* View Type Toggles */}
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "1.5rem" }}>
-        <button
-          onClick={() => setViewType("monthly")}
-          style={{
-            flex: 1,
-            padding: "1rem",
-            backgroundColor: viewType === "monthly" ? "var(--color-danger)" : "var(--color-surface)",
-            color: viewType === "monthly" ? "white" : "var(--color-text)",
-            border: viewType === "monthly" ? "none" : "1px solid var(--color-border)",
-            borderRadius: "var(--radius-md)",
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "all 0.2s",
-            textAlign: "center",
-            boxShadow: viewType === "monthly" ? "var(--shadow-md)" : "none"
-          }}
-        >
-          Gastos Mensuales
-          <span style={{ display: "block", fontSize: "0.75rem", fontWeight: 400, opacity: 0.9, marginTop: "0.25rem" }}>
-            Fijos (Alquiler, Luz, Internet...)
-          </span>
-        </button>
-        <button
-          onClick={() => setViewType("daily")}
-          style={{
-            flex: 1,
-            padding: "1rem",
-            backgroundColor: viewType === "daily" ? "var(--color-warning)" : "var(--color-surface)",
-            color: viewType === "daily" ? "white" : "var(--color-text)",
-            border: viewType === "daily" ? "none" : "1px solid var(--color-border)",
-            borderRadius: "var(--radius-md)",
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "all 0.2s",
-            textAlign: "center",
-            boxShadow: viewType === "daily" ? "var(--shadow-md)" : "none"
-          }}
-        >
-          Gastos Diarios
-          <span style={{ display: "block", fontSize: "0.75rem", fontWeight: 400, opacity: 0.9, marginTop: "0.25rem" }}>
-            Variables (Café, Cine, Compras...)
-          </span>
-        </button>
-      </div>
+      {/* Gastos (Mensuales / Variables) */}
+      <Card style={{ marginBottom: "1.5rem" }} padding="0">
+        <div style={{
+          padding: "1rem 1.25rem",
+          borderBottom: "1px solid var(--color-border)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
+          <div style={{ fontWeight: 800, color: "var(--color-text)" }}>Gastos</div>
+          <div style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", fontWeight: 700 }}>
+            {new Date(year, month - 1).toLocaleString('es-ES', { month: 'long', year: 'numeric' })}
+          </div>
+        </div>
+
+        <div style={{ display: "flex" }}>
+          <button
+            type="button"
+            onClick={() => setViewType("monthly")}
+            style={{
+              flex: 1,
+              padding: "1rem",
+              background: viewType === "monthly" ? "var(--gradient-danger)" : "transparent",
+              color: "var(--color-text)",
+              border: "none",
+              cursor: "pointer",
+              textAlign: "left",
+              transition: "all 0.2s",
+              borderRight: "1px solid var(--color-border)"
+            }}
+          >
+            <div style={{ fontWeight: 900, fontSize: "1rem" }}>Mensuales</div>
+            <div style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", marginTop: "0.25rem" }}>
+              Fijos (Alquiler, Luz, Internet...)
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setViewType("daily")}
+            style={{
+              flex: 1,
+              padding: "1rem",
+              background: viewType === "daily" ? "var(--gradient-primary)" : "transparent",
+              color: "var(--color-text)",
+              border: "none",
+              cursor: "pointer",
+              textAlign: "left",
+              transition: "all 0.2s"
+            }}
+          >
+            <div style={{ fontWeight: 900, fontSize: "1rem" }}>Variables</div>
+            <div style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", marginTop: "0.25rem" }}>
+              Café, Cine, Compras...
+            </div>
+          </button>
+        </div>
+      </Card>
 
       {/* Shared Date Filter */}
       <Card style={{ marginBottom: "1.5rem" }} padding="1rem">
@@ -160,21 +177,32 @@ export default function Expenses() {
               <option key={i + 1} value={i + 1}>{new Date(0, i).toLocaleString('es-ES', { month: 'long' })}</option>
             ))}
           </select>
-          <select 
-            value={year} 
-            onChange={(e) => setYear(Number(e.target.value))}
-            style={{ 
-              padding: "0.5rem", 
-              borderRadius: "var(--radius-sm)", 
+          <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+            <div style={{
+              padding: "0.5rem 0.75rem",
+              borderRadius: "var(--radius-sm)",
               border: "1px solid var(--color-border)",
-              flex: 1
-            }}
-          >
-            <option value="2024">2024</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
-            <option value="2027">2027</option>
-          </select>
+              color: "var(--color-text)",
+              backgroundColor: "var(--color-surface)",
+              fontWeight: 800,
+              minWidth: 84,
+              textAlign: "center"
+            }}>
+              {year}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setYearDraft(year);
+                setFilterOpen(true);
+              }}
+              style={{ height: 36 }}
+            >
+              Filtrar
+            </Button>
+          </div>
         </div>
       </Card>
 
@@ -184,6 +212,49 @@ export default function Expenses() {
       ) : (
         <DailyExpenses month={month} year={year} onUpdate={fetchTotals} />
       )}
+
+      <Modal
+        isOpen={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        title="Filtrar"
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <div style={{ fontWeight: 800, color: "var(--color-text)" }}>Año</div>
+            <select
+              value={yearDraft}
+              onChange={(e) => setYearDraft(Number(e.target.value))}
+              style={{
+                padding: "0.75rem",
+                borderRadius: "var(--radius-sm)",
+                border: "1px solid var(--color-border)",
+                backgroundColor: "var(--color-surface)",
+                color: "var(--color-text)"
+              }}
+            >
+              {Array.from({ length: 6 }, (_, i) => {
+                const y = new Date().getFullYear() - 2 + i;
+                return <option key={y} value={y}>{y}</option>;
+              })}
+            </select>
+          </div>
+
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
+            <Button type="button" variant="ghost" onClick={() => setFilterOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setYear(yearDraft);
+                setFilterOpen(false);
+              }}
+            >
+              Aplicar
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
