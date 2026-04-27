@@ -33,6 +33,16 @@ function setSessionCookie(res, token) {
   });
 }
 
+function clearSessionCookie(res) {
+  const isProd = env.NODE_ENV === "production";
+  res.clearCookie("mf_session", {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+    path: "/"
+  });
+}
+
 export async function register(req, res, next) {
   try {
     throw new HttpError(410, "Registro con email/contraseña deshabilitado. Usa Google.");
@@ -193,6 +203,15 @@ export async function googleLogin(req, res, next) {
       ok: true,
       data: { token, user: { _id: user._id, email: user.email, name: user.name, role: user.role, avatar: user.avatar } }
     });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function logout(req, res, next) {
+  try {
+    clearSessionCookie(res);
+    return res.json({ ok: true });
   } catch (err) {
     return next(err);
   }

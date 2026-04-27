@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, registerAdmin, googleLogin, updateProfile } from "../controllers/auth.controller.js";
+import { register, login, registerAdmin, googleLogin, logout, updateProfile } from "../controllers/auth.controller.js";
 import { requireAuth, requireRole } from "../middlewares/auth.js";
 import { getAuthenticationOptions, getRegistrationOptions, verifyAuthentication, verifyRegistration } from "../controllers/webauthn.controller.js";
 
@@ -8,6 +8,7 @@ const router = Router();
 router.post("/auth/register", register);
 router.post("/auth/login", login);
 router.post("/auth/google", googleLogin);
+router.post("/auth/logout", logout);
 
 // Admin: crear usuarios con password
 router.post("/auth/register-admin", requireAuth, requireRole("admin"), registerAdmin);

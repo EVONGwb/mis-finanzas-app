@@ -40,12 +40,13 @@ const allowedOrigins = Array.from(new Set([
 app.use(cors({
   origin: function(origin, cb) {
     if (!origin) return cb(null, true);
+    const o = String(origin).trim().replace(/`/g, "");
     // Permitir localhost en cualquier puerto (desarrollo)
-    if (/^https?:\/\/localhost:\d+$/.test(origin) || /^https?:\/\/127\.0\.0\.1:\d+$/.test(origin)) return cb(null, true);
+    if (/^https?:\/\/localhost:\d+$/.test(o) || /^https?:\/\/127\.0\.0\.1:\d+$/.test(o)) return cb(null, true);
     // Permitir subdominios de vercel.app automáticamente
-    if (origin.endsWith(".vercel.app") || origin.endsWith(".onrender.com")) return cb(null, true);
-    if (allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(new HttpError(403, "Not allowed by CORS: " + origin));
+    if (o.endsWith(".vercel.app") || o.endsWith(".onrender.com")) return cb(null, true);
+    if (allowedOrigins.includes(o)) return cb(null, true);
+    return cb(new HttpError(403, "Not allowed by CORS: " + o));
   },
   methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
   allowedHeaders: ["Content-Type","Authorization"],
