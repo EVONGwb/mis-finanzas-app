@@ -11,6 +11,28 @@ function isEmailValid(email) {
   return typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function parseExpiresInMs(expiresIn) {
+  const raw = String(expiresIn || "").trim();
+  const match = raw.match(/^(\d+)\s*([smhd])$/i);
+  if (!match) return null;
+  const amount = Number(match[1]);
+  const unit = match[2].toLowerCase();
+  const multipliers = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 };
+  return Number.isFinite(amount) && amount > 0 ? amount * multipliers[unit] : null;
+}
+
+function setSessionCookie(res, token) {
+  const isProd = env.NODE_ENV === "production";
+  const maxAge = parseExpiresInMs(env.JWT_EXPIRES_IN) ?? 7 * 24 * 60 * 60 * 1000;
+  res.cookie("mf_session", token, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+    path: "/",
+    maxAge
+  });
+}
+
 export async function register(req, res, next) {
   try {
     throw new HttpError(410, "Registro con email/contraseña deshabilitado. Usa Google.");
@@ -64,6 +86,7 @@ export async function login(req, res, next) {
     }
 
     const token = signToken({ sub: user._id.toString() });
+    setSessionCookie(res, token);
 
     return res.json({
       ok: true,
@@ -165,6 +188,7 @@ export async function googleLogin(req, res, next) {
     }
 
     const token = signToken({ sub: user._id.toString() });
+    setSessionCookie(res, token);
     return res.json({
       ok: true,
       data: { token, user: { _id: user._id, email: user.email, name: user.name, role: user.role, avatar: user.avatar } }
