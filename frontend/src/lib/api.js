@@ -45,6 +45,7 @@ export async function apiFetch(path, { token, method = "GET", body } = {}) {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
+      credentials: "include",
       signal: controller.signal
     });
   } catch (err) {
