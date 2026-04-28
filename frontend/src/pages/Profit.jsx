@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../lib/api";
-import { getToken } from "../lib/auth";
 import { Card } from "../components/ui/Card";
 import { useCurrency } from "../context/CurrencyContext";
 import { 
@@ -27,8 +26,7 @@ export default function Profit() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = getToken();
-      const summaryRes = await apiFetch(`/summary?year=${year}&month=${month}`, { token });
+      const summaryRes = await apiFetch(`/summary?year=${year}&month=${month}`);
       setSummary(summaryRes.data);
     } catch (e) {
       console.error(e);

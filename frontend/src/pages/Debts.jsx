@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../lib/api";
-import { getToken } from "../lib/auth";
 import { Card, StatsCard } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
@@ -67,7 +66,7 @@ export default function Debts() {
   const fetchDebts = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch("/debts", { token: getToken() });
+      const res = await apiFetch("/debts");
       if (res && res.data) {
         setData(res.data);
       } else {
@@ -102,7 +101,6 @@ export default function Debts() {
 
       await apiFetch(url, {
         method,
-        token: getToken(),
         body: debtForm
       });
 
@@ -120,7 +118,6 @@ export default function Debts() {
     try {
       await apiFetch(`/debts/${selectedDebt._id}/payments`, {
         method: "POST",
-        token: getToken(),
         body: paymentForm
       });
 
@@ -140,7 +137,7 @@ export default function Debts() {
   const handleDeleteDebt = async (id) => {
     if (!window.confirm("¿Estás seguro de eliminar esta deuda?")) return;
     try {
-      await apiFetch(`/debts/${id}`, { method: "DELETE", token: getToken() });
+      await apiFetch(`/debts/${id}`, { method: "DELETE" });
       setIsDetailModalOpen(false);
       fetchDebts();
     } catch (error) {
@@ -152,8 +149,7 @@ export default function Debts() {
     if (!window.confirm("¿Eliminar este pago?")) return;
     try {
       await apiFetch(`/debts/${selectedDebt._id}/payments/${paymentId}`, {
-        method: "DELETE",
-        token: getToken()
+        method: "DELETE"
       });
       fetchDebts();
       // Refresh detail modal

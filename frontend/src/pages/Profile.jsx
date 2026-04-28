@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import { getToken } from "../lib/auth";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { User, Lock, Mail, Save, LogOut, Copy, Check, DollarSign } from "lucide-react";
@@ -43,10 +42,8 @@ export default function Profile() {
     setSuccess("");
 
     try {
-      const token = getToken();
       const res = await apiFetch("/auth/profile", {
         method: "PUT",
-        headers: { "Authorization": `Bearer ${token}` },
         body: { name, currency: selectedCurrency }
       });
 

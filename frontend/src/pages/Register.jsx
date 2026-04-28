@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { apiFetch } from "../lib/api";
-import { setToken } from "../lib/auth";
 import { Link } from "react-router-dom";
 import { TrendingUp, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Input } from "../components/ui/Input";
@@ -27,19 +26,9 @@ export default function Register({ onAuthed }) {
           body: { accessToken: tokenResponse.access_token }
         });
 
-        const token = res.data?.token;
         const user = res.data?.user;
 
-        if (token) {
-          localStorage.setItem("token", token);
-          if (user) {
-            localStorage.setItem("user", JSON.stringify(user));
-          }
-          setToken(token);
-          onAuthed();
-        } else {
-          setError("Respuesta inválida del servidor");
-        }
+        onAuthed();
       } catch (err) {
         setError(err.message || "Error al registrarse con Google");
       } finally {
@@ -69,7 +58,6 @@ export default function Register({ onAuthed }) {
         method: "POST",
         body: { email, password, name }
       });
-      setToken(res.data.token);
       onAuthed();
     } catch (err) {
       setError(err.message);

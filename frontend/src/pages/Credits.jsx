@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../lib/api";
-import { getToken } from "../lib/auth";
 import { Card, StatsCard } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
@@ -60,7 +59,7 @@ export default function Credits() {
   const fetchCredits = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch("/credits", { token: getToken() });
+      const res = await apiFetch("/credits");
       if (res && res.data) {
         setData(res.data);
       } else {
@@ -83,7 +82,6 @@ export default function Credits() {
 
       await apiFetch(url, {
         method,
-        token: getToken(),
         body: creditForm
       });
 
@@ -101,7 +99,6 @@ export default function Credits() {
     try {
       await apiFetch(`/credits/${selectedCredit._id}/payments`, {
         method: "POST",
-        token: getToken(),
         body: paymentForm
       });
 
@@ -119,7 +116,7 @@ export default function Credits() {
   const handleDeleteCredit = async (id) => {
     if (!window.confirm("¿Estás seguro de eliminar este registro?")) return;
     try {
-      await apiFetch(`/credits/${id}`, { method: "DELETE", token: getToken() });
+      await apiFetch(`/credits/${id}`, { method: "DELETE" });
       setIsDetailModalOpen(false);
       fetchCredits();
     } catch (error) {

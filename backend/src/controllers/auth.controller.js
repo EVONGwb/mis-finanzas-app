@@ -3,6 +3,7 @@ import { OAuth2Client } from "google-auth-library";
 import { User } from "../models/user.model.js";
 import { HttpError } from "../utils/httpError.js";
 import { signToken } from "../utils/jwt.js";
+import { verifyToken } from "../utils/jwt.js";
 import { env } from "../config/env.js";
 
 const client = new OAuth2Client(env.GOOGLE_CLIENT_ID);
@@ -41,6 +42,20 @@ function clearSessionCookie(res) {
     sameSite: isProd ? "none" : "lax",
     path: "/"
   });
+}
+
+function parseCookies(header) {
+  const raw = String(header || "");
+  if (!raw) return {};
+  return raw.split(";").reduce((acc, part) => {
+    const idx = part.indexOf("=");
+    if (idx === -1) return acc;
+    const key = part.slice(0, idx).trim();
+    const value = part.slice(idx + 1).trim();
+    if (!key) return acc;
+    acc[key] = decodeURIComponent(value);
+    return acc;
+  }, {});
 }
 
 export async function register(req, res, next) {
@@ -212,6 +227,34 @@ export async function logout(req, res, next) {
   try {
     clearSessionCookie(res);
     return res.json({ ok: true });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function getSession(req, res, next) {
+  try {
+    const cookies = parseCookies(req.headers.cookie);
+    const token = cookies.mf_session || "";
+    if (!token) {
+      return res.json({ ok: true, data: { authenticated: false } });
+    }
+
+    let decoded;
+    try {
+      decoded = verifyToken(token);
+    } catch {
+      clearSessionCookie(res);
+      return res.json({ ok: true, data: { authenticated: false } });
+    }
+
+    const user = await User.findById(decoded?.sub).select("-passwordHash");
+    if (!user) {
+      clearSessionCookie(res);
+      return res.json({ ok: true, data: { authenticated: false } });
+    }
+
+    return res.json({ ok: true, data: { authenticated: true, user } });
   } catch (err) {
     return next(err);
   }

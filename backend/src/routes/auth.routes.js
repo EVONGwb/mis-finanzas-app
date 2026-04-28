@@ -1,7 +1,6 @@
 import { Router } from "express";
-import { register, login, registerAdmin, googleLogin, logout, updateProfile } from "../controllers/auth.controller.js";
+import { register, login, registerAdmin, googleLogin, logout, updateProfile, getSession } from "../controllers/auth.controller.js";
 import { requireAuth, requireRole } from "../middlewares/auth.js";
-import { getAuthenticationOptions, getRegistrationOptions, verifyAuthentication, verifyRegistration } from "../controllers/webauthn.controller.js";
 
 const router = Router();
 
@@ -9,14 +8,14 @@ router.post("/auth/register", register);
 router.post("/auth/login", login);
 router.post("/auth/google", googleLogin);
 router.post("/auth/logout", logout);
+router.get("/auth/session", getSession);
 
 // Admin: crear usuarios con password
 router.post("/auth/register-admin", requireAuth, requireRole("admin"), registerAdmin);
 
-router.get("/auth/webauthn/register/options", requireAuth, getRegistrationOptions);
-router.post("/auth/webauthn/register/verify", requireAuth, verifyRegistration);
-router.get("/auth/webauthn/login/options", getAuthenticationOptions);
-router.post("/auth/webauthn/login/verify", verifyAuthentication);
+router.all(/^\/auth\/webauthn\/.*/, (req, res) => {
+  return res.status(410).json({ ok: false, message: "Biometría deshabilitada" });
+});
 
 // Perfil del usuario logueado
 router.get("/auth/me", requireAuth, (req, res) => {

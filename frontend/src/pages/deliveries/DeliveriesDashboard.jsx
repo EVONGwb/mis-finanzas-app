@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../../lib/api";
-import { getToken } from "../../lib/auth";
 import { Button } from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
 import { Input } from "../../components/ui/Input";
@@ -98,13 +97,11 @@ export default function DeliveriesDashboard() {
       const from = new Date(Date.UTC(year, month, 1)).toISOString();
       // End of month in UTC (last millisecond of the month)
       const to = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999)).toISOString();
-      
-      const token = getToken();
 
       const [statsRes, entriesRes, bankRes] = await Promise.all([
-        apiFetch(`/work-entries/stats?from=${from}&to=${to}&syncRates=1`, { token }),
-        apiFetch(`/work-entries?from=${from}&to=${to}&syncRates=1`, { token }),
-        apiFetch(`/bank?month=${month + 1}&year=${year}`, { token }) // Check if month is closed
+        apiFetch(`/work-entries/stats?from=${from}&to=${to}&syncRates=1`),
+        apiFetch(`/work-entries?from=${from}&to=${to}&syncRates=1`),
+        apiFetch(`/bank?month=${month + 1}&year=${year}`) // Check if month is closed
       ]);
 
       setStats(statsRes.data);
@@ -126,7 +123,7 @@ export default function DeliveriesDashboard() {
     try {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      const res = await apiFetch(`/companies?month=${month + 1}&year=${year}`, { token: getToken() });
+      const res = await apiFetch(`/companies?month=${month + 1}&year=${year}`);
       setCompanies(res.data);
     } catch (error) {
       console.error("Error loading companies:", error);
@@ -138,7 +135,6 @@ export default function DeliveriesDashboard() {
     try {
       await apiFetch("/work-entries", {
         method: "POST",
-        token: getToken(),
         body: {
           ...entryForm,
           date: selectedDate.toLocaleDateString('en-CA') // Force YYYY-MM-DD local
@@ -162,7 +158,7 @@ export default function DeliveriesDashboard() {
   const handleDelete = async (id) => {
     // Eliminar confirmación: if (!window.confirm("¿Eliminar registro?")) return;
     try {
-      await apiFetch(`/work-entries/${id}`, { method: "DELETE", token: getToken() });
+      await apiFetch(`/work-entries/${id}`, { method: "DELETE" });
       fetchData();
     } catch (e) {
       alert(e.message);
@@ -190,7 +186,7 @@ export default function DeliveriesDashboard() {
         limitRule: companyForm.limitRule
       };
 
-      await apiFetch(url, { method, token: getToken(), body: payload });
+      await apiFetch(url, { method, body: payload });
 
       setIsCompanyModalOpen(false);
       resetCompanyForm();
@@ -259,7 +255,7 @@ export default function DeliveriesDashboard() {
   const handleDeleteCompany = async (id) => {
     if (!window.confirm("¿Eliminar empresa?")) return;
     try {
-      await apiFetch(`/companies/${id}`, { method: "DELETE", token: getToken() });
+      await apiFetch(`/companies/${id}`, { method: "DELETE" });
       fetchCompanies();
     } catch (error) {
       alert(error.message);
@@ -384,7 +380,6 @@ export default function DeliveriesDashboard() {
     try {
       await apiFetch("/bank/close", {
         method: "POST",
-        token: getToken(),
         body: { month: currentDate.getMonth() + 1, year: currentDate.getFullYear() }
       });
       setIsClosingModalOpen(false);
@@ -399,7 +394,6 @@ export default function DeliveriesDashboard() {
     try {
       await apiFetch("/bank/open", {
         method: "POST",
-        token: getToken(),
         body: { 
           month: currentDate.getMonth() + 1, 
           year: currentDate.getFullYear(),
@@ -1001,4 +995,3 @@ export default function DeliveriesDashboard() {
     </div>
   );
 }
-

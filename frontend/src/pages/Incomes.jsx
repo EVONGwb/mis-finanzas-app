@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../lib/api";
-import { getToken } from "../lib/auth";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -34,7 +33,7 @@ export default function Incomes() {
     setLoading(true);
     try {
       setError("");
-      const res = await apiFetch("/incomes", { token: getToken() });
+      const res = await apiFetch("/incomes");
       setItems(res.data);
     } catch (e) {
       setError(e.message || "Error API");
@@ -60,7 +59,6 @@ export default function Incomes() {
     try {
       await apiFetch("/incomes", {
         method: "POST",
-        token: getToken(),
         body: formData
       });
       setIsModalOpen(false);
@@ -77,8 +75,7 @@ export default function Incomes() {
     setDeletingId(id);
     try {
       await apiFetch(`/incomes/${id}`, {
-        method: "DELETE",
-        token: getToken()
+        method: "DELETE"
       });
       // Remove from UI immediately
       setItems(items.filter(item => item._id !== id));

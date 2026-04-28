@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import { getToken } from "../lib/auth";
 import { useCurrency } from "../context/CurrencyContext";
 import { 
   TrendingUp, 
@@ -26,12 +25,11 @@ export default function Dashboard() {
   useEffect(() => {
     (async () => {
       try {
-        const token = getToken();
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
           setUser(JSON.parse(storedUser));
         } else {
-           const resUser = await apiFetch("/auth/me", { token });
+           const resUser = await apiFetch("/auth/me");
            if (resUser.data) {
              setUser(resUser.data);
              localStorage.setItem("user", JSON.stringify(resUser.data));
@@ -39,7 +37,7 @@ export default function Dashboard() {
         }
 
         // Fetch pending shopping items count for badge
-        const resHome = await apiFetch("/home", { token });
+        const resHome = await apiFetch("/home");
         if (resHome.data?.home?.shoppingList) {
           const pendingCount = resHome.data.home.shoppingList.filter(i => !i.isBought).length;
           setHomeBadge(pendingCount);

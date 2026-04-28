@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../lib/api";
-import { getToken } from "../lib/auth";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Badge } from "../components/ui/Badge";
@@ -39,8 +38,7 @@ export default function Bank() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = getToken();
-      const res = await apiFetch(`/bank?month=${month}&year=${year}&type=${filterType}`, { token });
+      const res = await apiFetch(`/bank?month=${month}&year=${year}&type=${filterType}`);
       setData(res.data);
     } catch (e) {
       console.error(e);
@@ -54,7 +52,6 @@ export default function Bank() {
     try {
       await apiFetch("/bank/close", {
         method: "POST",
-        token: getToken(),
         body: { month, year }
       });
       fetchData();
@@ -69,7 +66,6 @@ export default function Bank() {
     try {
       await apiFetch("/bank/open", {
         method: "POST",
-        token: getToken(),
         body: { month, year }
       });
       fetchData();

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "../lib/api";
-import { getToken } from "../lib/auth";
 import { Card } from "../components/ui/Card";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { useCurrency } from "../context/CurrencyContext";
@@ -43,13 +42,12 @@ export default function Reports() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = getToken();
       // Fetch expenses for selected month/year
-      const expensesRes = await apiFetch(`/expenses?year=${year}&month=${month}`, { token });
+      const expensesRes = await apiFetch(`/expenses?year=${year}&month=${month}`);
       setExpenses(expensesRes.data);
 
       // Fetch summary
-      const summaryRes = await apiFetch(`/summary?year=${year}&month=${month}`, { token });
+      const summaryRes = await apiFetch(`/summary?year=${year}&month=${month}`);
       setSummary(summaryRes.data);
     } catch (e) {
       console.error(e);

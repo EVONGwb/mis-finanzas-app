@@ -14,47 +14,62 @@ const CACHE = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
 export async function apiFetch(path, { token, method = "GET", body } = {}) {
-  const headers = { "Content-Type": "application/json" };
-  const authToken = token || getToken(); 
-  
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
-  
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const url = `${API_ROOT}${normalizedPath}`;
-  
-  // Cache Key para GET requests
-  const cacheKey = `${url}|${authToken}`;
-  const shouldUseCache = method === "GET" && !normalizedPath.startsWith("/auth/webauthn/");
-  
-  // Si es GET y tenemos caché válida, devolvemos inmediatamente
+
+  const explicitToken =
+    typeof token === "string" && token.trim().length > 0 ? token.trim() : null;
+  const legacyStoredToken = getToken();
+  const legacyToken =
+    typeof legacyStoredToken === "string" && legacyStoredToken.trim().length > 0
+      ? legacyStoredToken.trim()
+      : null;
+
+  const bodyJson = body ? JSON.stringify(body) : undefined;
+
+  const doFetch = async (authHeaderToken) => {
+    const headers = { "Content-Type": "application/json" };
+    if (authHeaderToken) {
+      headers.Authorization = `Bearer ${authHeaderToken}`;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+    try {
+      return await fetch(url, {
+        method,
+        headers,
+        body: bodyJson,
+        credentials: "include",
+        signal: controller.signal
+      });
+    } catch (err) {
+      if (err?.name === "AbortError") {
+        throw new Error("Tiempo de espera agotado (15s). Revisa tu conexión.");
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  };
+
+  const primaryAuthToken = explicitToken;
+  const primaryCacheKey = `${url}|${primaryAuthToken || ""}`;
+  const shouldUseCache = method === "GET";
+
   if (shouldUseCache) {
-    const cached = CACHE.get(cacheKey);
+    const cached = CACHE.get(primaryCacheKey);
     if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
       return cached.data;
     }
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+  let res = await doFetch(primaryAuthToken);
+  let usedAuthToken = primaryAuthToken;
 
-  let res;
-  try {
-    res = await fetch(url, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-      credentials: "include",
-      signal: controller.signal
-    });
-  } catch (err) {
-    if (err.name === "AbortError") {
-      throw new Error("Tiempo de espera agotado (15s). Revisa tu conexión.");
-    }
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
+  if (!explicitToken && (res.status === 401 || res.status === 403) && legacyToken) {
+    res = await doFetch(legacyToken);
+    usedAuthToken = legacyToken;
   }
 
   const text = await res.text();
@@ -73,6 +88,7 @@ export async function apiFetch(path, { token, method = "GET", body } = {}) {
 
   // Guardar en caché si es GET exitoso
   if (shouldUseCache) {
+    const cacheKey = `${url}|${usedAuthToken || ""}`;
     CACHE.set(cacheKey, { data, timestamp: Date.now() });
   } else {
     // Si modificamos datos (POST, PUT, DELETE), invalidamos caché relacionada

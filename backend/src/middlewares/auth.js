@@ -34,7 +34,7 @@ export async function requireAuth(req, res, next) {
     } catch (e) {
       throw new HttpError(401, "Token inválido o expirado");
     }
-    const user = await User.findById(decoded.sub).select("-passwordHash -webauthnCredentials -webauthnCurrentChallenge");
+    const user = await User.findById(decoded.sub).select("-passwordHash");
     if (!user) throw new HttpError(401, "Usuario no válido");
 
     req.user = user;

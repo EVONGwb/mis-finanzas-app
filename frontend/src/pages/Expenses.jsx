@@ -4,7 +4,6 @@ import { Filter, DollarSign } from "lucide-react";
 import MonthlyExpenses from "./expenses/MonthlyExpenses";
 import DailyExpenses from "./expenses/DailyExpenses";
 import { apiFetch } from "../lib/api";
-import { getToken } from "../lib/auth";
 import { useCurrency } from "../context/CurrencyContext";
 import { Modal } from "../components/ui/Modal";
 import { Button } from "../components/ui/Button";
@@ -29,12 +28,12 @@ export default function Expenses() {
   const fetchTotals = async () => {
     try {
       // Fetch monthly expenses total
-      const resMonthly = await apiFetch(`/monthly-expenses/status?month=${month}&year=${year}`, { token: getToken() });
+      const resMonthly = await apiFetch(`/monthly-expenses/status?month=${month}&year=${year}`);
       const monthlyPlanned = resMonthly.data?.reduce((sum, item) => sum + Number(item.amount || 0), 0) || 0;
       const monthlyPaid = resMonthly.data?.reduce((sum, item) => sum + (item.status === 'confirmed' ? Number(item.amount || 0) : 0), 0) || 0;
 
       // Fetch daily expenses total
-      const resDaily = await apiFetch("/expenses", { token: getToken() });
+      const resDaily = await apiFetch("/expenses");
       const dailyTotal = resDaily.data?.filter(item => {
         const d = new Date(item.date);
         return d.getMonth() + 1 === month && d.getFullYear() === year && (item.type || "daily") === "daily";

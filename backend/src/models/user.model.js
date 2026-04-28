@@ -10,19 +10,6 @@ const UserSchema = new mongoose.Schema(
     avatar: { type: String },
     currency: { type: String, default: "EUR" },
 
-    biometricEnabled: { type: Boolean, default: false },
-    webauthnCredentials: [
-      {
-        credentialID: { type: String, required: true },
-        publicKey: { type: String, required: true },
-        counter: { type: Number, default: 0 },
-        transports: [{ type: String }],
-        deviceType: { type: String },
-        backedUp: { type: Boolean, default: false }
-      }
-    ],
-    webauthnCurrentChallenge: { type: String, default: null },
-    
     // Stripe Subscription Fields
     stripeCustomerId: { type: String, default: null },
     stripeSubscriptionId: { type: String, default: null },

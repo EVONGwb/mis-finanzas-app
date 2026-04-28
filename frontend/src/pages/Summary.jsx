@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../lib/api";
-import { getToken } from "../lib/auth";
 
 export default function Summary() {
   const [data, setData] = useState(null);
@@ -9,12 +8,11 @@ export default function Summary() {
   useEffect(() => {
     (async () => {
       try {
-        const token = getToken();
         const now = new Date();
         const year = now.getFullYear();
         const month = now.getMonth() + 1;
 
-        const res = await apiFetch(`/summary?year=${year}&month=${month}`, { token });
+        const res = await apiFetch(`/summary?year=${year}&month=${month}`);
         setData(res.data);
       } catch (e) {
         setError(e.message);
