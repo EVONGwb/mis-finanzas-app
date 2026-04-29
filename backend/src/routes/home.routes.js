@@ -19,28 +19,34 @@ import {
 
 const router = Router();
 
-router.use(requireAuth);
+const wrap = (handler) => async (req, res, next) => {
+  try {
+    return await handler(req, res, next);
+  } catch (err) {
+    return next(err);
+  }
+};
 
 // Gestión Hogar
-router.get("/home", getHome);
-router.post("/home/request", sendHomeRequest);
-router.post("/home/respond", respondHomeRequest);
-router.post("/home/leave", leaveHome);
-router.patch("/home/name", updateHomeName);
+router.get("/home", requireAuth, wrap(getHome));
+router.post("/home/request", requireAuth, wrap(sendHomeRequest));
+router.post("/home/respond", requireAuth, wrap(respondHomeRequest));
+router.post("/home/leave", requireAuth, wrap(leaveHome));
+router.patch("/home/name", requireAuth, wrap(updateHomeName));
 
 // Inventario
-router.get("/home/inventory", getInventory);
-router.post("/home/inventory", addProduct);
-router.patch("/home/inventory/:id", updateProduct);
-router.delete("/home/inventory/:id", deleteProduct);
+router.get("/home/inventory", requireAuth, wrap(getInventory));
+router.post("/home/inventory", requireAuth, wrap(addProduct));
+router.patch("/home/inventory/:id", requireAuth, wrap(updateProduct));
+router.delete("/home/inventory/:id", requireAuth, wrap(deleteProduct));
 
 // Lista de Compra
-router.get("/home/shopping-list", getShoppingList);
-router.post("/home/shopping-list", addToShoppingList);
-router.post("/home/shopping-list/:id/buy", buyItem); // Marcar comprado
-router.delete("/home/shopping-list/:id", deleteShoppingItem);
+router.get("/home/shopping-list", requireAuth, wrap(getShoppingList));
+router.post("/home/shopping-list", requireAuth, wrap(addToShoppingList));
+router.post("/home/shopping-list/:id/buy", requireAuth, wrap(buyItem)); // Marcar comprado
+router.delete("/home/shopping-list/:id", requireAuth, wrap(deleteShoppingItem));
 
 // Historial
-router.get("/home/history", getHistory);
+router.get("/home/history", requireAuth, wrap(getHistory));
 
 export default router;

@@ -16,19 +16,25 @@ import {
 
 const router = Router();
 
-router.use(requireAuth);
+const wrap = (handler) => async (req, res, next) => {
+  try {
+    return await handler(req, res, next);
+  } catch (err) {
+    return next(err);
+  }
+};
 
 // Companies
-router.get("/companies", getCompanies);
-router.post("/companies", createCompany);
-router.patch("/companies/:id", updateCompany);
-router.delete("/companies/:id", deleteCompany);
+router.get("/companies", requireAuth, wrap(getCompanies));
+router.post("/companies", requireAuth, wrap(createCompany));
+router.patch("/companies/:id", requireAuth, wrap(updateCompany));
+router.delete("/companies/:id", requireAuth, wrap(deleteCompany));
 
 // Work Entries
-router.get("/work-entries", getWorkEntries);
-router.get("/work-entries/stats", getDashboardStats);
-router.post("/work-entries", createWorkEntry);
-router.patch("/work-entries/:id", updateWorkEntry);
-router.delete("/work-entries/:id", deleteWorkEntry);
+router.get("/work-entries", requireAuth, wrap(getWorkEntries));
+router.get("/work-entries/stats", requireAuth, wrap(getDashboardStats));
+router.post("/work-entries", requireAuth, wrap(createWorkEntry));
+router.patch("/work-entries/:id", requireAuth, wrap(updateWorkEntry));
+router.delete("/work-entries/:id", requireAuth, wrap(deleteWorkEntry));
 
 export default router;

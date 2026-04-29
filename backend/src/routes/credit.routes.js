@@ -13,6 +13,14 @@ import {
 
 const router = Router();
 
+const wrap = (handler) => async (req, res, next) => {
+  try {
+    return await handler(req, res, next);
+  } catch (err) {
+    return next(err);
+  }
+};
+
 const creditPublicLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 30,
@@ -20,23 +28,15 @@ const creditPublicLimiter = rateLimit({
   legacyHeaders: false
 });
 
-router.post("/credits/consultar", creditPublicLimiter, async (req, res, next) => {
-  try {
-    return await consultarCreditPublic(req, res, next);
-  } catch (err) {
-    return next(err);
-  }
-});
+router.post("/credits/consultar", creditPublicLimiter, wrap(consultarCreditPublic));
 
-router.use(requireAuth);
-
-router.get("/credits", getCredits);
-router.post("/credits", createCredit);
-router.patch("/credits/:id", updateCredit);
-router.delete("/credits/:id", deleteCredit);
+router.get("/credits", requireAuth, wrap(getCredits));
+router.post("/credits", requireAuth, wrap(createCredit));
+router.patch("/credits/:id", requireAuth, wrap(updateCredit));
+router.delete("/credits/:id", requireAuth, wrap(deleteCredit));
 
 // Pagos (Cobros parciales)
-router.post("/credits/:id/payments", addPayment);
-router.delete("/credits/:id/payments/:paymentId", deletePayment);
+router.post("/credits/:id/payments", requireAuth, wrap(addPayment));
+router.delete("/credits/:id/payments/:paymentId", requireAuth, wrap(deletePayment));
 
 export default router;
