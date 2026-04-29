@@ -35,13 +35,19 @@ async function ensureTrackingCodesForUser(userId) {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const trackingCode = generateCreditTrackingCode(6);
       try {
-        const updated = await Credit.findOneAndUpdate(
-          { _id: item._id, $or: [{ trackingCode: { $exists: false } }, { trackingCode: null }, { trackingCode: "" }] },
+        const selector = {
+          _id: item._id,
+          $or: [{ trackingCode: { $exists: false } }, { trackingCode: null }, { trackingCode: "" }]
+        };
+
+        const result = await Credit.updateOne(
+          selector,
           { $set: { trackingCode } },
-          { new: true }
+          { overwriteImmutable: true }
         );
-        if (updated) break;
-        break;
+
+        if (result?.modifiedCount === 1) break;
+        if (result?.matchedCount === 0) break;
       } catch (err) {
         if (err?.code === 11000) continue;
         throw err;
