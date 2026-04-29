@@ -46,7 +46,8 @@ export function Modal({ isOpen, onClose, title, children }) {
         ref={contentRef}
         className="modal-content"
         style={{
-          backgroundColor: "var(--color-surface)",
+          backgroundColor: "var(--color-background-2)",
+          border: "1px solid var(--color-border)",
           borderRadius: "1.5rem", // Fully rounded
           width: "100%",
           maxWidth: "500px",
