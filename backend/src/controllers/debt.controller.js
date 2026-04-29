@@ -21,9 +21,40 @@ function isTrackingCodeValid(codigo) {
   return /^MF-[A-Z0-9]{6,10}$/.test(codigo);
 }
 
+async function ensureTrackingCodesForUser(userId) {
+  const missingSelector = {
+    user: userId,
+    $or: [{ trackingCode: { $exists: false } }, { trackingCode: null }, { trackingCode: "" }]
+  };
+
+  const missing = await Debt.find(missingSelector).select("_id").lean();
+  if (!missing.length) return;
+
+  const maxAttempts = 10;
+  for (const item of missing) {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const trackingCode = generateDebtTrackingCode(6);
+      try {
+        const updated = await Debt.findOneAndUpdate(
+          { _id: item._id, $or: [{ trackingCode: { $exists: false } }, { trackingCode: null }, { trackingCode: "" }] },
+          { $set: { trackingCode } },
+          { new: true }
+        );
+
+        if (updated) break;
+        break;
+      } catch (err) {
+        if (err?.code === 11000) continue;
+        throw err;
+      }
+    }
+  }
+}
+
 // GET /api/debts
 export const getDebts = async (req, res, next) => {
   try {
+    await ensureTrackingCodesForUser(req.user._id);
     const debts = await Debt.find({ user: req.user._id })
       .sort({ status: 1, dueDate: 1, createdAt: -1 }); // Activas primero, luego por fecha límite
     
