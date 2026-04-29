@@ -1,6 +1,7 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { consultarDeuda } from "../controllers/deuda.controller.js";
+import { consultarDeuda, crearDeuda } from "../controllers/deuda.controller.js";
+import { requireAuth, requireRole } from "../middlewares/auth.js";
 
 const router = Router();
 
@@ -19,5 +20,12 @@ router.post("/deuda/consultar", deudaLimiter, async (req, res, next) => {
   }
 });
 
-export default router;
+router.post("/deuda/crear", requireAuth, requireRole("admin"), async (req, res, next) => {
+  try {
+    return await crearDeuda(req, res, next);
+  } catch (err) {
+    return next(err);
+  }
+});
 
+export default router;
