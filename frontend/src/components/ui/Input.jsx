@@ -30,6 +30,9 @@ export function Input({ label, error, icon: Icon, iconColor, rightElement, ...pr
             transition: "all 0.2s",
             width: "100%",
             backgroundColor: "var(--color-surface)",
+            color: "var(--color-text)",
+            caretColor: "var(--color-text)",
+            WebkitTextFillColor: "var(--color-text)",
             height: "50px" // Taller inputs for mobile
           }}
           onFocus={(e) => {
