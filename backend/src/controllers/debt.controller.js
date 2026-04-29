@@ -1,5 +1,25 @@
 import { Debt } from "../models/debt.model.js";
+import { randomInt } from "crypto";
 import { HttpError } from "../utils/httpError.js";
+
+function generateDebtTrackingCode(length) {
+  const size = Number(length);
+  const n = Number.isFinite(size) ? Math.trunc(size) : 6;
+  if (n < 6 || n > 10) throw new HttpError(400, "Longitud de código inválida");
+
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let out = "MF-";
+  for (let i = 0; i < n; i++) out += chars[randomInt(0, chars.length)];
+  return out;
+}
+
+function normalizeCodigo(value) {
+  return String(value || "").trim().toUpperCase();
+}
+
+function isTrackingCodeValid(codigo) {
+  return /^MF-[A-Z0-9]{6,10}$/.test(codigo);
+}
 
 // GET /api/debts
 export const getDebts = async (req, res, next) => {
@@ -50,19 +70,66 @@ export const createDebt = async (req, res, next) => {
       throw new HttpError(400, "Nombre e importe total son obligatorios");
     }
 
-    const debt = await Debt.create({
-      user: req.user._id,
-      name,
-      creditor,
-      totalAmount: Number(totalAmount),
-      startDate: startDate || new Date(),
-      dueDate,
-      description
-    });
+    const maxAttempts = 10;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const trackingCode = generateDebtTrackingCode(6);
+      try {
+        const debt = await Debt.create({
+          user: req.user._id,
+          name,
+          creditor,
+          totalAmount: Number(totalAmount),
+          startDate: startDate || new Date(),
+          dueDate,
+          description,
+          trackingCode
+        });
 
-    res.status(201).json({ ok: true, data: debt });
+        return res.status(201).json({ ok: true, data: debt });
+      } catch (err) {
+        if (err?.code === 11000) continue;
+        throw err;
+      }
+    }
+
+    throw new HttpError(500, "No se pudo generar un código único");
+
   } catch (error) {
     next(error);
+  }
+};
+
+// POST /api/debts/consultar
+export const consultarDebtPublic = async (req, res, next) => {
+  try {
+    const codigo = normalizeCodigo(req.body?.codigo);
+    if (!isTrackingCodeValid(codigo)) throw new HttpError(400, "Código inválido");
+
+    const debt = await Debt.findOne({ trackingCode: codigo });
+    if (!debt) throw new HttpError(404, "Código no encontrado");
+
+    const total = Math.max(0, Number(debt.totalAmount) || 0);
+    const totalPaid = Math.max(0, debt.payments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0);
+    const pagado = Math.min(totalPaid, total);
+    const pendiente = Math.max(0, total - pagado);
+    const porcentajePagado = total > 0 ? Math.round((pagado / total) * 100) : 100;
+    const estado = debt.status === "paid" ? "pagado" : "activo";
+
+    return res.json({
+      ok: true,
+      data: {
+        codigo: debt.trackingCode,
+        total,
+        pagado,
+        pendiente,
+        porcentajePagado,
+        fechaInicio: debt.startDate,
+        fechaFin: debt.dueDate,
+        estado
+      }
+    });
+  } catch (error) {
+    return next(error);
   }
 };
 
@@ -79,7 +146,7 @@ export const updateDebt = async (req, res, next) => {
     if (!debt) throw new HttpError(404, "Deuda no encontrada");
 
     Object.keys(updates).forEach(key => {
-      if (key !== 'payments' && key !== 'user') { // Protegemos pagos y usuario
+      if (key !== 'payments' && key !== 'user' && key !== 'trackingCode') { // Protegemos pagos, usuario y código
         debt[key] = updates[key];
       }
     });
