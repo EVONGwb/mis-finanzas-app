@@ -60,13 +60,25 @@ export default function Login({ onAuthed }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem", fontFamily: "var(--font-family)", position: "relative", overflow: "hidden" }}>
+    <div
+      style={{
+        minHeight: "100dvh",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        padding: "clamp(0.9rem, 3vw, 1.5rem)",
+        fontFamily: "var(--font-family)",
+        position: "relative",
+        overflowX: "hidden",
+        overflowY: "auto"
+      }}
+    >
       <div style={{ position: "absolute", inset: 0, background: "radial-gradient(1200px 700px at 20% 15%, rgba(16, 185, 129, 0.16), transparent 55%), radial-gradient(1100px 650px at 80% 90%, rgba(34, 211, 238, 0.12), transparent 55%), radial-gradient(900px 600px at 50% 55%, rgba(59, 130, 246, 0.08), transparent 60%)", pointerEvents: "none" }} />
-      <div style={{ width: "100%", maxWidth: "720px", display: "flex", flexDirection: "column", gap: "1.25rem", position: "relative" }}>
-        <div style={{ width: "100%", padding: "1.75rem 1.5rem", borderRadius: "22px", backgroundColor: "rgba(6, 15, 23, 0.42)", border: "1px solid rgba(148, 163, 184, 0.14)", boxShadow: "0 28px 80px rgba(0, 0, 0, 0.55)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)" }}>
+      <div style={{ width: "100%", maxWidth: "720px", display: "flex", flexDirection: "column", gap: "clamp(0.85rem, 2.6vw, 1.25rem)", position: "relative", paddingBottom: "clamp(1rem, 4vw, 2.25rem)" }}>
+        <div style={{ width: "100%", padding: "clamp(1.1rem, 3vw, 1.75rem) clamp(1rem, 3vw, 1.5rem)", borderRadius: "clamp(18px, 4vw, 22px)", backgroundColor: "rgba(6, 15, 23, 0.42)", border: "1px solid rgba(148, 163, 184, 0.14)", boxShadow: "0 28px 80px rgba(0, 0, 0, 0.55)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
-            <div style={{ width: 86, height: 86, borderRadius: 43, background: "radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0) 70%)", border: "1px solid rgba(16, 185, 129, 0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="38" height="38" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div style={{ width: "clamp(58px, 16vw, 86px)", height: "clamp(58px, 16vw, 86px)", borderRadius: 999, background: "radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0) 70%)", border: "1px solid rgba(16, 185, 129, 0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg style={{ width: "clamp(28px, 8vw, 38px)", height: "clamp(28px, 8vw, 38px)" }} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M4 17V20H20V17" stroke="rgba(16,185,129,0.9)" strokeWidth="2" strokeLinecap="round" />
                 <path d="M7 14V16" stroke="rgba(16,185,129,0.9)" strokeWidth="2" strokeLinecap="round" />
                 <path d="M12 10V16" stroke="rgba(16,185,129,0.9)" strokeWidth="2" strokeLinecap="round" />
@@ -76,11 +88,11 @@ export default function Login({ onAuthed }) {
             </div>
 
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "2.25rem", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.02 }}>
+              <div style={{ fontSize: "clamp(1.6rem, 6vw, 2.25rem)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.02 }}>
                 <span style={{ color: "var(--color-text)" }}>MIS </span>
                 <span style={{ color: "var(--color-primary)" }}>FINANZAS</span>
               </div>
-              <div style={{ marginTop: "0.55rem", color: "rgba(226, 232, 240, 0.78)", fontSize: "1.05rem", fontWeight: 650 }}>
+              <div style={{ marginTop: "0.55rem", color: "rgba(226, 232, 240, 0.78)", fontSize: "clamp(0.95rem, 3.5vw, 1.05rem)", fontWeight: 650 }}>
                 Controla tu dinero de forma inteligente
               </div>
             </div>
@@ -100,7 +112,7 @@ export default function Login({ onAuthed }) {
         ) : (
           <>
             <div style={{ marginTop: "1rem" }}>
-              <button type="button" onClick={() => googleLogin()} style={{ width: "100%", height: "64px", borderRadius: "18px", border: "1px solid rgba(255, 255, 255, 0.10)", backgroundColor: "rgba(255, 255, 255, 0.95)", color: "rgba(17, 24, 39, 0.95)", fontSize: "1rem", fontWeight: 850, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.85rem", boxShadow: "0 18px 46px rgba(0, 0, 0, 0.42)", cursor: "pointer" }}>
+              <button type="button" onClick={() => googleLogin()} style={{ width: "100%", height: "clamp(52px, 13vw, 64px)", borderRadius: "18px", border: "1px solid rgba(255, 255, 255, 0.10)", backgroundColor: "rgba(255, 255, 255, 0.95)", color: "rgba(17, 24, 39, 0.95)", fontSize: "clamp(0.95rem, 3.2vw, 1rem)", fontWeight: 850, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", boxShadow: "0 18px 46px rgba(0, 0, 0, 0.42)", cursor: "pointer" }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -120,7 +132,7 @@ export default function Login({ onAuthed }) {
               </div>
             </div>
 
-            <div style={{ marginTop: "1.35rem", display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "0.9rem" }}>
+            <div style={{ marginTop: "1.35rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "clamp(0.75rem, 2.6vw, 0.9rem)" }}>
               <div style={{ padding: "0.85rem 0.9rem", borderRadius: "16px", border: "1px solid rgba(148, 163, 184, 0.14)", backgroundColor: "rgba(15, 23, 42, 0.18)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "rgba(226, 232, 240, 0.92)", fontWeight: 850 }}>
                   <span style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(15, 23, 42, 0.35)", border: "1px solid rgba(148, 163, 184, 0.14)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -167,7 +179,7 @@ export default function Login({ onAuthed }) {
         )}
         </div>
 
-        <div style={{ width: "100%", padding: "1.4rem 1.5rem", borderRadius: "22px", backgroundColor: "rgba(6, 15, 23, 0.42)", border: "1px solid rgba(148, 163, 184, 0.14)", boxShadow: "0 28px 80px rgba(0, 0, 0, 0.55)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)" }}>
+        <div style={{ width: "100%", padding: "clamp(1.05rem, 3vw, 1.4rem) clamp(1rem, 3vw, 1.5rem)", borderRadius: "clamp(18px, 4vw, 22px)", backgroundColor: "rgba(6, 15, 23, 0.42)", border: "1px solid rgba(148, 163, 184, 0.14)", boxShadow: "0 28px 80px rgba(0, 0, 0, 0.55)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.9rem" }}>
             <div style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.25)", display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto" }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -178,15 +190,15 @@ export default function Login({ onAuthed }) {
               </svg>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "1.35rem", fontWeight: 900, color: "rgba(226, 232, 240, 0.95)" }}>Seguimiento de mi deuda</div>
+              <div style={{ fontSize: "clamp(1.12rem, 4.6vw, 1.35rem)", fontWeight: 900, color: "rgba(226, 232, 240, 0.95)" }}>Seguimiento de mi deuda</div>
               <div style={{ marginTop: "0.25rem", color: "rgba(226, 232, 240, 0.68)", fontWeight: 650 }}>
                 Accede al estado de tu préstamo con tu código personal
               </div>
             </div>
           </div>
 
-          <div style={{ marginTop: "1.1rem", display: "grid", gridTemplateColumns: "1fr auto", gap: "0.85rem", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", padding: "0.85rem 0.9rem", borderRadius: "16px", border: "1px solid rgba(148, 163, 184, 0.16)", backgroundColor: "rgba(15, 23, 42, 0.22)" }}>
+          <div style={{ marginTop: "1.1rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "0.85rem", alignItems: "stretch" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", padding: "0.85rem 0.9rem", borderRadius: "16px", border: "1px solid rgba(148, 163, 184, 0.16)", backgroundColor: "rgba(15, 23, 42, 0.22)", minWidth: 0 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="rgba(226,232,240,0.75)" strokeWidth="2" strokeLinecap="round" />
                 <path d="M6 11h12v10H6V11Z" stroke="rgba(226,232,240,0.75)" strokeWidth="2" strokeLinejoin="round" />
@@ -197,7 +209,7 @@ export default function Login({ onAuthed }) {
                 placeholder="Introduce tu código de deuda"
                 inputMode="text"
                 autoComplete="off"
-                style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "rgba(226, 232, 240, 0.92)", fontWeight: 700, fontSize: "0.98rem" }}
+                style={{ flex: 1, minWidth: 0, width: "100%", background: "transparent", border: "none", outline: "none", color: "rgba(226, 232, 240, 0.92)", fontWeight: 700, fontSize: "16px" }}
               />
             </div>
 
@@ -206,6 +218,7 @@ export default function Login({ onAuthed }) {
               onClick={onDebtSubmit}
               disabled={debtLoading}
               style={{
+                width: "100%",
                 height: "52px",
                 padding: "0 1.15rem",
                 borderRadius: "16px",
@@ -219,6 +232,7 @@ export default function Login({ onAuthed }) {
                 display: "flex",
                 alignItems: "center",
                 gap: "0.6rem",
+                justifyContent: "center",
                 boxShadow: "0 18px 40px rgba(16, 185, 129, 0.18)"
               }}
             >
@@ -251,7 +265,7 @@ export default function Login({ onAuthed }) {
                 <div style={{ width: `${debtProgress}%`, height: "100%", background: "linear-gradient(90deg, rgba(16,185,129,0.95), rgba(34,211,238,0.75))" }} />
               </div>
 
-              <div style={{ marginTop: "1rem", display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "0.85rem" }}>
+              <div style={{ marginTop: "1rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "0.85rem" }}>
                 <div>
                   <div style={{ color: "rgba(226, 232, 240, 0.62)", fontWeight: 750, fontSize: "0.85rem" }}>Total</div>
                   <div style={{ marginTop: "0.2rem", color: "rgba(226, 232, 240, 0.95)", fontWeight: 900, fontSize: "1.02rem" }}>{formatCurrency(debtData.total)}</div>
