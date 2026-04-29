@@ -198,6 +198,15 @@ export default function Credits() {
     return "var(--color-warning)";
   };
 
+  const handleCopyTrackingCode = async (code) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      alert("Código copiado");
+    } catch {
+      alert("No se pudo copiar el código");
+    }
+  };
+
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "6rem" }}>
       {/* 1) Header Superior */}
@@ -437,6 +446,20 @@ export default function Credits() {
                 <p style={{ color: "var(--color-text-secondary)" }}>{selectedCredit.debtor}</p>
               </div>
             </div>
+
+            {selectedCredit.trackingCode && (
+              <div style={{ marginBottom: "1.5rem", padding: "1rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", backgroundColor: "var(--color-surface-hover)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem" }}>
+                  <div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginBottom: "0.25rem" }}>Código de seguimiento</div>
+                    <div style={{ fontWeight: 800, letterSpacing: "0.04em", color: "var(--color-text)" }}>{selectedCredit.trackingCode}</div>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => handleCopyTrackingCode(selectedCredit.trackingCode)}>
+                    Copiar
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Main Stats in Detail */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", marginBottom: "2rem", textAlign: "center" }}>

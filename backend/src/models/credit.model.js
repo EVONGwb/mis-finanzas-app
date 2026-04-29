@@ -59,6 +59,15 @@ const creditSchema = new mongoose.Schema({
     enum: ["active", "paid"],
     default: "active"
   },
+  trackingCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+    index: true,
+    uppercase: true,
+    trim: true,
+    immutable: true
+  },
   payments: [paymentSchema]
 }, {
   timestamps: true,
