@@ -17,7 +17,9 @@ import {
   Edit2,
   Search,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Copy,
+  Share2
 } from "lucide-react";
 
 export default function Credits() {
@@ -52,9 +54,17 @@ export default function Credits() {
     note: ""
   });
 
+  const [toast, setToast] = useState(null);
+
   useEffect(() => {
     fetchCredits();
   }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2200);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const fetchCredits = async () => {
     setLoading(true);
@@ -198,17 +208,57 @@ export default function Credits() {
     return "var(--color-warning)";
   };
 
+  const showToast = (message, variant = "success") => {
+    setToast({ message, variant, key: Date.now() });
+  };
+
   const handleCopyTrackingCode = async (code) => {
     try {
       await navigator.clipboard.writeText(code);
-      alert("Código copiado");
+      showToast("Código copiado", "success");
     } catch {
-      alert("No se pudo copiar el código");
+      showToast("No se pudo copiar el código", "error");
+    }
+  };
+
+  const handleShareTrackingCode = async (code) => {
+    const message = `Consulta tu cobro en MIS FINANZAS con este código: ${code}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ text: message });
+        return;
+      }
+      await navigator.clipboard.writeText(message);
+      showToast("Mensaje copiado para compartir", "success");
+    } catch {
+      showToast("No se pudo compartir", "error");
     }
   };
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "6rem" }}>
+      {toast && (
+        <div
+          key={toast.key}
+          style={{
+            position: "fixed",
+            left: "50%",
+            top: "1rem",
+            transform: "translateX(-50%)",
+            zIndex: 1000,
+            padding: "0.75rem 1rem",
+            borderRadius: "999px",
+            border: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-surface)",
+            boxShadow: "var(--shadow-sm)",
+            color: toast.variant === "error" ? "var(--color-danger)" : "var(--color-success)",
+            fontWeight: 700,
+            fontSize: "0.9rem"
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
       {/* 1) Header Superior */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <div>
@@ -383,6 +433,75 @@ export default function Credits() {
                     </span>
                   </div>
                 </div>
+
+                {credit.trackingCode && (
+                  <div
+                    style={{
+                      marginBottom: "1rem",
+                      padding: "0.85rem",
+                      borderRadius: "var(--radius-md)",
+                      border: "1px solid rgba(34, 197, 94, 0.35)",
+                      backgroundColor: "rgba(34, 197, 94, 0.08)",
+                      display: "grid",
+                      gridTemplateColumns: "1fr auto",
+                      gap: "0.75rem",
+                      alignItems: "center"
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginBottom: "0.25rem", fontWeight: 600 }}>
+                        Código de seguimiento
+                      </div>
+                      <div style={{ fontWeight: 900, letterSpacing: "0.08em", color: "var(--color-success)", fontSize: "1.25rem", lineHeight: 1.1 }}>
+                        {credit.trackingCode}
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "0.35rem" }}>
+                        Comparte este código con la persona que debe para que pueda ver su progreso.
+                      </div>
+                    </div>
+                    <div style={{ display: "grid", gap: "0.5rem", justifyItems: "end" }}>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleCopyTrackingCode(credit.trackingCode); }}
+                        style={{
+                          borderRadius: "0.9rem",
+                          padding: "0.6rem 0.9rem",
+                          border: "1px solid rgba(34, 197, 94, 0.35)",
+                          backgroundColor: "rgba(34, 197, 94, 0.10)",
+                          color: "var(--color-success)",
+                          fontWeight: 800,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          cursor: "pointer",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        <Copy size={16} /> Copiar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleShareTrackingCode(credit.trackingCode); }}
+                        style={{
+                          borderRadius: "0.9rem",
+                          padding: "0.6rem 0.9rem",
+                          border: "1px solid var(--color-border)",
+                          backgroundColor: "var(--color-surface)",
+                          color: "var(--color-text)",
+                          fontWeight: 800,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          cursor: "pointer",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        <Share2 size={16} /> Compartir
+                      </button>
+                    </div>
+                  </div>
+                )}
                 
                 {/* Progress Bar */}
                 <div style={{ marginBottom: "1rem" }}>
