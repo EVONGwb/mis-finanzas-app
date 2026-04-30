@@ -46,12 +46,35 @@ export default function Login({ onAuthed }) {
     try {
       const codigo = String(debtCode || "").trim();
       if (!codigo) throw new Error("Introduce tu código de deuda");
-      const res = await apiFetch("/deuda/consultar", {
-        method: "POST",
-        body: { codigo }
-      });
-      if (!res?.ok) throw new Error("No se pudo consultar la deuda");
-      setDebtData(res.data || null);
+
+      const attempts = [
+        { path: "/credits/consultar", label: "Me Deben" },
+        { path: "/debts/consultar", label: "Deudas" },
+        { path: "/deuda/consultar", label: "Seguimiento" }
+      ];
+
+      let lastError = null;
+      for (const attempt of attempts) {
+        try {
+          const res = await apiFetch(attempt.path, {
+            method: "POST",
+            body: { codigo }
+          });
+          if (!res?.ok) throw new Error("No se pudo consultar la deuda");
+          setDebtData(res.data || null);
+          lastError = null;
+          break;
+        } catch (e) {
+          const msg = String(e?.message || "");
+          if (msg.includes("404 - Código no encontrado")) {
+            lastError = e;
+            continue;
+          }
+          throw e;
+        }
+      }
+
+      if (lastError) throw lastError;
     } catch (e) {
       setDebtError(e?.message || "No se pudo consultar la deuda");
     } finally {
