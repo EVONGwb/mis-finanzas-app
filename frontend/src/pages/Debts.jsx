@@ -476,128 +476,109 @@ export default function Debts() {
 
       {/* DETALLE MODAL (Full Screen-ish) */}
       {isDetailModalOpen && selectedDebt && (
-        <div style={{ 
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0, 
-          backgroundColor: "rgba(0,0,0,0.5)", zIndex: 50, 
-          display: "flex", alignItems: "flex-end", justifyContent: "center"
-        }} onClick={() => setIsDetailModalOpen(false)}>
-          <div style={{ 
-            width: "100%", maxWidth: "600px", height: "90vh", 
-            backgroundColor: "var(--color-surface)", 
-            borderTopLeftRadius: "1.5rem", borderTopRightRadius: "1.5rem", 
-            padding: "1.5rem", overflowY: "auto", position: "relative",
-            animation: "slideUp 0.3s ease-out"
-          }} onClick={e => e.stopPropagation()}>
-            
-            <div style={{ width: "40px", height: "4px", backgroundColor: "var(--color-border)", borderRadius: "99px", margin: "0 auto 1.5rem auto" }}></div>
-            
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "1.5rem" }}>
-              <div>
-                <h2 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "0.25rem" }}>{selectedDebt.name}</h2>
-                <p style={{ color: "var(--color-text-secondary)" }}>{selectedDebt.creditor}</p>
-              </div>
-              <button onClick={() => setIsDetailModalOpen(false)} style={{ padding: "0.5rem", background: "none", border: "none", cursor: "pointer" }}>
-                 ✕
-              </button>
+        <Modal
+          isOpen={isDetailModalOpen}
+          onClose={() => setIsDetailModalOpen(false)}
+          title="Detalle de la Deuda"
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "1.5rem" }}>
+            <div>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "0.25rem" }}>{selectedDebt.name}</h2>
+              <p style={{ color: "var(--color-text-secondary)" }}>{selectedDebt.creditor}</p>
             </div>
+          </div>
 
-            {/* Main Stats in Detail */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", marginBottom: "2rem", textAlign: "center" }}>
-              <div style={{ padding: "1rem 0.5rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
-                <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Total</div>
-                <div style={{ fontWeight: "bold" }}>{formatCurrency(selectedDebt.totalAmount)}</div>
-              </div>
-              <div style={{ padding: "1rem 0.5rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
-                <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Pagado</div>
-                <div style={{ fontWeight: "bold", color: "var(--color-success)" }}>{formatCurrency(selectedDebt.totalPaid)}</div>
-              </div>
-              <div style={{ padding: "1rem 0.5rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
-                <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Restante</div>
-                <div style={{ fontWeight: "bold", color: "var(--color-danger)" }}>{formatCurrency(selectedDebt.remaining)}</div>
-              </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", marginBottom: "2rem", textAlign: "center" }}>
+            <div style={{ padding: "1rem 0.5rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Total</div>
+              <div style={{ fontWeight: "bold" }}>{formatCurrency(selectedDebt.totalAmount)}</div>
             </div>
+            <div style={{ padding: "1rem 0.5rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Pagado</div>
+              <div style={{ fontWeight: "bold", color: "var(--color-success)" }}>{formatCurrency(selectedDebt.totalPaid)}</div>
+            </div>
+            <div style={{ padding: "1rem 0.5rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
+              <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Restante</div>
+              <div style={{ fontWeight: "bold", color: "var(--color-danger)" }}>{formatCurrency(selectedDebt.remaining)}</div>
+            </div>
+          </div>
 
-            {selectedDebt.trackingCode && (
-              <div style={{ marginBottom: "1.5rem", padding: "1rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", backgroundColor: "var(--color-surface-hover)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem" }}>
-                  <div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginBottom: "0.25rem" }}>Código de seguimiento</div>
-                    <div style={{ fontWeight: 800, letterSpacing: "0.04em" }}>{selectedDebt.trackingCode}</div>
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => handleCopyTrackingCode(selectedDebt.trackingCode)}>
-                    Copiar
-                  </Button>
+          {selectedDebt.trackingCode && (
+            <div style={{ marginBottom: "1.5rem", padding: "1rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", backgroundColor: "var(--color-surface-hover)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem" }}>
+                <div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginBottom: "0.25rem" }}>Código de seguimiento</div>
+                  <div style={{ fontWeight: 800, letterSpacing: "0.04em" }}>{selectedDebt.trackingCode}</div>
                 </div>
+                <Button size="sm" variant="outline" onClick={() => handleCopyTrackingCode(selectedDebt.trackingCode)}>
+                  Copiar
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div style={{ marginBottom: "2rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+              <span style={{ fontWeight: 600 }}>Progreso del pago</span>
+              <span style={{ fontWeight: 600 }}>{(selectedDebt.progress || 0).toFixed(1)}%</span>
+            </div>
+            <div style={{ height: "10px", backgroundColor: "var(--color-surface-hover)", borderRadius: "99px", overflow: "hidden" }}>
+              <div style={{ width: `${selectedDebt.progress}%`, height: "100%", backgroundColor: getProgressColor(selectedDebt.progress) }}></div>
+            </div>
+            {selectedDebt.remaining <= 0 && (
+              <div style={{ marginTop: "1rem", padding: "0.75rem", backgroundColor: "var(--color-success-bg)", color: "var(--color-success)", borderRadius: "var(--radius-md)", textAlign: "center", fontWeight: "bold" }}>
+                 ¡DEUDA PAGADA! 🎉
               </div>
             )}
-
-            {/* Progress */}
-            <div style={{ marginBottom: "2rem" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                <span style={{ fontWeight: 600 }}>Progreso del pago</span>
-                <span style={{ fontWeight: 600 }}>{(selectedDebt.progress || 0).toFixed(1)}%</span>
-              </div>
-              <div style={{ height: "10px", backgroundColor: "var(--color-surface-hover)", borderRadius: "99px", overflow: "hidden" }}>
-                <div style={{ width: `${selectedDebt.progress}%`, height: "100%", backgroundColor: getProgressColor(selectedDebt.progress) }}></div>
-              </div>
-              {selectedDebt.remaining <= 0 && (
-                <div style={{ marginTop: "1rem", padding: "0.75rem", backgroundColor: "var(--color-success-bg)", color: "var(--color-success)", borderRadius: "var(--radius-md)", textAlign: "center", fontWeight: "bold" }}>
-                   ¡DEUDA PAGADA! 🎉
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
-               {selectedDebt.remaining > 0 && (
-                 <Button onClick={() => openPaymentModal(selectedDebt)} style={{ display: "flex", justifyContent: "center", gap: "0.5rem" }}>
-                   <Plus size={18} /> Añadir Pago
-                 </Button>
-               )}
-               <Button variant="outline" onClick={() => { setIsDetailModalOpen(false); openEditModal(selectedDebt); }} style={{ display: "flex", justifyContent: "center", gap: "0.5rem" }}>
-                 <Edit2 size={18} /> Editar
-               </Button>
-            </div>
-            
-            <div style={{ marginBottom: "2rem" }}>
-               <Button variant="ghost" onClick={() => handleDeleteDebt(selectedDebt._id)} style={{ width: "100%", color: "var(--color-danger)", display: "flex", justifyContent: "center", gap: "0.5rem" }}>
-                 <Trash2 size={18} /> Eliminar Deuda
-               </Button>
-            </div>
-
-            {/* Timeline / Historial de Pagos */}
-            <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1.5rem" }}>
-              <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Historial</h3>
-              {(!selectedDebt.payments || selectedDebt.payments.length === 0) ? (
-                <div style={{ padding: "1rem", textAlign: "center", color: "var(--color-text-secondary)", fontStyle: "italic" }}>
-                   Sin pagos registrados
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                  {[...selectedDebt.payments].reverse().map((payment, idx) => (
-                    <div key={payment._id || idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
-                        <span style={{ fontWeight: 600, color: "var(--color-success)" }}>+{formatCurrency(payment.amount)}</span>
-                        <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
-                          {new Date(payment.date).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
-                          {payment.note && ` — ${payment.note}`}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => handleDeletePayment(payment._id)}
-                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-danger)", padding: "0.25rem", display: "flex", alignItems: "center" }}
-                        title="Eliminar pago"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
           </div>
-        </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "2rem" }}>
+            {selectedDebt.remaining > 0 && (
+              <Button onClick={() => openPaymentModal(selectedDebt)} style={{ display: "flex", justifyContent: "center", gap: "0.5rem" }}>
+                <Plus size={18} /> Añadir Pago
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => { setIsDetailModalOpen(false); openEditModal(selectedDebt); }} style={{ display: "flex", justifyContent: "center", gap: "0.5rem" }}>
+              <Edit2 size={18} /> Editar
+            </Button>
+          </div>
+
+          <div style={{ marginBottom: "2rem" }}>
+            <Button variant="ghost" onClick={() => handleDeleteDebt(selectedDebt._id)} style={{ width: "100%", color: "var(--color-danger)", display: "flex", justifyContent: "center", gap: "0.5rem" }}>
+              <Trash2 size={18} /> Eliminar Deuda
+            </Button>
+          </div>
+
+          <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1.5rem" }}>
+            <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Historial</h3>
+            {(!selectedDebt.payments || selectedDebt.payments.length === 0) ? (
+              <div style={{ padding: "1rem", textAlign: "center", color: "var(--color-text-secondary)", fontStyle: "italic" }}>
+                 Sin pagos registrados
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {[...selectedDebt.payments].reverse().map((payment, idx) => (
+                  <div key={payment._id || idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                      <span style={{ fontWeight: 600, color: "var(--color-success)" }}>+{formatCurrency(payment.amount)}</span>
+                      <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
+                        {new Date(payment.date).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                        {payment.note && ` — ${payment.note}`}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleDeletePayment(payment._id)}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-danger)", padding: "0.25rem", display: "flex", alignItems: "center" }}
+                      title="Eliminar pago"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Modal>
       )}
 
       {/* Modal: Crear/Editar Deuda (Original logic preserved) */}
