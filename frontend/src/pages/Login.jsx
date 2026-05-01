@@ -275,6 +275,23 @@ export default function Login({ onAuthed }) {
 
           {debtData && (
             <div style={{ marginTop: "1.05rem", padding: "1rem 1rem", borderRadius: "18px", border: "1px solid rgba(148, 163, 184, 0.14)", backgroundColor: "rgba(15, 23, 42, 0.18)" }}>
+              {(debtData.concepto || debtData.persona) && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem", marginBottom: "0.9rem" }}>
+                  {debtData.concepto && (
+                    <div>
+                      <div style={{ color: "rgba(226, 232, 240, 0.62)", fontWeight: 750, fontSize: "0.85rem" }}>Concepto</div>
+                      <div style={{ marginTop: "0.2rem", color: "rgba(226, 232, 240, 0.95)", fontWeight: 900, fontSize: "1.02rem" }}>{String(debtData.concepto)}</div>
+                    </div>
+                  )}
+                  {debtData.persona && (
+                    <div>
+                      <div style={{ color: "rgba(226, 232, 240, 0.62)", fontWeight: 750, fontSize: "0.85rem" }}>{String(debtData.personaLabel || "Persona")}</div>
+                      <div style={{ marginTop: "0.2rem", color: "rgba(226, 232, 240, 0.95)", fontWeight: 900, fontSize: "1.02rem" }}>{String(debtData.persona)}</div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.8rem" }}>
                 <div style={{ color: "rgba(226, 232, 240, 0.92)", fontWeight: 900, fontSize: "1.05rem" }}>
                   Estado: <span style={{ color: "rgba(16, 185, 129, 0.95)" }}>{String(debtData.estado || "").toUpperCase() || "ACTIVO"}</span>
@@ -302,6 +319,33 @@ export default function Login({ onAuthed }) {
                   <div style={{ marginTop: "0.2rem", color: "rgba(226, 232, 240, 0.95)", fontWeight: 900, fontSize: "1.02rem" }}>{formatCurrency(debtData.pendiente)}</div>
                 </div>
               </div>
+
+              {Array.isArray(debtData.historialPagos) && debtData.historialPagos.length > 0 && (
+                <div style={{ marginTop: "1rem", paddingTop: "0.95rem", borderTop: "1px solid rgba(148, 163, 184, 0.14)" }}>
+                  <div style={{ color: "rgba(226, 232, 240, 0.92)", fontWeight: 900, fontSize: "1rem", marginBottom: "0.65rem" }}>
+                    Historial de devoluciones
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                    {debtData.historialPagos.slice(0, 20).map((p, idx) => (
+                      <div key={`${String(p?.date || "")}-${idx}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.75rem", padding: "0.75rem 0.85rem", borderRadius: "14px", border: "1px solid rgba(148, 163, 184, 0.14)", backgroundColor: "rgba(2, 8, 14, 0.22)" }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ color: "rgba(226, 232, 240, 0.92)", fontWeight: 850 }}>
+                            {p?.date ? new Date(p.date).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" }) : "Sin fecha"}
+                          </div>
+                          {p?.note ? (
+                            <div style={{ marginTop: "0.25rem", color: "rgba(226, 232, 240, 0.65)", fontWeight: 650, fontSize: "0.88rem", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {String(p.note)}
+                            </div>
+                          ) : null}
+                        </div>
+                        <div style={{ color: "rgba(16, 185, 129, 0.95)", fontWeight: 900, whiteSpace: "nowrap" }}>
+                          {formatCurrency(p?.amount || 0)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div style={{ marginTop: "0.85rem", color: "rgba(226, 232, 240, 0.62)", fontWeight: 700, fontSize: "0.88rem" }}>
                 Este acceso es solo para seguimiento. No necesitas iniciar sesión.

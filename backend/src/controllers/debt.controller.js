@@ -140,23 +140,39 @@ export const consultarDebtPublic = async (req, res, next) => {
     if (!debt) throw new HttpError(404, "Código no encontrado");
 
     const total = Math.max(0, Number(debt.totalAmount) || 0);
-    const totalPaid = Math.max(0, debt.payments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0);
+    const payments = Array.isArray(debt.payments) ? debt.payments : [];
+    const totalPaid = Math.max(0, payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0);
     const pagado = Math.min(totalPaid, total);
     const pendiente = Math.max(0, total - pagado);
     const porcentajePagado = total > 0 ? Math.round((pagado / total) * 100) : 100;
     const estado = debt.status === "paid" ? "pagado" : "activo";
 
+    const historialPagos = payments
+      .slice()
+      .sort((a, b) => new Date(b?.date || 0) - new Date(a?.date || 0))
+      .slice(0, 20)
+      .map((p) => ({
+        amount: Math.max(0, Number(p.amount) || 0),
+        date: p.date,
+        note: p.note || ""
+      }));
+
     return res.json({
       ok: true,
       data: {
+        tipo: "debt",
         codigo: debt.trackingCode,
+        concepto: debt.name,
+        personaLabel: "Acreedor",
+        persona: debt.creditor,
         total,
         pagado,
         pendiente,
         porcentajePagado,
         fechaInicio: debt.startDate,
         fechaFin: debt.dueDate,
-        estado
+        estado,
+        historialPagos
       }
     });
   } catch (error) {
