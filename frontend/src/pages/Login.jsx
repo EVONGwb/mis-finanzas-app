@@ -178,28 +178,28 @@ export default function Login({ onAuthed }) {
         <div style={{ width: "100%", padding: "clamp(1.1rem, 3vw, 1.75rem) clamp(1rem, 3vw, 1.5rem)", borderRadius: "clamp(18px, 4vw, 22px)", backgroundColor: "rgba(6, 15, 23, 0.42)", border: "1px solid rgba(148, 163, 184, 0.14)", boxShadow: "0 28px 80px rgba(0, 0, 0, 0.55)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.8rem" }}>
             <div
-              style={{
-                width: "100%",
-                maxWidth: "520px",
-                height: isCompactMobile ? "clamp(64px, 18vw, 86px)" : "clamp(68px, 14vw, 92px)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: isCompactMobile ? "0.15rem 0" : "0.25rem 0",
-                borderRadius: "18px",
-                background: "radial-gradient(900px 260px at 50% 60%, rgba(16, 185, 129, 0.18), transparent 65%)"
-              }}
-            >
+	              style={{
+	                width: "100%",
+	                maxWidth: "640px",
+	                height: isCompactMobile ? "clamp(92px, 24vw, 122px)" : "clamp(104px, 18vw, 140px)",
+	                display: "flex",
+	                alignItems: "center",
+	                justifyContent: "center",
+	                padding: isCompactMobile ? "0.2rem 0" : "0.35rem 0",
+	                borderRadius: "18px",
+	                background: "radial-gradient(900px 260px at 50% 60%, rgba(16, 185, 129, 0.18), transparent 65%)"
+	              }}
+	            >
               <img
                 src="/logo.png"
                 alt="Mis Finanzas"
-                style={{
-                  width: "min(520px, 92%)",
-                  height: "100%",
-                  objectFit: "contain",
-                  filter: "drop-shadow(0 14px 26px rgba(0,0,0,0.4))"
-                }}
-              />
+	                style={{
+	                  width: "min(640px, 100%)",
+	                  height: "100%",
+	                  objectFit: "contain",
+	                  filter: "drop-shadow(0 14px 26px rgba(0,0,0,0.4))"
+	                }}
+	              />
             </div>
 
             <div style={{ textAlign: "center" }}>
