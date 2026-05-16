@@ -176,26 +176,34 @@ export default function Login({ onAuthed }) {
         )}
 
         <div style={{ width: "100%", padding: "clamp(1.1rem, 3vw, 1.75rem) clamp(1rem, 3vw, 1.5rem)", borderRadius: "clamp(18px, 4vw, 22px)", backgroundColor: "rgba(6, 15, 23, 0.42)", border: "1px solid rgba(148, 163, 184, 0.14)", boxShadow: "0 28px 80px rgba(0, 0, 0, 0.55)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
-            <div style={{ width: "clamp(58px, 16vw, 86px)", height: "clamp(58px, 16vw, 86px)", borderRadius: 999, background: "radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0) 70%)", border: "1px solid rgba(16, 185, 129, 0.35)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.8rem" }}>
+            <div
+              style={{
+                width: "100%",
+                maxWidth: "520px",
+                height: isCompactMobile ? "clamp(64px, 18vw, 86px)" : "clamp(68px, 14vw, 92px)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: isCompactMobile ? "0.15rem 0" : "0.25rem 0",
+                borderRadius: "18px",
+                background: "radial-gradient(900px 260px at 50% 60%, rgba(16, 185, 129, 0.18), transparent 65%)"
+              }}
+            >
               <img
                 src="/logo.png"
                 alt="Mis Finanzas"
                 style={{
-                  width: "72%",
-                  height: "72%",
+                  width: "min(520px, 92%)",
+                  height: "100%",
                   objectFit: "contain",
-                  filter: "drop-shadow(0 10px 18px rgba(0,0,0,0.35))"
+                  filter: "drop-shadow(0 14px 26px rgba(0,0,0,0.4))"
                 }}
               />
             </div>
 
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "clamp(1.6rem, 6vw, 2.25rem)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.02 }}>
-                <span style={{ color: "var(--color-text)" }}>MIS </span>
-                <span style={{ color: "var(--color-primary)" }}>FINANZAS</span>
-              </div>
-              <div style={{ marginTop: "0.55rem", color: "var(--color-text-secondary)", fontSize: "clamp(0.95rem, 3.5vw, 1.05rem)", fontWeight: 650 }}>
+              <div style={{ color: "var(--color-text-secondary)", fontSize: isCompactMobile ? "clamp(0.92rem, 3.3vw, 1.02rem)" : "clamp(0.95rem, 3.5vw, 1.05rem)", fontWeight: 650 }}>
                 Controla tu dinero de forma inteligente
               </div>
             </div>
