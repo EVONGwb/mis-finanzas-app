@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { apiFetch } from "../lib/api";
 import { useCurrency } from "../context/CurrencyContext";
@@ -7,10 +7,28 @@ export default function Login({ onAuthed }) {
   const { formatCurrency } = useCurrency();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activePane, setActivePane] = useState("login"); // login | debt (mobile compact)
+  const [isCompactMobile, setIsCompactMobile] = useState(false);
   const [debtCode, setDebtCode] = useState("");
   const [debtLoading, setDebtLoading] = useState(false);
   const [debtError, setDebtError] = useState("");
   const [debtData, setDebtData] = useState(null);
+
+  useEffect(() => {
+    const compute = () => {
+      // Objetivo: que en móviles con poca altura no haya scroll.
+      const compact = window.innerWidth <= 480 && window.innerHeight <= 760;
+      setIsCompactMobile(compact);
+      if (!compact) setActivePane("login");
+    };
+    compute();
+    window.addEventListener("resize", compute);
+    window.addEventListener("orientationchange", compute);
+    return () => {
+      window.removeEventListener("resize", compute);
+      window.removeEventListener("orientationchange", compute);
+    };
+  }, []);
 
   const debtProgress = useMemo(() => {
     const pct = Number(debtData?.porcentajePagado);
@@ -85,19 +103,78 @@ export default function Login({ onAuthed }) {
   return (
     <div
       style={{
-        minHeight: "100dvh",
+        height: "100dvh",
         display: "flex",
         alignItems: "flex-start",
         justifyContent: "center",
-        padding: "clamp(0.9rem, 3vw, 1.5rem)",
+        padding: isCompactMobile ? "0.75rem" : "clamp(0.9rem, 3vw, 1.5rem)",
         fontFamily: "var(--font-family)",
         position: "relative",
         overflowX: "hidden",
-        overflowY: "auto"
+        overflowY: "hidden"
       }}
     >
       <div style={{ position: "absolute", inset: 0, background: "radial-gradient(1200px 700px at 20% 15%, rgba(16, 185, 129, 0.16), transparent 55%), radial-gradient(1100px 650px at 80% 90%, rgba(34, 211, 238, 0.12), transparent 55%), radial-gradient(900px 600px at 50% 55%, rgba(59, 130, 246, 0.08), transparent 60%)", pointerEvents: "none" }} />
-      <div style={{ width: "100%", maxWidth: "720px", display: "flex", flexDirection: "column", gap: "clamp(0.85rem, 2.6vw, 1.25rem)", position: "relative", paddingBottom: "clamp(1rem, 4vw, 2.25rem)" }}>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: isCompactMobile ? "520px" : "720px",
+          display: "flex",
+          flexDirection: "column",
+          gap: isCompactMobile ? "0.7rem" : "clamp(0.85rem, 2.6vw, 1.25rem)",
+          position: "relative",
+          height: "100%",
+          paddingBottom: isCompactMobile ? "0.5rem" : "clamp(1rem, 4vw, 2.25rem)"
+        }}
+      >
+        {isCompactMobile && (
+          <div
+            style={{
+              width: "100%",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "0.5rem",
+              padding: "0.35rem",
+              borderRadius: "16px",
+              border: "1px solid rgba(148, 163, 184, 0.14)",
+              backgroundColor: "rgba(6, 15, 23, 0.35)",
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)"
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setActivePane("login")}
+              style={{
+                height: "42px",
+                borderRadius: "12px",
+                border: "1px solid rgba(148, 163, 184, 0.12)",
+                backgroundColor: activePane === "login" ? "rgba(16, 185, 129, 0.92)" : "rgba(15, 23, 42, 0.18)",
+                color: activePane === "login" ? "var(--color-text-inverse)" : "var(--color-text)",
+                fontWeight: 900,
+                cursor: "pointer"
+              }}
+            >
+              Entrar
+            </button>
+            <button
+              type="button"
+              onClick={() => setActivePane("debt")}
+              style={{
+                height: "42px",
+                borderRadius: "12px",
+                border: "1px solid rgba(148, 163, 184, 0.12)",
+                backgroundColor: activePane === "debt" ? "rgba(16, 185, 129, 0.92)" : "rgba(15, 23, 42, 0.18)",
+                color: activePane === "debt" ? "var(--color-text-inverse)" : "var(--color-text)",
+                fontWeight: 900,
+                cursor: "pointer"
+              }}
+            >
+              Mi deuda
+            </button>
+          </div>
+        )}
+
         <div style={{ width: "100%", padding: "clamp(1.1rem, 3vw, 1.75rem) clamp(1rem, 3vw, 1.5rem)", borderRadius: "clamp(18px, 4vw, 22px)", backgroundColor: "rgba(6, 15, 23, 0.42)", border: "1px solid rgba(148, 163, 184, 0.14)", boxShadow: "0 28px 80px rgba(0, 0, 0, 0.55)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
             <div style={{ width: "clamp(58px, 16vw, 86px)", height: "clamp(58px, 16vw, 86px)", borderRadius: 999, background: "radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0) 70%)", border: "1px solid rgba(16, 185, 129, 0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -127,35 +204,37 @@ export default function Login({ onAuthed }) {
           </div>
         )}
 
-        {loading ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", padding: "1.75rem 0" }}>
-            <div className="animate-spin" style={{ width: 44, height: 44, border: "4px solid rgba(148, 163, 184, 0.22)", borderTopColor: "var(--color-primary)", borderRadius: "50%" }} />
-            <div style={{ color: "var(--color-text-secondary)", fontWeight: 700 }}>Verificando acceso...</div>
-          </div>
-        ) : (
-          <>
-            <div style={{ marginTop: "1rem" }}>
-              <button type="button" onClick={() => googleLogin()} style={{ width: "100%", height: "clamp(52px, 13vw, 64px)", borderRadius: "18px", border: "1px solid var(--color-border-inverse)", backgroundColor: "var(--color-surface-inverse)", color: "var(--color-text-inverse)", fontSize: "clamp(0.95rem, 3.2vw, 1rem)", fontWeight: 850, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", boxShadow: "0 18px 46px rgba(0, 0, 0, 0.42)", cursor: "pointer" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-              </svg>
-              Continuar con Google
-              </button>
-              <div style={{ marginTop: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.55rem", color: "var(--color-text-secondary)", fontWeight: 700 }}>
-                <span style={{ width: 18, height: 18, borderRadius: 9, border: "1px solid rgba(16, 185, 129, 0.55)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L4 6V12C4 16.4183 7.5817 20 12 22C16.4183 20 20 16.4183 20 12V6L12 2Z" stroke="rgba(16,185,129,0.85)" strokeWidth="2" />
-                    <path d="M9 12L11 14L15.5 9.5" stroke="rgba(16,185,129,0.85)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-                Seguro, rápido y sin complicaciones
-              </div>
+        {(!isCompactMobile || activePane === "login") && (
+          loading ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", padding: "1.75rem 0" }}>
+              <div className="animate-spin" style={{ width: 44, height: 44, border: "4px solid rgba(148, 163, 184, 0.22)", borderTopColor: "var(--color-primary)", borderRadius: "50%" }} />
+              <div style={{ color: "var(--color-text-secondary)", fontWeight: 700 }}>Verificando acceso...</div>
             </div>
+          ) : (
+            <>
+              <div style={{ marginTop: "1rem" }}>
+                <button type="button" onClick={() => googleLogin()} style={{ width: "100%", height: "clamp(52px, 13vw, 64px)", borderRadius: "18px", border: "1px solid var(--color-border-inverse)", backgroundColor: "var(--color-surface-inverse)", color: "var(--color-text-inverse)", fontSize: "clamp(0.95rem, 3.2vw, 1rem)", fontWeight: 850, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", boxShadow: "0 18px 46px rgba(0, 0, 0, 0.42)", cursor: "pointer" }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Continuar con Google
+                </button>
+                <div style={{ marginTop: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.55rem", color: "var(--color-text-secondary)", fontWeight: 700 }}>
+                  <span style={{ width: 18, height: 18, borderRadius: 9, border: "1px solid rgba(16, 185, 129, 0.55)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2L4 6V12C4 16.4183 7.5817 20 12 22C16.4183 20 20 16.4183 20 12V6L12 2Z" stroke="rgba(16,185,129,0.85)" strokeWidth="2" />
+                      <path d="M9 12L11 14L15.5 9.5" stroke="rgba(16,185,129,0.85)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                  Seguro, rápido y sin complicaciones
+                </div>
+              </div>
 
-            <div style={{ marginTop: "1.35rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "clamp(0.75rem, 2.6vw, 0.9rem)" }}>
+              {!isCompactMobile && (
+              <div style={{ marginTop: "1.35rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "clamp(0.75rem, 2.6vw, 0.9rem)" }}>
               <div style={{ padding: "0.85rem 0.9rem", borderRadius: "16px", border: "1px solid rgba(148, 163, 184, 0.14)", backgroundColor: "rgba(15, 23, 42, 0.18)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "var(--color-text)", fontWeight: 850 }}>
                   <span style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(15, 23, 42, 0.35)", border: "1px solid rgba(148, 163, 184, 0.14)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -198,10 +277,13 @@ export default function Login({ onAuthed }) {
                 </div>
               </div>
             </div>
+            )}
           </>
+          )
         )}
         </div>
 
+        {(!isCompactMobile || activePane === "debt") && (
         <div style={{ width: "100%", padding: "clamp(1.05rem, 3vw, 1.4rem) clamp(1rem, 3vw, 1.5rem)", borderRadius: "clamp(18px, 4vw, 22px)", backgroundColor: "rgba(6, 15, 23, 0.42)", border: "1px solid rgba(148, 163, 184, 0.14)", boxShadow: "0 28px 80px rgba(0, 0, 0, 0.55)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.9rem" }}>
             <div style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.25)", display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto" }}>
@@ -220,7 +302,7 @@ export default function Login({ onAuthed }) {
             </div>
           </div>
 
-          <div style={{ marginTop: "1.1rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "0.85rem", alignItems: "stretch" }}>
+          <div style={{ marginTop: isCompactMobile ? "0.85rem" : "1.1rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: isCompactMobile ? "0.65rem" : "0.85rem", alignItems: "stretch" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", padding: "0.85rem 0.9rem", borderRadius: "16px", border: "1px solid rgba(148, 163, 184, 0.16)", backgroundColor: "rgba(15, 23, 42, 0.22)", minWidth: 0 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="rgba(226,232,240,0.75)" strokeWidth="2" strokeLinecap="round" />
@@ -347,13 +429,14 @@ export default function Login({ onAuthed }) {
                 </div>
               )}
 
-              <div style={{ marginTop: "0.85rem", color: "var(--color-text-secondary)", fontWeight: 700, fontSize: "0.88rem" }}>
-                Este acceso es solo para seguimiento. No necesitas iniciar sesión.
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+	              <div style={{ marginTop: "0.85rem", color: "var(--color-text-secondary)", fontWeight: 700, fontSize: "0.88rem" }}>
+	                Este acceso es solo para seguimiento. No necesitas iniciar sesión.
+	              </div>
+	            </div>
+	          )}
+	        </div>
+	        )}
+	      </div>
+	    </div>
+	  );
 }
