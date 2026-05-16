@@ -177,14 +177,17 @@ export default function Login({ onAuthed }) {
 
         <div style={{ width: "100%", padding: "clamp(1.1rem, 3vw, 1.75rem) clamp(1rem, 3vw, 1.5rem)", borderRadius: "clamp(18px, 4vw, 22px)", backgroundColor: "rgba(6, 15, 23, 0.42)", border: "1px solid rgba(148, 163, 184, 0.14)", boxShadow: "0 28px 80px rgba(0, 0, 0, 0.55)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)" }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
-            <div style={{ width: "clamp(58px, 16vw, 86px)", height: "clamp(58px, 16vw, 86px)", borderRadius: 999, background: "radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0) 70%)", border: "1px solid rgba(16, 185, 129, 0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg style={{ width: "clamp(28px, 8vw, 38px)", height: "clamp(28px, 8vw, 38px)" }} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 17V20H20V17" stroke="rgba(16,185,129,0.9)" strokeWidth="2" strokeLinecap="round" />
-                <path d="M7 14V16" stroke="rgba(16,185,129,0.9)" strokeWidth="2" strokeLinecap="round" />
-                <path d="M12 10V16" stroke="rgba(16,185,129,0.9)" strokeWidth="2" strokeLinecap="round" />
-                <path d="M17 6V16" stroke="rgba(16,185,129,0.9)" strokeWidth="2" strokeLinecap="round" />
-                <path d="M6 9L10.5 5.5L13.5 8L18 4" stroke="rgba(16,185,129,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+            <div style={{ width: "clamp(58px, 16vw, 86px)", height: "clamp(58px, 16vw, 86px)", borderRadius: 999, background: "radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0) 70%)", border: "1px solid rgba(16, 185, 129, 0.35)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              <img
+                src="/logo.png"
+                alt="Mis Finanzas"
+                style={{
+                  width: "72%",
+                  height: "72%",
+                  objectFit: "contain",
+                  filter: "drop-shadow(0 10px 18px rgba(0,0,0,0.35))"
+                }}
+              />
             </div>
 
             <div style={{ textAlign: "center" }}>
