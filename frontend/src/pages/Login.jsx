@@ -193,13 +193,14 @@ export default function Login({ onAuthed }) {
               <img
                 src="/logo.png"
                 alt="Mis Finanzas"
-	                style={{
-	                  width: "min(640px, 100%)",
-	                  height: "100%",
-	                  objectFit: "contain",
-	                  filter: "drop-shadow(0 14px 26px rgba(0,0,0,0.4))"
-	                }}
-	              />
+                style={{
+                  width: "110%",
+                  height: "110%",
+                  objectFit: "cover",
+                  objectPosition: "center",
+                  filter: "drop-shadow(0 14px 26px rgba(0,0,0,0.4))"
+                }}
+              />
             </div>
 
             <div style={{ textAlign: "center" }}>
