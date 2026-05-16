@@ -8,8 +8,6 @@ const BASE = RAW || (IS_PROD ? "https://mis-finanzas-app.onrender.com" : "http:/
 const BASE_NO_API = BASE.replace(/\/+$/, "").replace(/\/api$/, "");
 const API_ROOT = `${BASE_NO_API}/api`;
 
-console.log("[DEBUG] API ROOT:", API_ROOT); // Para ver en la consola del navegador qué URL está usando realmente
-
 const CACHE = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 

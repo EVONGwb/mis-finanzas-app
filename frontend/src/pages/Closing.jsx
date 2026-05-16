@@ -5,8 +5,10 @@ import { Card, StatsCard } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Badge } from "../components/ui/Badge";
 import { CheckCircle, Lock } from "lucide-react";
+import { useCurrency } from "../context/CurrencyContext";
 
 export default function Closing() {
+  const { formatCurrency } = useCurrency();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "../lib/api";
 import { Card } from "../components/ui/Card";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
@@ -35,11 +35,7 @@ export default function Reports() {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
 
-  useEffect(() => {
-    fetchData();
-  }, [month, year]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       // Fetch expenses for selected month/year
@@ -54,7 +50,11 @@ export default function Reports() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [month, year]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Process data for charts
   const categoryData = expenses.reduce((acc, item) => {

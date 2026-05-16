@@ -22,9 +22,12 @@ import homeRoutes from "./src/routes/home.routes.js";
 import creditRoutes from "./src/routes/credit.routes.js";
 import bankRoutes from "./src/routes/bank.routes.js";
 import monthlyExpensesRoutes from "./src/routes/monthlyExpenses.routes.js";
+import billingRoutes from "./src/routes/billing.routes.js";
 import deudaRoutes from "./src/routes/deuda.routes.js";
+import { handleWebhook } from "./src/controllers/billing.controller.js";
 import { notFound } from "./src/middlewares/notFound.js";
 import { errorHandler } from "./src/middlewares/errorHandler.js";
+import { wrap } from "./src/utils/wrap.js";
 
 const app = express();
 
@@ -59,6 +62,7 @@ app.use(cors({
 // Using a middleware for OPTIONS instead:
 app.options(/.*/, cors()); 
 
+app.post("/api/billing/webhook", express.raw({ type: "application/json" }), wrap(handleWebhook));
 app.use(express.json()); app.use(helmet());
 
 app.use(
@@ -85,6 +89,7 @@ app.use("/api", homeRoutes);
 app.use("/api", creditRoutes);
 app.use("/api/bank", bankRoutes);
 app.use("/api/monthly-expenses", monthlyExpensesRoutes);
+app.use("/api/billing", billingRoutes);
 app.use("/api", deudaRoutes);
 
 app.use("/api", incomesRoutes);

@@ -41,29 +41,29 @@ export function StatsCard({ title, value, subtext, color = "primary", trend }) {
       gradient: "linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%)",
       stroke: "#60A5FA",
       fill: "rgba(59, 130, 246, 0.3)",
-      textColor: "white",
-      subTextColor: "rgba(255, 255, 255, 0.8)"
+      textColor: "var(--color-on-accent)",
+      subTextColor: "var(--color-on-accent-secondary)"
     },
     success: { // Income - Green
       gradient: "linear-gradient(135deg, #065F46 0%, #10B981 100%)",
       stroke: "#34D399",
       fill: "rgba(16, 185, 129, 0.3)",
-      textColor: "white",
-      subTextColor: "rgba(255, 255, 255, 0.8)"
+      textColor: "var(--color-on-accent)",
+      subTextColor: "var(--color-on-accent-secondary)"
     },
     danger: { // Expense - Red
       gradient: "linear-gradient(135deg, #991B1B 0%, #EF4444 100%)",
       stroke: "#F87171",
       fill: "rgba(239, 68, 68, 0.3)",
-      textColor: "white",
-      subTextColor: "rgba(255, 255, 255, 0.8)"
+      textColor: "var(--color-on-accent)",
+      subTextColor: "var(--color-on-accent-secondary)"
     },
     info: { // Benefit - Light Blue
       gradient: "linear-gradient(135deg, #2563EB 0%, #60A5FA 100%)",
       stroke: "#93C5FD",
       fill: "rgba(96, 165, 250, 0.3)",
-      textColor: "white",
-      subTextColor: "rgba(255, 255, 255, 0.8)"
+      textColor: "var(--color-on-accent)",
+      subTextColor: "var(--color-on-accent-secondary)"
     }
   };
 
@@ -107,6 +107,11 @@ export function StatsCard({ title, value, subtext, color = "primary", trend }) {
       <div style={{ zIndex: 1, position: "relative" }}>
         <p style={{ fontSize: "0.875rem", fontWeight: 500, opacity: 0.9, marginBottom: "0.25rem", color: currentStyle.subTextColor }}>{title}</p>
         <h3 style={{ fontSize: "1.75rem", fontWeight: 700, letterSpacing: "-0.5px" }}>{value}</h3>
+        {subtext && (
+          <p style={{ fontSize: "0.8rem", marginTop: "0.25rem", color: currentStyle.subTextColor }}>
+            {subtext}
+          </p>
+        )}
       </div>
       
       <div style={{ zIndex: 1, position: "relative", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem" }}>

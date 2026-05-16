@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card } from "../components/ui/Card";
 import { Filter, DollarSign } from "lucide-react";
 import MonthlyExpenses from "./expenses/MonthlyExpenses";
@@ -21,11 +21,7 @@ export default function Expenses() {
   // Totals state
   const [totals, setTotals] = useState({ monthlyPlanned: 0, monthlyPaid: 0, daily: 0, totalPlanned: 0, totalPaid: 0 });
 
-  useEffect(() => {
-    fetchTotals();
-  }, [month, year]);
-
-  const fetchTotals = async () => {
+  const fetchTotals = useCallback(async () => {
     try {
       // Fetch monthly expenses total
       const resMonthly = await apiFetch(`/monthly-expenses/status?month=${month}&year=${year}`);
@@ -49,7 +45,11 @@ export default function Expenses() {
     } catch (error) {
       console.error("Error calculating totals:", error);
     }
-  };
+  }, [month, year]);
+
+  useEffect(() => {
+    fetchTotals();
+  }, [fetchTotals]);
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "5rem" }}>

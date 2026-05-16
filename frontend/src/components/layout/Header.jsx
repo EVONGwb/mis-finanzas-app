@@ -16,7 +16,6 @@ export function Header({ onMenuClick, user }) {
     <header style={{
       height: "80px",
       backgroundColor: "var(--color-glass-bg)",
-      borderBottom: "none", // Remove border for cleaner look
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",

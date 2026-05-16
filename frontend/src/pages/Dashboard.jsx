@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
-import { useCurrency } from "../context/CurrencyContext";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -109,7 +108,7 @@ export default function Dashboard() {
               to={item.link}
               style={{
                 textDecoration: "none",
-                color: "white",
+                color: "var(--color-on-accent)",
                 position: "relative",
                 overflow: "hidden",
                 gridColumn: (index === menuItems.length - 1 && menuItems.length % 2 !== 0) ? "span 2" : "span 1"
@@ -150,8 +149,8 @@ export default function Dashboard() {
                     position: "absolute",
                     top: "-5px",
                     right: "-5px",
-                    backgroundColor: "#EF4444",
-                    color: "white",
+                    backgroundColor: "var(--color-danger)",
+                    color: "var(--color-on-accent)",
                     borderRadius: "50%",
                     width: "24px",
                     height: "24px",
@@ -160,7 +159,7 @@ export default function Dashboard() {
                     justifyContent: "center",
                     fontSize: "0.75rem",
                     fontWeight: "bold",
-                    border: "2px solid white",
+                    border: "2px solid var(--color-on-accent)",
                     zIndex: 10
                   }}>
                     {item.badge}
@@ -175,7 +174,7 @@ export default function Dashboard() {
                 }}>
                    {/* Icon Wrapper */}
                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <item.icon size={24} strokeWidth={2.5} color="white" />
+                      <item.icon size={24} strokeWidth={2.5} color="var(--color-on-accent)" />
                       <h3 style={{ 
                         fontSize: "0.95rem", 
                         fontWeight: 800, 

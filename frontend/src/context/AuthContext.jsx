@@ -62,7 +62,8 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try {
       await apiFetch("/auth/logout", { method: "POST" });
-    } catch {
+    } catch (error) {
+      console.error("Error during logout", error);
     }
     setUser(null);
     localStorage.removeItem("user");

@@ -181,15 +181,6 @@ export const createWorkEntry = async (req, res, next) => {
     if (!company) throw new HttpError(404, "Empresa no encontrada");
 
     const calculatedTotal = parseFloat((Number(hours) * Number(hourlyRate)).toFixed(2));
-    
-    console.log("[DEBUG] Creating WorkEntry:", {
-      user: req.user._id,
-      company: companyId,
-      date,
-      hours: Number(hours),
-      hourlyRate: Number(hourlyRate),
-      total: calculatedTotal
-    });
 
     const entry = await WorkEntry.create({
       user: req.user._id,

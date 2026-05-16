@@ -17,11 +17,21 @@ export default function SubscribeSuccess() {
   }, [fetchUser, navigate]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", textAlign: "center", padding: "2rem" }}>
-      <CheckCircle size={64} color="#10b981" style={{ marginBottom: "1.5rem" }} />
-      <h1 style={{ fontSize: "2rem", fontWeight: 700, color: "#1e293b" }}>¡Pago Exitoso!</h1>
-      <p style={{ color: "#64748b", marginTop: "1rem" }}>Tu suscripción se ha activado correctamente.</p>
-      <p style={{ color: "#94a3b8", marginTop: "0.5rem" }}>Redirigiendo a tu dashboard...</p>
+    <div style={{ 
+      display: "flex", 
+      flexDirection: "column", 
+      alignItems: "center", 
+      justifyContent: "center", 
+      height: "100vh", 
+      textAlign: "center", 
+      padding: "2rem",
+      backgroundColor: "var(--color-background)",
+      color: "var(--color-text)"
+    }}>
+      <CheckCircle size={64} color="var(--color-success)" style={{ marginBottom: "1.5rem" }} />
+      <h1 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--color-text)" }}>¡Pago Exitoso!</h1>
+      <p style={{ color: "var(--color-text-secondary)", marginTop: "1rem" }}>Tu suscripción se ha activado correctamente.</p>
+      <p style={{ color: "var(--color-text-tertiary)", marginTop: "0.5rem" }}>Redirigiendo a tu dashboard...</p>
     </div>
   );
 }

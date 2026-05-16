@@ -154,9 +154,6 @@ export default function Home() {
   const fetchHomeData = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch("/home/request", { method: "GET", token: getToken() }).catch(() => null); 
-      // El endpoint es /home pero el controller usa getHome. 
-      // Ups, en routes puse /home apuntando a getHome.
       const resHome = await apiFetch("/home", { token: getToken() });
       setHomeData(resHome.data);
     } catch (error) {

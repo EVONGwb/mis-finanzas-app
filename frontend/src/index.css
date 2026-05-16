@@ -20,6 +20,11 @@
   --color-text: rgba(255, 255, 255, 0.92);
   --color-text-secondary: rgba(255, 255, 255, 0.72);
   --color-text-tertiary: rgba(255, 255, 255, 0.52);
+  --color-text-inverse: rgba(17, 24, 39, 0.95);
+  --color-on-accent: rgba(255, 255, 255, 0.98);
+  --color-on-accent-secondary: rgba(255, 255, 255, 0.82);
+  --color-surface-inverse: rgba(255, 255, 255, 0.95);
+  --color-border-inverse: rgba(255, 255, 255, 0.10);
 
   /* Status */
   --color-success: #10B981;
@@ -99,6 +104,24 @@ input, textarea {
 input, textarea, select {
   color: var(--color-text);
   caret-color: var(--color-text);
+}
+
+input[type="number"] {
+  color: var(--color-text);
+  -webkit-text-fill-color: var(--color-text);
+  color-scheme: dark;
+}
+
+input[type="number"]:disabled,
+input[type="number"][readonly] {
+  opacity: 1;
+  color: var(--color-text-secondary);
+  -webkit-text-fill-color: var(--color-text-secondary);
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 0.7;
 }
 
 input::placeholder,

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { requireAuth } from "../middlewares/auth.js";
+import { wrap } from "../utils/wrap.js";
 import { 
   createCheckoutSession, 
   createPortalSession, 
@@ -15,7 +16,7 @@ const router = Router();
 // The user instruction says: "Montar webhook antes de express.json()" in server.js.
 // So we will NOT include webhook here, but import it in server.js directly.
 
-router.post("/create-checkout-session", requireAuth, createCheckoutSession);
-router.post("/create-portal-session", requireAuth, createPortalSession);
+router.post("/create-checkout-session", requireAuth, wrap(createCheckoutSession));
+router.post("/create-portal-session", requireAuth, wrap(createPortalSession));
 
 export default router;

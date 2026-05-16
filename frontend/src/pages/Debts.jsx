@@ -42,7 +42,6 @@ export default function Debts() {
   
   // Forms & Selected Item
   const [selectedDebt, setSelectedDebt] = useState(null);
-  const [debtDetails, setDebtDetails] = useState(null); // For fetching full details with history
   const [debtForm, setDebtForm] = useState({
     id: null,
     name: "",
@@ -80,17 +79,6 @@ export default function Debts() {
     }
   };
 
-  const fetchDebtDetails = async (id) => {
-    try {
-      // Assuming endpoint exists, otherwise we use selectedDebt
-      // const res = await apiFetch(`/debts/${id}`, { token: getToken() });
-      // setDebtDetails(res.data);
-      // Fallback if no specific endpoint:
-      setDebtDetails(selectedDebt); 
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const handleSaveDebt = async (e) => {
     e.preventDefault();
@@ -125,8 +113,6 @@ export default function Debts() {
       setPaymentForm({ amount: "", date: new Date().toISOString().split("T")[0], note: "" });
       fetchDebts();
       if (isDetailModalOpen) {
-        // Refresh details if open
-        // fetchDebtDetails(selectedDebt._id);
         setIsDetailModalOpen(false); // Close detail to refresh list
       }
     } catch (error) {
@@ -156,7 +142,6 @@ export default function Debts() {
       const updated = data.list.find(d => d._id === selectedDebt._id);
       if (updated) {
         setSelectedDebt(updated);
-        setDebtDetails(updated);
       }
     } catch (error) {
       alert(error.message);
@@ -197,8 +182,6 @@ export default function Debts() {
 
   const openDetailModal = (debt) => {
     setSelectedDebt(debt);
-    setDebtDetails(debt); // Set initial data
-    // fetchDebtDetails(debt._id); // Fetch more if needed
     setIsDetailModalOpen(true);
   };
 

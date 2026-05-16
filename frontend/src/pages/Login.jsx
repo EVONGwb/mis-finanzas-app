@@ -115,14 +115,14 @@ export default function Login({ onAuthed }) {
                 <span style={{ color: "var(--color-text)" }}>MIS </span>
                 <span style={{ color: "var(--color-primary)" }}>FINANZAS</span>
               </div>
-              <div style={{ marginTop: "0.55rem", color: "rgba(226, 232, 240, 0.78)", fontSize: "clamp(0.95rem, 3.5vw, 1.05rem)", fontWeight: 650 }}>
+              <div style={{ marginTop: "0.55rem", color: "var(--color-text-secondary)", fontSize: "clamp(0.95rem, 3.5vw, 1.05rem)", fontWeight: 650 }}>
                 Controla tu dinero de forma inteligente
               </div>
             </div>
           </div>
 
         {error && (
-          <div style={{ width: "100%", padding: "0.9rem 1rem", marginTop: "1rem", backgroundColor: "var(--color-danger-bg)", color: "rgba(255, 255, 255, 0.92)", borderRadius: "var(--radius-md)", fontSize: "0.9rem", textAlign: "center", fontWeight: 600, border: "1px solid rgba(239, 68, 68, 0.35)" }}>
+          <div style={{ width: "100%", padding: "0.9rem 1rem", marginTop: "1rem", backgroundColor: "var(--color-danger-bg)", color: "var(--color-on-accent)", borderRadius: "var(--radius-md)", fontSize: "0.9rem", textAlign: "center", fontWeight: 600, border: "1px solid rgba(239, 68, 68, 0.35)" }}>
             {error}
           </div>
         )}
@@ -130,12 +130,12 @@ export default function Login({ onAuthed }) {
         {loading ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", padding: "1.75rem 0" }}>
             <div className="animate-spin" style={{ width: 44, height: 44, border: "4px solid rgba(148, 163, 184, 0.22)", borderTopColor: "var(--color-primary)", borderRadius: "50%" }} />
-            <div style={{ color: "rgba(226, 232, 240, 0.75)", fontWeight: 700 }}>Verificando acceso...</div>
+            <div style={{ color: "var(--color-text-secondary)", fontWeight: 700 }}>Verificando acceso...</div>
           </div>
         ) : (
           <>
             <div style={{ marginTop: "1rem" }}>
-              <button type="button" onClick={() => googleLogin()} style={{ width: "100%", height: "clamp(52px, 13vw, 64px)", borderRadius: "18px", border: "1px solid rgba(255, 255, 255, 0.10)", backgroundColor: "rgba(255, 255, 255, 0.95)", color: "rgba(17, 24, 39, 0.95)", fontSize: "clamp(0.95rem, 3.2vw, 1rem)", fontWeight: 850, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", boxShadow: "0 18px 46px rgba(0, 0, 0, 0.42)", cursor: "pointer" }}>
+              <button type="button" onClick={() => googleLogin()} style={{ width: "100%", height: "clamp(52px, 13vw, 64px)", borderRadius: "18px", border: "1px solid var(--color-border-inverse)", backgroundColor: "var(--color-surface-inverse)", color: "var(--color-text-inverse)", fontSize: "clamp(0.95rem, 3.2vw, 1rem)", fontWeight: 850, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", boxShadow: "0 18px 46px rgba(0, 0, 0, 0.42)", cursor: "pointer" }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -144,7 +144,7 @@ export default function Login({ onAuthed }) {
               </svg>
               Continuar con Google
               </button>
-              <div style={{ marginTop: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.55rem", color: "rgba(226, 232, 240, 0.70)", fontWeight: 700 }}>
+              <div style={{ marginTop: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.55rem", color: "var(--color-text-secondary)", fontWeight: 700 }}>
                 <span style={{ width: 18, height: 18, borderRadius: 9, border: "1px solid rgba(16, 185, 129, 0.55)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2L4 6V12C4 16.4183 7.5817 20 12 22C16.4183 20 20 16.4183 20 12V6L12 2Z" stroke="rgba(16,185,129,0.85)" strokeWidth="2" />
@@ -157,43 +157,43 @@ export default function Login({ onAuthed }) {
 
             <div style={{ marginTop: "1.35rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "clamp(0.75rem, 2.6vw, 0.9rem)" }}>
               <div style={{ padding: "0.85rem 0.9rem", borderRadius: "16px", border: "1px solid rgba(148, 163, 184, 0.14)", backgroundColor: "rgba(15, 23, 42, 0.18)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "rgba(226, 232, 240, 0.92)", fontWeight: 850 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "var(--color-text)", fontWeight: 850 }}>
                   <span style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(15, 23, 42, 0.35)", border: "1px solid rgba(148, 163, 184, 0.14)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="rgba(226,232,240,0.9)" strokeWidth="2" strokeLinecap="round" />
-                      <path d="M6 11h12v10H6V11Z" stroke="rgba(226,232,240,0.9)" strokeWidth="2" strokeLinejoin="round" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="var(--color-text)" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M6 11h12v10H6V11Z" stroke="var(--color-text)" strokeWidth="2" strokeLinejoin="round" />
                     </svg>
                   </span>
                   Privado
                 </div>
-                <div style={{ marginTop: "0.35rem", color: "rgba(226, 232, 240, 0.65)", fontWeight: 650, fontSize: "0.9rem" }}>
+                <div style={{ marginTop: "0.35rem", color: "var(--color-text-secondary)", fontWeight: 650, fontSize: "0.9rem" }}>
                   Tu información está protegida
                 </div>
               </div>
               <div style={{ padding: "0.85rem 0.9rem", borderRadius: "16px", border: "1px solid rgba(148, 163, 184, 0.14)", backgroundColor: "rgba(15, 23, 42, 0.18)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "rgba(226, 232, 240, 0.92)", fontWeight: 850 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "var(--color-text)", fontWeight: 850 }}>
                   <span style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(15, 23, 42, 0.35)", border: "1px solid rgba(148, 163, 184, 0.14)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8Z" stroke="rgba(226,232,240,0.9)" strokeWidth="2" strokeLinejoin="round" />
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8Z" stroke="var(--color-text)" strokeWidth="2" strokeLinejoin="round" />
                     </svg>
                   </span>
                   Rápido
                 </div>
-                <div style={{ marginTop: "0.35rem", color: "rgba(226, 232, 240, 0.65)", fontWeight: 650, fontSize: "0.9rem" }}>
+                <div style={{ marginTop: "0.35rem", color: "var(--color-text-secondary)", fontWeight: 650, fontSize: "0.9rem" }}>
                   Accede en segundos con Google
                 </div>
               </div>
               <div style={{ padding: "0.85rem 0.9rem", borderRadius: "16px", border: "1px solid rgba(148, 163, 184, 0.14)", backgroundColor: "rgba(15, 23, 42, 0.18)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "rgba(226, 232, 240, 0.92)", fontWeight: 850 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "var(--color-text)", fontWeight: 850 }}>
                   <span style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(15, 23, 42, 0.35)", border: "1px solid rgba(148, 163, 184, 0.14)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 2a10 10 0 1 0 10 10" stroke="rgba(226,232,240,0.9)" strokeWidth="2" strokeLinecap="round" />
-                      <path d="M12 7v6l4 2" stroke="rgba(226,232,240,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M12 2a10 10 0 1 0 10 10" stroke="var(--color-text)" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M12 7v6l4 2" stroke="var(--color-text)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </span>
                   Eficiente
                 </div>
-                <div style={{ marginTop: "0.35rem", color: "rgba(226, 232, 240, 0.65)", fontWeight: 650, fontSize: "0.9rem" }}>
+                <div style={{ marginTop: "0.35rem", color: "var(--color-text-secondary)", fontWeight: 650, fontSize: "0.9rem" }}>
                   Gestiona tus finanzas
                 </div>
               </div>
@@ -213,8 +213,8 @@ export default function Login({ onAuthed }) {
               </svg>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "clamp(1.12rem, 4.6vw, 1.35rem)", fontWeight: 900, color: "rgba(226, 232, 240, 0.95)" }}>Seguimiento de mi deuda</div>
-              <div style={{ marginTop: "0.25rem", color: "rgba(226, 232, 240, 0.68)", fontWeight: 650 }}>
+              <div style={{ fontSize: "clamp(1.12rem, 4.6vw, 1.35rem)", fontWeight: 900, color: "var(--color-text)" }}>Seguimiento de mi deuda</div>
+              <div style={{ marginTop: "0.25rem", color: "var(--color-text-secondary)", fontWeight: 650 }}>
                 Accede al estado de tu préstamo con tu código personal
               </div>
             </div>
@@ -232,7 +232,7 @@ export default function Login({ onAuthed }) {
                 placeholder="Introduce tu código de deuda"
                 inputMode="text"
                 autoComplete="off"
-                style={{ flex: 1, minWidth: 0, width: "100%", background: "transparent", border: "none", outline: "none", color: "rgba(226, 232, 240, 0.92)", fontWeight: 700, fontSize: "16px" }}
+                style={{ flex: 1, minWidth: 0, width: "100%", background: "transparent", border: "none", outline: "none", color: "var(--color-text)", fontWeight: 700, fontSize: "16px" }}
               />
             </div>
 
@@ -247,7 +247,7 @@ export default function Login({ onAuthed }) {
                 borderRadius: "16px",
                 border: "1px solid rgba(16, 185, 129, 0.20)",
                 backgroundColor: "rgba(16, 185, 129, 0.85)",
-                color: "rgba(15, 23, 42, 0.95)",
+                color: "var(--color-text-inverse)",
                 fontWeight: 900,
                 fontSize: "0.98rem",
                 cursor: debtLoading ? "not-allowed" : "pointer",
@@ -261,14 +261,14 @@ export default function Login({ onAuthed }) {
             >
               {debtLoading ? "Consultando..." : "Consultar deuda"}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5 12h12" stroke="rgba(15,23,42,0.92)" strokeWidth="2" strokeLinecap="round" />
-                <path d="M13 6l6 6-6 6" stroke="rgba(15,23,42,0.92)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M5 12h12" stroke="var(--color-text-inverse)" strokeWidth="2" strokeLinecap="round" />
+                <path d="M13 6l6 6-6 6" stroke="var(--color-text-inverse)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
           </div>
 
           {debtError && (
-            <div style={{ marginTop: "0.9rem", width: "100%", padding: "0.85rem 0.95rem", backgroundColor: "rgba(239, 68, 68, 0.14)", color: "rgba(255, 255, 255, 0.92)", borderRadius: "14px", fontSize: "0.92rem", textAlign: "left", fontWeight: 700, border: "1px solid rgba(239, 68, 68, 0.25)" }}>
+            <div style={{ marginTop: "0.9rem", width: "100%", padding: "0.85rem 0.95rem", backgroundColor: "rgba(239, 68, 68, 0.14)", color: "var(--color-on-accent)", borderRadius: "14px", fontSize: "0.92rem", textAlign: "left", fontWeight: 700, border: "1px solid rgba(239, 68, 68, 0.25)" }}>
               {debtError}
             </div>
           )}
@@ -293,10 +293,10 @@ export default function Login({ onAuthed }) {
               )}
 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.8rem" }}>
-                <div style={{ color: "rgba(226, 232, 240, 0.92)", fontWeight: 900, fontSize: "1.05rem" }}>
+                <div style={{ color: "var(--color-text)", fontWeight: 900, fontSize: "1.05rem" }}>
                   Estado: <span style={{ color: "rgba(16, 185, 129, 0.95)" }}>{String(debtData.estado || "").toUpperCase() || "ACTIVO"}</span>
                 </div>
-                <div style={{ color: "rgba(226, 232, 240, 0.70)", fontWeight: 750 }}>
+                <div style={{ color: "var(--color-text-secondary)", fontWeight: 750 }}>
                   {debtProgress}% pagado
                 </div>
               </div>
@@ -307,16 +307,16 @@ export default function Login({ onAuthed }) {
 
               <div style={{ marginTop: "1rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "0.85rem" }}>
                 <div>
-                  <div style={{ color: "rgba(226, 232, 240, 0.62)", fontWeight: 750, fontSize: "0.85rem" }}>Total</div>
-                  <div style={{ marginTop: "0.2rem", color: "rgba(226, 232, 240, 0.95)", fontWeight: 900, fontSize: "1.02rem" }}>{formatCurrency(debtData.total)}</div>
+                  <div style={{ color: "var(--color-text-secondary)", fontWeight: 750, fontSize: "0.85rem" }}>Total</div>
+                  <div style={{ marginTop: "0.2rem", color: "var(--color-text)", fontWeight: 900, fontSize: "1.02rem" }}>{formatCurrency(debtData.total)}</div>
                 </div>
                 <div>
-                  <div style={{ color: "rgba(226, 232, 240, 0.62)", fontWeight: 750, fontSize: "0.85rem" }}>Pagado</div>
+                  <div style={{ color: "var(--color-text-secondary)", fontWeight: 750, fontSize: "0.85rem" }}>Pagado</div>
                   <div style={{ marginTop: "0.2rem", color: "rgba(16, 185, 129, 0.95)", fontWeight: 900, fontSize: "1.02rem" }}>{formatCurrency(debtData.pagado)}</div>
                 </div>
                 <div>
-                  <div style={{ color: "rgba(226, 232, 240, 0.62)", fontWeight: 750, fontSize: "0.85rem" }}>Pendiente</div>
-                  <div style={{ marginTop: "0.2rem", color: "rgba(226, 232, 240, 0.95)", fontWeight: 900, fontSize: "1.02rem" }}>{formatCurrency(debtData.pendiente)}</div>
+                  <div style={{ color: "var(--color-text-secondary)", fontWeight: 750, fontSize: "0.85rem" }}>Pendiente</div>
+                  <div style={{ marginTop: "0.2rem", color: "var(--color-text)", fontWeight: 900, fontSize: "1.02rem" }}>{formatCurrency(debtData.pendiente)}</div>
                 </div>
               </div>
 
@@ -329,11 +329,11 @@ export default function Login({ onAuthed }) {
                     {debtData.historialPagos.slice(0, 20).map((p, idx) => (
                       <div key={`${String(p?.date || "")}-${idx}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.75rem", padding: "0.75rem 0.85rem", borderRadius: "14px", border: "1px solid rgba(148, 163, 184, 0.14)", backgroundColor: "rgba(2, 8, 14, 0.22)" }}>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ color: "rgba(226, 232, 240, 0.92)", fontWeight: 850 }}>
+                          <div style={{ color: "var(--color-text)", fontWeight: 850 }}>
                             {p?.date ? new Date(p.date).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" }) : "Sin fecha"}
                           </div>
                           {p?.note ? (
-                            <div style={{ marginTop: "0.25rem", color: "rgba(226, 232, 240, 0.65)", fontWeight: 650, fontSize: "0.88rem", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            <div style={{ marginTop: "0.25rem", color: "var(--color-text-secondary)", fontWeight: 650, fontSize: "0.88rem", overflow: "hidden", textOverflow: "ellipsis" }}>
                               {String(p.note)}
                             </div>
                           ) : null}
@@ -347,7 +347,7 @@ export default function Login({ onAuthed }) {
                 </div>
               )}
 
-              <div style={{ marginTop: "0.85rem", color: "rgba(226, 232, 240, 0.62)", fontWeight: 700, fontSize: "0.88rem" }}>
+              <div style={{ marginTop: "0.85rem", color: "var(--color-text-secondary)", fontWeight: 700, fontSize: "0.88rem" }}>
                 Este acceso es solo para seguimiento. No necesitas iniciar sesión.
               </div>
             </div>

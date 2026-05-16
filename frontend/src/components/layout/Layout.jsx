@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { NavLink } from "react-router-dom";
-import { LayoutGrid, Clock, Wallet } from "lucide-react";
+import { LayoutGrid, Clock } from "lucide-react";
 
 export function Layout({ children, onLogout, user }) {
   // Always hidden by default, acts as a Drawer

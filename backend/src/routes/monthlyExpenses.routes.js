@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { requireAuth } from "../middlewares/auth.js";
+import { wrap } from "../utils/wrap.js";
 import { 
   getTemplates, 
   createTemplate, 
@@ -12,17 +13,15 @@ import {
 
 const router = Router();
 
-router.use(requireAuth);
-
 // Templates
-router.get("/templates", getTemplates);
-router.post("/templates", createTemplate);
-router.patch("/templates/:id", updateTemplate);
-router.delete("/templates/:id", deleteTemplate);
+router.get("/templates", requireAuth, wrap(getTemplates));
+router.post("/templates", requireAuth, wrap(createTemplate));
+router.patch("/templates/:id", requireAuth, wrap(updateTemplate));
+router.delete("/templates/:id", requireAuth, wrap(deleteTemplate));
 
 // Monthly Status & Actions
-router.get("/status", getMonthlyStatus); // ?month=X&year=Y
-router.post("/confirm", confirmExpense);
-router.delete("/revoke/:instanceId", revokeExpense);
+router.get("/status", requireAuth, wrap(getMonthlyStatus)); // ?month=X&year=Y
+router.post("/confirm", requireAuth, wrap(confirmExpense));
+router.delete("/revoke/:instanceId", requireAuth, wrap(revokeExpense));
 
 export default router;

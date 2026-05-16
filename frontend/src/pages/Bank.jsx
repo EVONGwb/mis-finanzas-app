@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "../lib/api";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -10,7 +10,6 @@ import {
   TrendingDown, 
   Lock, 
   Unlock, 
-  Search, 
   Filter, 
   Calendar, 
   ArrowUpRight, 
@@ -29,13 +28,8 @@ export default function Bank() {
   
   // Filters for Movements
   const [filterType, setFilterType] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, [month, year, filterType]); // Refetch when filters change
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await apiFetch(`/bank?month=${month}&year=${year}&type=${filterType}`);
@@ -45,7 +39,11 @@ export default function Bank() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [month, year, filterType]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]); // Refetch when filters change
 
   const handleCloseMonth = async () => {
     if (!window.confirm(`¿Estás seguro de cerrar el mes de ${month}/${year}? Esto transferirá el saldo al Banco.`)) return;
@@ -151,7 +149,7 @@ export default function Bank() {
                 background: "linear-gradient(135deg, #2563EB 0%, #1E40AF 100%)", 
                 borderRadius: "var(--radius-lg)", 
                 padding: "2rem", 
-                color: "white",
+                color: "var(--color-on-accent)",
                 boxShadow: "0 10px 15px -3px rgba(37, 99, 235, 0.3)"
               }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -171,7 +169,7 @@ export default function Bank() {
                     borderRadius: "50%", 
                     display: "flex", alignItems: "center", justifyContent: "center" 
                   }}>
-                    <Building2 size={30} color="white" />
+                    <Building2 size={30} color="var(--color-on-accent)" />
                   </div>
                 </div>
               </div>
