@@ -21,12 +21,10 @@ export default function Register({ onAuthed }) {
       setLoading(true);
       setError("");
       try {
-        const res = await apiFetch("/auth/google", {
+        await apiFetch("/auth/google", {
           method: "POST",
           body: { accessToken: tokenResponse.access_token }
         });
-
-        const user = res.data?.user;
 
         onAuthed();
       } catch (err) {
@@ -54,7 +52,7 @@ export default function Register({ onAuthed }) {
 
     setLoading(true);
     try {
-      const res = await apiFetch("/auth/register", {
+      await apiFetch("/auth/register", {
         method: "POST",
         body: { email, password, name }
       });
@@ -72,7 +70,7 @@ export default function Register({ onAuthed }) {
       display: "flex", 
       alignItems: "center", 
       justifyContent: "center", 
-      background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)", // Fondo degradado suave verde
+      background: "var(--gradient-app)",
       padding: "1rem",
       fontFamily: "'Inter', sans-serif"
     }}>
@@ -80,10 +78,11 @@ export default function Register({ onAuthed }) {
       <div style={{ 
         width: "100%", 
         maxWidth: "480px", 
-        backgroundColor: "white", 
+        backgroundColor: "var(--color-background-2)", 
+        border: "1px solid var(--color-border)",
         borderRadius: "24px",
         padding: "2.5rem 2rem",
-        boxShadow: "0 20px 40px -10px rgba(0,0,0,0.1)", // Sombra elegante
+        boxShadow: "var(--shadow-lg)",
         display: "flex", 
         flexDirection: "column", 
         alignItems: "center"
@@ -108,14 +107,14 @@ export default function Register({ onAuthed }) {
           <h1 style={{ 
             fontSize: "1.75rem", 
             fontWeight: 800, 
-            color: "#111827", 
+            color: "var(--color-text)", 
             marginBottom: "0.5rem",
             letterSpacing: "-0.02em"
           }}>
             Crear cuenta
           </h1>
           <p style={{ 
-            color: "#6B7280", 
+            color: "var(--color-text-secondary)", 
             fontSize: "0.95rem",
             lineHeight: 1.5
           }}>
@@ -127,93 +126,61 @@ export default function Register({ onAuthed }) {
         <form onSubmit={submit} style={{ width: "100%", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
           
           <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <label style={{ fontSize: "0.875rem", fontWeight: 600, color: "#374151", marginLeft: "0.25rem" }}>
+            <label style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginLeft: "0.25rem" }}>
               Nombre completo
             </label>
             <Input 
               icon={User}
-              iconColor="#9CA3AF"
+              iconColor="var(--color-text-tertiary)"
               placeholder="Ej. Juan Pérez" 
               value={name} 
               onChange={(e) => setName(e.target.value)} 
               required
-              style={{ 
-                height: "52px", 
-                fontSize: "1rem", 
-                borderRadius: "12px",
-                backgroundColor: "#F9FAFB", 
-                border: "1px solid #E5E7EB",
-                boxShadow: "none"
-              }}
             />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <label style={{ fontSize: "0.875rem", fontWeight: 600, color: "#374151", marginLeft: "0.25rem" }}>
+            <label style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginLeft: "0.25rem" }}>
               Correo electrónico
             </label>
             <Input 
               icon={Mail}
-              iconColor="#9CA3AF"
+              iconColor="var(--color-text-tertiary)"
               type="email" 
               placeholder="ejemplo@correo.com" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
               required
-              style={{ 
-                height: "52px", 
-                fontSize: "1rem", 
-                borderRadius: "12px",
-                backgroundColor: "#F9FAFB", 
-                border: "1px solid #E5E7EB",
-                boxShadow: "none"
-              }}
             />
           </div>
           
           <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <label style={{ fontSize: "0.875rem", fontWeight: 600, color: "#374151", marginLeft: "0.25rem" }}>
+            <label style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginLeft: "0.25rem" }}>
               Contraseña
             </label>
             <Input 
               icon={Lock}
-              iconColor="#9CA3AF"
+              iconColor="var(--color-text-tertiary)"
               type={showPassword ? "text" : "password"} 
               placeholder="••••••••" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
               required
-              style={{ 
-                height: "52px", 
-                fontSize: "1rem", 
-                borderRadius: "12px",
-                backgroundColor: "#F9FAFB",
-                border: "1px solid #E5E7EB",
-                boxShadow: "none"
-              }}
             />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <label style={{ fontSize: "0.875rem", fontWeight: 600, color: "#374151", marginLeft: "0.25rem" }}>
+            <label style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginLeft: "0.25rem" }}>
               Confirmar contraseña
             </label>
             <Input 
               icon={Lock}
-              iconColor="#9CA3AF"
+              iconColor="var(--color-text-tertiary)"
               type={showPassword ? "text" : "password"} 
               placeholder="••••••••" 
               value={confirmPassword} 
               onChange={(e) => setConfirmPassword(e.target.value)} 
               required
-              style={{ 
-                height: "52px", 
-                fontSize: "1rem", 
-                borderRadius: "12px",
-                backgroundColor: "#F9FAFB",
-                border: "1px solid #E5E7EB",
-                boxShadow: "none"
-              }}
               rightElement={
                 <button
                   type="button"
@@ -222,14 +189,14 @@ export default function Register({ onAuthed }) {
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    color: "#9CA3AF",
+                    color: "var(--color-text-tertiary)",
                     display: "flex",
                     alignItems: "center",
                     padding: "0.25rem",
                     transition: "color 0.2s"
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = "#4B5563"}
-                  onMouseLeave={(e) => e.currentTarget.style.color = "#9CA3AF"}
+                  onMouseEnter={(e) => e.currentTarget.style.color = "var(--color-text-secondary)"}
+                  onMouseLeave={(e) => e.currentTarget.style.color = "var(--color-text-tertiary)"}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -252,21 +219,21 @@ export default function Register({ onAuthed }) {
                 borderRadius: "4px"
               }} 
             />
-            <label htmlFor="terms" style={{ fontSize: "0.875rem", color: "#6B7280", cursor: "pointer" }}>
-              Acepto los <span style={{ fontWeight: 600, color: "#111827" }}>términos y condiciones</span>
+            <label htmlFor="terms" style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)", cursor: "pointer" }}>
+              Acepto los <span style={{ fontWeight: 600, color: "var(--color-text)" }}>términos y condiciones</span>
             </label>
           </div>
 
           {error && (
             <div style={{ 
               padding: "0.75rem", 
-              backgroundColor: "#FEF2F2", 
-              color: "#EF4444", 
+              backgroundColor: "var(--color-danger-bg)", 
+              color: "var(--color-danger)", 
               borderRadius: "10px",
               fontSize: "0.875rem",
               textAlign: "center",
               fontWeight: 500,
-              border: "1px solid #FEE2E2"
+              border: "1px solid var(--color-danger)"
             }}>
               {error}
             </div>
@@ -302,9 +269,9 @@ export default function Register({ onAuthed }) {
           </Button>
 
           <div style={{ display: "flex", alignItems: "center", width: "100%", margin: "1rem 0" }}>
-            <div style={{ flex: 1, height: "1px", backgroundColor: "#E5E7EB" }}></div>
-            <span style={{ padding: "0 0.5rem", fontSize: "0.875rem", color: "#6B7280" }}>O regístrate con</span>
-            <div style={{ flex: 1, height: "1px", backgroundColor: "#E5E7EB" }}></div>
+            <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }}></div>
+            <span style={{ padding: "0 0.5rem", fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>O regístrate con</span>
+            <div style={{ flex: 1, height: "1px", backgroundColor: "var(--color-border)" }}></div>
           </div>
 
           <Button 
@@ -318,9 +285,9 @@ export default function Register({ onAuthed }) {
               fontSize: "1rem",
               fontWeight: 600,
               borderRadius: "14px", 
-              backgroundColor: "white",
-              color: "#374151",
-              border: "1px solid #E5E7EB",
+              backgroundColor: "var(--color-surface)",
+              color: "var(--color-text)",
+              border: "1px solid var(--color-border)",
               boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
               display: "flex",
               alignItems: "center",
@@ -328,8 +295,8 @@ export default function Register({ onAuthed }) {
               gap: "0.75rem",
               transition: "all 0.2s"
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#F9FAFB"}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "white"}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--color-surface-hover)"}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "var(--color-surface)"}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -342,7 +309,7 @@ export default function Register({ onAuthed }) {
         </form>
 
         {/* Footer */}
-        <div style={{ marginTop: "2rem", fontSize: "0.9rem", color: "#6B7280" }}>
+        <div style={{ marginTop: "2rem", fontSize: "0.9rem", color: "var(--color-text-secondary)" }}>
           ¿Ya tienes cuenta?{" "}
           <Link to="/login" style={{ color: "#10B981", fontWeight: 700, textDecoration: "none" }}>
             Inicia sesión

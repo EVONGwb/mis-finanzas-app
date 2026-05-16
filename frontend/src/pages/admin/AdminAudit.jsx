@@ -38,15 +38,15 @@ export default function AdminAudit() {
     <div className="animate-fade-in">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.875rem", fontWeight: 700, color: "#1e293b", margin: 0 }}>Registro de Auditoría</h1>
-          <p style={{ color: "#64748b", marginTop: "0.25rem" }}>Monitorización de actividades del sistema</p>
+          <h1 style={{ fontSize: "1.875rem", fontWeight: 700, color: "var(--color-text)", margin: 0 }}>Registro de Auditoría</h1>
+          <p style={{ color: "var(--color-text-secondary)", marginTop: "0.25rem" }}>Monitorización de actividades del sistema</p>
         </div>
       </div>
 
       <Card style={{ marginBottom: "1.5rem", padding: "1rem" }}>
         <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
           <div style={{ position: "relative", flex: 1, maxWidth: "400px" }}>
-            <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+            <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--color-text-tertiary)" }} />
             <input 
               type="text" 
               placeholder="Buscar por acción, usuario o mensaje..." 
@@ -56,9 +56,11 @@ export default function AdminAudit() {
                 width: "100%",
                 padding: "0.625rem 1rem 0.625rem 2.5rem",
                 borderRadius: "0.5rem",
-                border: "1px solid #cbd5e1",
+                border: "1px solid var(--color-border)",
                 outline: "none",
-                fontSize: "0.875rem"
+                fontSize: "0.875rem",
+                backgroundColor: "var(--color-surface)",
+                color: "var(--color-text)"
               }}
             />
           </div>
@@ -66,58 +68,58 @@ export default function AdminAudit() {
         </div>
       </Card>
 
-      {error && <div style={{ color: "#ef4444", marginBottom: "1rem", padding: "1rem", backgroundColor: "#fef2f2", borderRadius: "0.5rem" }}>{error}</div>}
+      {error && <div style={{ color: "var(--color-danger)", marginBottom: "1rem", padding: "1rem", backgroundColor: "var(--color-danger-bg)", borderRadius: "0.5rem", border: "1px solid var(--color-danger)" }}>{error}</div>}
 
       <Card style={{ overflow: "hidden" }}>
         {loading ? (
-          <div style={{ padding: "3rem", textAlign: "center", color: "#64748b" }}>Cargando registros...</div>
+          <div style={{ padding: "3rem", textAlign: "center", color: "var(--color-text-secondary)" }}>Cargando registros...</div>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
-              <thead style={{ backgroundColor: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+              <thead style={{ backgroundColor: "var(--color-surface-hover)", borderBottom: "1px solid var(--color-border)" }}>
                 <tr>
-                  <th style={{ padding: "1rem", textAlign: "left", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Fecha</th>
-                  <th style={{ padding: "1rem", textAlign: "left", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Acción</th>
-                  <th style={{ padding: "1rem", textAlign: "left", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Usuario</th>
-                  <th style={{ padding: "1rem", textAlign: "left", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>Detalles</th>
-                  <th style={{ padding: "1rem", textAlign: "left", fontSize: "0.75rem", fontWeight: 600, color: "#64748b", textTransform: "uppercase" }}>IP</th>
+                  <th style={{ padding: "1rem", textAlign: "left", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Fecha</th>
+                  <th style={{ padding: "1rem", textAlign: "left", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Acción</th>
+                  <th style={{ padding: "1rem", textAlign: "left", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Usuario</th>
+                  <th style={{ padding: "1rem", textAlign: "left", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Detalles</th>
+                  <th style={{ padding: "1rem", textAlign: "left", fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>IP</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredLogs.map((log) => (
-                  <tr key={log._id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                    <td style={{ padding: "1rem", fontSize: "0.875rem", color: "#1e293b", whiteSpace: "nowrap" }}>
+                  <tr key={log._id} style={{ borderBottom: "1px solid var(--color-border)" }}>
+                    <td style={{ padding: "1rem", fontSize: "0.875rem", color: "var(--color-text)", whiteSpace: "nowrap" }}>
                       {new Date(log.createdAt).toLocaleString()}
                     </td>
                     <td style={{ padding: "1rem", fontSize: "0.875rem" }}>
                       <Badge variant="neutral">{log.action}</Badge>
                     </td>
-                    <td style={{ padding: "1rem", fontSize: "0.875rem", color: "#334155" }}>
+                    <td style={{ padding: "1rem", fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
                       {log.actor?.userId ? (
                         <div>
                           <div style={{ fontWeight: 500 }}>{log.actor.userId.name}</div>
-                          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{log.actor.userId.email}</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--color-text-tertiary)" }}>{log.actor.userId.email}</div>
                         </div>
                       ) : log.actor?.email ? (
                         <div>
                           <div style={{ fontWeight: 500 }}>Usuario Eliminado/Sistema</div>
-                          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{log.actor.email}</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--color-text-tertiary)" }}>{log.actor.email}</div>
                         </div>
                       ) : (
-                        <span style={{ color: "#94a3b8" }}>Sistema / Desconocido</span>
+                        <span style={{ color: "var(--color-text-tertiary)" }}>Sistema / Desconocido</span>
                       )}
                     </td>
-                    <td style={{ padding: "1rem", fontSize: "0.875rem", color: "#475569", maxWidth: "300px" }}>
+                    <td style={{ padding: "1rem", fontSize: "0.875rem", color: "var(--color-text-secondary)", maxWidth: "300px" }}>
                       {log.message}
                     </td>
-                    <td style={{ padding: "1rem", fontSize: "0.875rem", color: "#64748b", fontFamily: "monospace" }}>
+                    <td style={{ padding: "1rem", fontSize: "0.875rem", color: "var(--color-text-tertiary)", fontFamily: "monospace" }}>
                       {log.ip || "-"}
                     </td>
                   </tr>
                 ))}
                 {filteredLogs.length === 0 && (
                   <tr>
-                    <td colSpan={5} style={{ padding: "3rem", textAlign: "center", color: "#94a3b8" }}>
+                    <td colSpan={5} style={{ padding: "3rem", textAlign: "center", color: "var(--color-text-tertiary)" }}>
                       No se encontraron registros que coincidan con "{searchTerm}"
                     </td>
                   </tr>

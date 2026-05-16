@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { getToken } from "../lib/auth";
 import { useAuth } from "./AuthContext";
 
 const CurrencyContext = createContext();

@@ -135,7 +135,7 @@ export default function Profile() {
                 borderRadius: "50%", 
                 objectFit: "cover",
                 border: "4px solid var(--color-background)",
-                boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
+                boxShadow: "var(--shadow-sm)"
               }} 
             />
             <div style={{
@@ -143,10 +143,10 @@ export default function Profile() {
               bottom: 0,
               right: 0,
               backgroundColor: "var(--color-primary)",
-              color: "white",
+              color: "var(--color-on-accent)",
               borderRadius: "50%",
               padding: "4px",
-              border: "2px solid white",
+              border: "2px solid var(--color-on-accent)",
               cursor: "pointer"
             }}>
               <User size={14} />
@@ -250,12 +250,12 @@ export default function Profile() {
 
         {/* Feedback Messages */}
         {error && (
-          <div style={{ padding: "1rem", backgroundColor: "#FEF2F2", color: "#EF4444", borderRadius: "8px", fontSize: "0.875rem" }}>
+          <div style={{ padding: "1rem", backgroundColor: "var(--color-danger-bg)", color: "var(--color-danger)", borderRadius: "8px", fontSize: "0.875rem", border: "1px solid var(--color-danger)" }}>
             {error}
           </div>
         )}
         {success && (
-          <div style={{ padding: "1rem", backgroundColor: "#ECFDF5", color: "#10B981", borderRadius: "8px", fontSize: "0.875rem" }}>
+          <div style={{ padding: "1rem", backgroundColor: "var(--color-success-bg)", color: "var(--color-success)", borderRadius: "8px", fontSize: "0.875rem", border: "1px solid var(--color-success)" }}>
             {success}
           </div>
         )}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "../../lib/api";
 import { getToken } from "../../lib/auth";
 import { Card } from "../../components/ui/Card";
@@ -31,7 +31,7 @@ export default function MonthlyExpenses({ month, year, onUpdate }) {
   const [selectedExpense, setSelectedExpense] = useState(null);
   const [confirmAmount, setConfirmAmount] = useState("");
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await apiFetch(`/monthly-expenses/status?month=${month}&year=${year}`, { token: getToken() });
@@ -41,11 +41,11 @@ export default function MonthlyExpenses({ month, year, onUpdate }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [month, year]);
 
   useEffect(() => {
     fetchData();
-  }, [month, year]);
+  }, [fetchData]);
 
   // --- Template Actions ---
   const handleSaveTemplate = async (e) => {

@@ -4,6 +4,7 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Modal } from "../components/ui/Modal";
 import { useCurrency } from "../context/CurrencyContext";
+import { createLocalId } from "../lib/ids";
 import { 
   Plus, 
   Target, 
@@ -98,7 +99,7 @@ export default function Goals() {
     if (form.id) {
       setGoals(goals.map(g => g.id === form.id ? { ...form, target: parseFloat(form.target), current: parseFloat(form.current) } : g));
     } else {
-      setGoals([...goals, { ...form, id: Date.now(), target: parseFloat(form.target), current: parseFloat(form.current) }]);
+      setGoals([...goals, { ...form, id: createLocalId(), target: parseFloat(form.target), current: parseFloat(form.current) }]);
     }
     setIsModalOpen(false);
     resetForm();

@@ -1,11 +1,17 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useEffect, useState } from "react";
 
 export function SubscriptionGuard({ children }) {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const [now, setNow] = useState(null);
 
-  if (loading) {
+  useEffect(() => {
+    setNow(Date.now());
+  }, []);
+
+  if (loading || now === null) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
         <div className="animate-spin" style={{ 
@@ -32,7 +38,7 @@ export function SubscriptionGuard({ children }) {
   const isActive = ["active", "trialing"].includes(user.subscriptionStatus);
   // Verificar fecha (dar margen de 24h por diferencias de zona horaria)
   const isPeriodValid = user.currentPeriodEnd 
-    ? new Date(user.currentPeriodEnd) > new Date(Date.now() - 86400000)
+    ? new Date(user.currentPeriodEnd).getTime() > now - 86400000
     : false;
 
   if (isActive && isPeriodValid) {

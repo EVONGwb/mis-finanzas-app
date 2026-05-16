@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "../lib/api";
 import { Card } from "../components/ui/Card";
 import { useCurrency } from "../context/CurrencyContext";
@@ -16,14 +16,10 @@ export default function Profit() {
   const { formatCurrency } = useCurrency();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [month, setMonth] = useState(new Date().getMonth() + 1);
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [month] = useState(new Date().getMonth() + 1);
+  const [year] = useState(new Date().getFullYear());
 
-  useEffect(() => {
-    fetchData();
-  }, [month, year]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const summaryRes = await apiFetch(`/summary?year=${year}&month=${month}`);
@@ -33,7 +29,11 @@ export default function Profit() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [month, year]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const profitMargin = summary && summary.totals.incomes > 0 
     ? ((summary.totals.balance / summary.totals.incomes) * 100).toFixed(1) 

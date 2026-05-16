@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { apiFetch } from "../../lib/api";
 import { Button } from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
@@ -19,10 +19,8 @@ import {
   Unlock,
   AlertTriangle
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 export default function DeliveriesDashboard() {
-  const navigate = useNavigate();
   const { formatCurrency } = useCurrency();
   const [stats, setStats] = useState(null);
   const [entries, setEntries] = useState([]);
@@ -80,13 +78,7 @@ export default function DeliveriesDashboard() {
 
   // Initial Load (removed to prevent duplicate with currentDate effect)
 
-  // Fetch Data when Month Changes
-  useEffect(() => {
-    fetchData();
-    fetchCompanies();
-  }, [currentDate]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       // Use UTC dates to match backend storage (which saves YYYY-MM-DD as UTC midnight)
@@ -116,10 +108,10 @@ export default function DeliveriesDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentDate]);
 
 
-  const fetchCompanies = async () => {
+  const fetchCompanies = useCallback(async () => {
     try {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
@@ -128,7 +120,12 @@ export default function DeliveriesDashboard() {
     } catch (error) {
       console.error("Error loading companies:", error);
     }
-  };
+  }, [currentDate]);
+
+  useEffect(() => {
+    fetchData();
+    fetchCompanies();
+  }, [fetchCompanies, fetchData]);
 
   const handleCreateEntry = async (e) => {
     e.preventDefault();
@@ -410,6 +407,11 @@ export default function DeliveriesDashboard() {
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "5rem", maxWidth: "1200px", margin: "0 auto" }}>
+      {loading && (
+        <div style={{ padding: "1rem", color: "var(--color-text-secondary)" }}>
+          Cargando...
+        </div>
+      )}
       
       {/* 1. Header & Controls */}
       <div style={{ marginBottom: "1.5rem" }}>

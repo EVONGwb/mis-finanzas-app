@@ -16,7 +16,7 @@ export function Button({
       case "primary":
         return {
           backgroundColor: "var(--color-primary)",
-          color: "#ffffff",
+          color: "var(--color-on-accent)",
           boxShadow: "0 2px 4px rgba(var(--color-primary-rgb), 0.3)",
           border: "1px solid transparent"
         };
@@ -36,7 +36,7 @@ export function Button({
       case "danger":
         return {
           backgroundColor: "var(--color-danger)",
-          color: "white",
+          color: "var(--color-on-accent)",
           boxShadow: "0 2px 4px rgba(239, 68, 68, 0.3)",
           border: "1px solid transparent"
         };
@@ -50,7 +50,7 @@ export function Button({
       case "success":
         return {
           backgroundColor: "var(--color-success)",
-          color: "white",
+          color: "var(--color-on-accent)",
           boxShadow: "0 2px 4px rgba(16, 185, 129, 0.3)",
           border: "1px solid transparent"
         };

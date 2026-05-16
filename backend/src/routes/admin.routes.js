@@ -1,28 +1,25 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "../middlewares/auth.js";
+import { wrap } from "../utils/wrap.js";
 import { 
   getUsers, 
   createUser, 
   updateUserRole, 
   resetUserPassword, 
   deleteUser, 
-  promoteSelf, // Importar controlador temporal
   getDashboardStats
 } from "../controllers/admin.controller.js";
 
 const router = Router();
 
-// RUTA DE EMERGENCIA (GET para facilitar acceso por navegador, protegida por secret)
-router.get("/promote-self", promoteSelf);
-
 router.use(requireAuth);
 router.use(requireRole("admin"));
 
-router.get("/dashboard", getDashboardStats);
-router.get("/users", getUsers);
-router.post("/users", createUser);
-router.patch("/users/:id/role", updateUserRole);
-router.patch("/users/:id/password", resetUserPassword);
-router.delete("/users/:id", deleteUser);
+router.get("/dashboard", wrap(getDashboardStats));
+router.get("/users", wrap(getUsers));
+router.post("/users", wrap(createUser));
+router.patch("/users/:id/role", wrap(updateUserRole));
+router.patch("/users/:id/password", wrap(resetUserPassword));
+router.delete("/users/:id", wrap(deleteUser));
 
 export default router;

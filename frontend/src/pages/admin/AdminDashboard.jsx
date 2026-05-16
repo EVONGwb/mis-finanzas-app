@@ -25,8 +25,8 @@ export default function AdminDashboard() {
     fetchStats();
   }, []);
 
-  if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>Cargando...</div>;
-  if (error) return <div style={{ color: "red", padding: "1rem" }}>{error}</div>;
+  if (loading) return <div style={{ display: "flex", justifyContent: "center", padding: "2rem", color: "var(--color-text-secondary)" }}>Cargando...</div>;
+  if (error) return <div style={{ color: "var(--color-danger)", padding: "1rem", backgroundColor: "var(--color-danger-bg)", border: "1px solid var(--color-danger)", borderRadius: "var(--radius-md)" }}>{error}</div>;
 
   const { counts, financials, recentUsers, recentLogs } = stats;
 
@@ -48,14 +48,14 @@ export default function AdminDashboard() {
           <div style={{ 
             padding: "1rem", 
             borderRadius: "12px", 
-            backgroundColor: "#eff6ff", 
-            color: "#3b82f6" 
+            backgroundColor: "rgba(59, 130, 246, 0.18)", 
+            color: "var(--color-secondary)" 
           }}>
             <Users size={32} />
           </div>
           <div>
-            <p style={{ color: "#64748b", fontSize: "0.875rem", fontWeight: 500 }}>Usuarios Totales</p>
-            <h3 style={{ fontSize: "1.875rem", fontWeight: 700, color: "#1e293b", margin: 0 }}>{counts.users}</h3>
+            <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem", fontWeight: 500 }}>Usuarios Totales</p>
+            <h3 style={{ fontSize: "1.875rem", fontWeight: 700, color: "var(--color-text)", margin: 0 }}>{counts.users}</h3>
           </div>
         </Card>
 
@@ -64,15 +64,15 @@ export default function AdminDashboard() {
           <div style={{ 
             padding: "1rem", 
             borderRadius: "12px", 
-            backgroundColor: "#ecfdf5", 
-            color: "#10b981" 
+            backgroundColor: "var(--color-success-bg)", 
+            color: "var(--color-success)" 
           }}>
             <TrendingUp size={32} />
           </div>
           <div>
-            <p style={{ color: "#64748b", fontSize: "0.875rem", fontWeight: 500 }}>Ingresos Totales</p>
-            <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#1e293b", margin: 0 }}>{formatCurrency(financials.totalIncomeAmount)}</h3>
-            <span style={{ fontSize: "0.75rem", color: "#64748b" }}>{counts.incomes} transacciones</span>
+            <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem", fontWeight: 500 }}>Ingresos Totales</p>
+            <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text)", margin: 0 }}>{formatCurrency(financials.totalIncomeAmount)}</h3>
+            <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{counts.incomes} transacciones</span>
           </div>
         </Card>
 
@@ -81,15 +81,15 @@ export default function AdminDashboard() {
           <div style={{ 
             padding: "1rem", 
             borderRadius: "12px", 
-            backgroundColor: "#fef2f2", 
-            color: "#ef4444" 
+            backgroundColor: "var(--color-danger-bg)", 
+            color: "var(--color-danger)" 
           }}>
             <TrendingDown size={32} />
           </div>
           <div>
-            <p style={{ color: "#64748b", fontSize: "0.875rem", fontWeight: 500 }}>Gastos Totales</p>
-            <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#1e293b", margin: 0 }}>{formatCurrency(financials.totalExpenseAmount)}</h3>
-            <span style={{ fontSize: "0.75rem", color: "#64748b" }}>{counts.expenses} transacciones</span>
+            <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem", fontWeight: 500 }}>Gastos Totales</p>
+            <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text)", margin: 0 }}>{formatCurrency(financials.totalExpenseAmount)}</h3>
+            <span style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>{counts.expenses} transacciones</span>
           </div>
         </Card>
       </div>
@@ -98,22 +98,22 @@ export default function AdminDashboard() {
         
         {/* Recent Users */}
         <Card style={{ padding: "0" }}>
-          <div style={{ padding: "1.5rem", borderBottom: "1px solid #e2e8f0" }}>
-            <h3 style={{ fontSize: "1.125rem", fontWeight: 600, color: "#1e293b", margin: 0 }}>Usuarios Recientes</h3>
+          <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border)" }}>
+            <h3 style={{ fontSize: "1.125rem", fontWeight: 600, color: "var(--color-text)", margin: 0 }}>Usuarios Recientes</h3>
           </div>
           <Table>
             <thead>
               <tr>
-                <th style={{ textAlign: "left", padding: "1rem", color: "#64748b", fontWeight: 600 }}>Nombre</th>
-                <th style={{ textAlign: "left", padding: "1rem", color: "#64748b", fontWeight: 600 }}>Email</th>
-                <th style={{ textAlign: "left", padding: "1rem", color: "#64748b", fontWeight: 600 }}>Rol</th>
+                <th style={{ textAlign: "left", padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600 }}>Nombre</th>
+                <th style={{ textAlign: "left", padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600 }}>Email</th>
+                <th style={{ textAlign: "left", padding: "1rem", color: "var(--color-text-secondary)", fontWeight: 600 }}>Rol</th>
               </tr>
             </thead>
             <tbody>
               {recentUsers.map(u => (
                 <TableRow key={u._id}>
                   <TableCell style={{ fontWeight: 500 }}>{u.name || "Sin nombre"}</TableCell>
-                  <TableCell style={{ color: "#64748b" }}>{u.email}</TableCell>
+                  <TableCell style={{ color: "var(--color-text-secondary)" }}>{u.email}</TableCell>
                   <TableCell>
                     <Badge variant={u.role === "admin" ? "primary" : "neutral"}>{u.role}</Badge>
                   </TableCell>
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
               ))}
               {recentUsers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} style={{ textAlign: "center", color: "#94a3b8" }}>No hay usuarios recientes</TableCell>
+                  <TableCell colSpan={3} style={{ textAlign: "center", color: "var(--color-text-tertiary)" }}>No hay usuarios recientes</TableCell>
                 </TableRow>
               )}
             </tbody>
@@ -130,14 +130,14 @@ export default function AdminDashboard() {
 
         {/* Recent Logs */}
         <Card style={{ padding: "0" }}>
-          <div style={{ padding: "1.5rem", borderBottom: "1px solid #e2e8f0" }}>
-            <h3 style={{ fontSize: "1.125rem", fontWeight: 600, color: "#1e293b", margin: 0 }}>Actividad del Sistema</h3>
+          <div style={{ padding: "1.5rem", borderBottom: "1px solid var(--color-border)" }}>
+            <h3 style={{ fontSize: "1.125rem", fontWeight: 600, color: "var(--color-text)", margin: 0 }}>Actividad del Sistema</h3>
           </div>
           <div style={{ padding: "0" }}>
              {recentLogs.map((log, i) => (
                <div key={log._id || i} style={{ 
                  padding: "1rem 1.5rem", 
-                 borderBottom: i < recentLogs.length - 1 ? "1px solid #f1f5f9" : "none",
+                 borderBottom: i < recentLogs.length - 1 ? "1px solid var(--color-border)" : "none",
                  display: "flex",
                  gap: "1rem",
                  alignItems: "flex-start"
@@ -145,27 +145,27 @@ export default function AdminDashboard() {
                  <div style={{ 
                    minWidth: "32px", height: "32px", 
                    borderRadius: "50%", 
-                   backgroundColor: "#f8fafc", 
+                   backgroundColor: "var(--color-surface-hover)", 
                    display: "flex", alignItems: "center", justifyContent: "center",
-                   color: "#64748b",
-                   border: "1px solid #e2e8f0"
+                   color: "var(--color-text-secondary)",
+                   border: "1px solid var(--color-border)"
                  }}>
                    <Activity size={16} />
                  </div>
                  <div>
-                   <p style={{ margin: "0 0 0.25rem 0", fontSize: "0.875rem", color: "#1e293b", fontWeight: 500 }}>
+                   <p style={{ margin: "0 0 0.25rem 0", fontSize: "0.875rem", color: "var(--color-text)", fontWeight: 500 }}>
                      {log.action}
                    </p>
-                   <p style={{ margin: 0, fontSize: "0.75rem", color: "#64748b" }}>
+                   <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>
                      {log.message} • {new Date(log.createdAt).toLocaleString()}
                    </p>
                    {log.actor?.userId && (
-                     <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.75rem", color: "#3b82f6" }}>
+                     <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.75rem", color: "var(--color-secondary)" }}>
                        Por: {log.actor.userId.email}
                      </p>
                    )}
                    {!log.actor?.userId && log.actor?.email && (
-                      <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.75rem", color: "#3b82f6" }}>
+                      <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.75rem", color: "var(--color-secondary)" }}>
                         Por: {log.actor.email}
                       </p>
                    )}
@@ -173,7 +173,7 @@ export default function AdminDashboard() {
                </div>
              ))}
              {recentLogs.length === 0 && (
-                <div style={{ padding: "2rem", textAlign: "center", color: "#94a3b8" }}>No hay actividad reciente</div>
+                <div style={{ padding: "2rem", textAlign: "center", color: "var(--color-text-tertiary)" }}>No hay actividad reciente</div>
              )}
           </div>
         </Card>
