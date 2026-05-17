@@ -17,7 +17,8 @@ import {
   FileText,
   Lock,
   Unlock,
-  AlertTriangle
+  AlertTriangle,
+  Save
 } from "lucide-react";
 
 export default function DeliveriesDashboard() {
@@ -25,6 +26,7 @@ export default function DeliveriesDashboard() {
   const [stats, setStats] = useState(null);
   const [entries, setEntries] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Calendar State
@@ -42,6 +44,10 @@ export default function DeliveriesDashboard() {
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+  const [isReceiptsModalOpen, setIsReceiptsModalOpen] = useState(false);
+
+  const [receiptDrafts, setReceiptDrafts] = useState({});
+  const [savingCompanyId, setSavingCompanyId] = useState(null);
   
   // Form State
   const [entryForm, setEntryForm] = useState({
@@ -90,14 +96,27 @@ export default function DeliveriesDashboard() {
       // End of month in UTC (last millisecond of the month)
       const to = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999)).toISOString();
 
-      const [statsRes, entriesRes, bankRes] = await Promise.all([
+      const [statsRes, entriesRes, bankRes, receiptsRes] = await Promise.all([
         apiFetch(`/work-entries/stats?from=${from}&to=${to}&syncRates=1`),
         apiFetch(`/work-entries?from=${from}&to=${to}&syncRates=1`),
-        apiFetch(`/bank?month=${month + 1}&year=${year}`) // Check if month is closed
+        apiFetch(`/bank?month=${month + 1}&year=${year}`), // Check if month is closed
+        apiFetch(`/income-receipts?month=${month + 1}&year=${year}`)
       ]);
 
       setStats(statsRes.data);
       setEntries(entriesRes.data);
+      setReceipts(receiptsRes.data || []);
+
+      setReceiptDrafts((prev) => {
+        const next = { ...prev };
+        (receiptsRes.data || []).forEach((r) => {
+          const cid = r.company?._id || r.company;
+          if (!cid) return;
+          const key = String(cid);
+          if (next[key] === undefined) next[key] = String(r.amountReceived ?? "");
+        });
+        return next;
+      });
       
       // Check closing status
       const isClosed = bankRes.data?.closings?.some(c => c.month === month + 1 && c.year === year);
@@ -134,6 +153,7 @@ export default function DeliveriesDashboard() {
         method: "POST",
         body: {
           ...entryForm,
+          hourlyRate: 0,
           date: selectedDate.toLocaleDateString('en-CA') // Force YYYY-MM-DD local
         }
       });
@@ -259,59 +279,9 @@ export default function DeliveriesDashboard() {
     }
   };
 
-  // --- Payroll Helper (Same as before) ---
-  const getPayrollSummary = (company, totalEarnings) => {
-    if (!company) return null;
-    const limitEnabled = company.limitRule?.enabled || false;
-    const limitAmount = company.limitRule?.amount || 0;
-    
-    let totalEarningsWithSupplements = totalEarnings;
-
-    // Add Supplements
-    const supplements = company.supplements || {};
-    const supTotal = (supplements.benefits || 0) + 
-                     (supplements.agreementBonus || 0) + 
-                     (supplements.proratedPayments || 0) + 
-                     (supplements.voluntaryImprovement || 0) + 
-                     (supplements.other || 0);
-    
-    totalEarningsWithSupplements += supTotal;
-    
-    let tramoDeducible = totalEarningsWithSupplements;
-    let excedenteLibre = 0;
-
-    if (limitEnabled) {
-      if (totalEarningsWithSupplements > limitAmount) {
-        tramoDeducible = limitAmount;
-        excedenteLibre = totalEarningsWithSupplements - limitAmount;
-      } else {
-        tramoDeducible = totalEarningsWithSupplements;
-        excedenteLibre = 0;
-      }
-    }
-
-    const ded = company.deductions || {};
-    const dCC = (tramoDeducible * (ded.commonContingencies || 0)) / 100;
-    const dDA = (tramoDeducible * (ded.unemploymentAccident || 0)) / 100;
-    const dIRPF = (tramoDeducible * (ded.irpf || 0)) / 100;
-    const dOther = (tramoDeducible * (ded.other || 0)) / 100;
-    const totalDeducciones = dCC + dDA + dIRPF + dOther;
-    const netoNomina = tramoDeducible - totalDeducciones;
-    const totalRealCobrado = netoNomina + excedenteLibre;
-
-    return {
-      tramoDeducible,
-      excedenteLibre,
-      deductions: { cc: dCC, da: dDA, irpf: dIRPF, other: dOther, total: totalDeducciones },
-      netoNomina,
-      totalRealCobrado
-    };
-  };
-
   // --- Derived Data for UI ---
-  const selectedCompanyStats = stats?.byCompany?.length === 1 ? stats.byCompany[0] : null;
-  const companyForPayroll = selectedCompanyStats ? companies.find(c => c.name === selectedCompanyStats.companyName) : null;
-  const payroll = companyForPayroll ? getPayrollSummary(companyForPayroll, selectedCompanyStats.totalEarnings) : null;
+  // En modo "horas + cobros", no mostramos calculos de nomina/deducciones.
+  const payroll = null;
 
     // Filter entries for the selected date
     const selectedDateEntries = useMemo(() => {
@@ -370,7 +340,7 @@ export default function DeliveriesDashboard() {
                  entryDate.getMonth() === date.getMonth() &&
                  entryDate.getFullYear() === date.getFullYear();
         })
-        .reduce((sum, e) => sum + (e.total || 0), 0);
+        .reduce((sum, e) => sum + (e.hours || 0), 0);
     };
 
   const handleCloseMonth = async () => {
@@ -405,6 +375,40 @@ export default function DeliveriesDashboard() {
     }
   };
 
+  const totalReceivedThisMonth = useMemo(() => {
+    return (receipts || []).reduce((sum, r) => sum + Number(r.amountReceived || 0), 0);
+  }, [receipts]);
+
+  const avgHoursPerWorkedDay = useMemo(() => {
+    const days = new Set();
+    (entries || []).forEach((e) => {
+      const d = new Date(e.date);
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      days.add(key);
+    });
+    const workedDays = Math.max(1, days.size);
+    const totalHours = Number(stats?.totalHours || 0);
+    return totalHours / workedDays;
+  }, [entries, stats]);
+
+  const saveReceipt = async (companyId) => {
+    setSavingCompanyId(companyId);
+    try {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth() + 1;
+      const raw = receiptDrafts[String(companyId)] ?? "0";
+      await apiFetch("/income-receipts", {
+        method: "POST",
+        body: { companyId, year, month, amountReceived: Number(raw || 0) }
+      });
+      await fetchData();
+    } catch (e) {
+      alert(e.message || "Error al guardar el cobro");
+    } finally {
+      setSavingCompanyId(null);
+    }
+  };
+
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "5rem", maxWidth: "1200px", margin: "0 auto" }}>
       {loading && (
@@ -420,7 +424,7 @@ export default function DeliveriesDashboard() {
           <div>
             <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <Briefcase className="text-primary" size={24} /> 
-              Ingresos & Horas
+              Mis ingresos
             </h1>
             <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
               {currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase()}
@@ -455,6 +459,9 @@ export default function DeliveriesDashboard() {
           <Button variant="outline" size="sm" onClick={() => setIsCompanyModalOpen(true)}>
             Empresas
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setIsReceiptsModalOpen(true)}>
+            Cobros
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setIsSummaryModalOpen(true)}>
             <FileText size={16} style={{ marginRight: "0.5rem" }} /> Resumen
           </Button>
@@ -486,9 +493,9 @@ export default function DeliveriesDashboard() {
         gap: "0.5rem"
       }}>
         <div style={{ textAlign: "center", flex: 1 }}>
-          <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)", display: "block", textTransform: "uppercase" }}>Ganancias</span>
+          <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)", display: "block", textTransform: "uppercase" }}>Cobrado</span>
           <span style={{ fontSize: "1rem", fontWeight: "bold", color: "var(--color-success)" }}>
-            {formatCurrency(stats?.totalEarnings || 0)}
+            {formatCurrency(totalReceivedThisMonth)}
           </span>
         </div>
         
@@ -505,22 +512,10 @@ export default function DeliveriesDashboard() {
 
         <div style={{ textAlign: "center", flex: 1 }}>
           <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)", display: "block", textTransform: "uppercase" }}>Promedio</span>
-          <span style={{ fontSize: "1rem", fontWeight: "bold", color: "var(--color-warning)" }}>
-            {formatCurrency(stats?.dailyAverage || 0)}
-          </span>
+          <span style={{ fontSize: "1rem", fontWeight: "bold", color: "var(--color-warning)" }}>{avgHoursPerWorkedDay.toFixed(1)}h</span>
         </div>
 
-        {payroll && (
-          <>
-            <div style={{ width: "1px", height: "24px", backgroundColor: "var(--color-border)" }}></div>
-            <div style={{ textAlign: "center", flex: 1 }}>
-              <span style={{ fontSize: "0.7rem", color: "var(--color-text-secondary)", display: "block", textTransform: "uppercase" }}>Neto</span>
-              <span style={{ fontSize: "1rem", fontWeight: "bold", color: "var(--color-primary)" }}>
-                {formatCurrency(payroll.totalRealCobrado)}
-              </span>
-            </div>
-          </>
-        )}
+        {/* Neto/nomina no aplica en modo horas + cobros */}
       </div>
 
       {/* 3. Main Content Grid: Calendar Only */}
@@ -583,7 +578,7 @@ export default function DeliveriesDashboard() {
                   </span>
                   {hasData && (
                     <div style={{ marginTop: "0px", fontSize: "0.5rem", fontWeight: 600, color: "var(--color-success)", lineHeight: 1 }}>
-                    {formatCurrency(dayTotal)}
+                    {Number(dayTotal || 0).toFixed(1)}h
                   </div>
                   )}
                   {isToday && !isSelected && (
@@ -628,69 +623,72 @@ export default function DeliveriesDashboard() {
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div style={{ padding: "1rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
-            <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "0.5rem" }}>INGRESOS BRUTOS</h4>
+            <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "0.5rem" }}>RESUMEN DEL MES</h4>
             <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "var(--color-text)" }}>
-              {formatCurrency(stats?.totalEarnings || 0)}
+              {Number(stats?.totalHours || 0).toFixed(1)}h
             </div>
             <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
-              {stats?.totalHours || 0} horas trabajadas
+              Cobrado: {formatCurrency(totalReceivedThisMonth)}
             </div>
           </div>
+        </div>
+      </Modal>
 
-          {payroll && (
-            <>
-              <div style={{ padding: "1rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
-                <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "0.5rem" }}>DEDUCCIONES</h4>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-                    <span>Contingencias Comunes</span>
-                    <span style={{ color: "var(--color-danger)" }}>-{formatCurrency(payroll.deductions.cc)}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-                    <span>Desempleo / FP</span>
-                    <span style={{ color: "var(--color-danger)" }}>-{formatCurrency(payroll.deductions.da)}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-                    <span>IRPF</span>
-                    <span style={{ color: "var(--color-danger)" }}>-{formatCurrency(payroll.deductions.irpf)}</span>
-                  </div>
-                  {payroll.deductions.other > 0 && (
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem" }}>
-                      <span>Otras</span>
-                      <span style={{ color: "var(--color-danger)" }}>-{formatCurrency(payroll.deductions.other)}</span>
-                    </div>
-                  )}
-                  <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "0.5rem", display: "flex", justifyContent: "space-between", fontWeight: 600 }}>
-                    <span>Total Deducciones</span>
-                    <span style={{ color: "var(--color-danger)" }}>-{formatCurrency(payroll.deductions.total)}</span>
+      {/* Receipts Modal */}
+      <Modal
+        isOpen={isReceiptsModalOpen}
+        onClose={() => setIsReceiptsModalOpen(false)}
+        title="Cobros del mes (se refleja en Banco)"
+      >
+        <div style={{ display: "grid", gap: "0.75rem" }}>
+          {companies.length === 0 ? (
+            <div style={{ color: "var(--color-text-secondary)" }}>No tienes empresas creadas.</div>
+          ) : (
+            companies.map((c) => {
+              const cid = String(c._id);
+              const v = receiptDrafts[cid] ?? "";
+              return (
+                <div key={cid} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", padding: "0.75rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", background: "var(--color-surface)" }}>
+                  <div style={{ fontWeight: 700, minWidth: 0 }}>{c.name}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: "0 0 auto" }}>
+                    <input
+                      value={v}
+                      onChange={(e) => setReceiptDrafts((prev) => ({ ...prev, [cid]: e.target.value }))}
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      style={{
+                        width: 140,
+                        padding: "0.55rem 0.7rem",
+                        borderRadius: "var(--radius-sm)",
+                        border: "1px solid var(--color-border)",
+                        background: "rgba(15, 23, 42, 0.18)",
+                        color: "var(--color-text)"
+                      }}
+                    />
+                    <button
+                      type="button"
+                      title="Guardar"
+                      onClick={() => saveReceipt(cid)}
+                      disabled={savingCompanyId === cid}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 40,
+                        height: 40,
+                        borderRadius: 10,
+                        border: "1px solid var(--color-border)",
+                        background: "rgba(15, 23, 42, 0.18)",
+                        cursor: savingCompanyId === cid ? "wait" : "pointer",
+                        opacity: savingCompanyId === cid ? 0.6 : 1
+                      }}
+                    >
+                      <Save size={18} />
+                    </button>
                   </div>
                 </div>
-              </div>
-
-              <div style={{ padding: "1rem", backgroundColor: "var(--color-surface)", borderRadius: "var(--radius-md)", border: "1px solid var(--color-border)" }}>
-                <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: "0.5rem" }}>RESULTADO FINAL</h4>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span>Tramo Deducible (Base)</span>
-                    <span style={{ fontWeight: 600 }}>{formatCurrency(payroll.tramoDeducible)}</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span>Neto de Nómina</span>
-                    <span style={{ fontWeight: 600, color: "var(--color-primary)" }}>{formatCurrency(payroll.netoNomina)}</span>
-                  </div>
-                  {payroll.excedenteLibre > 0 && (
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "var(--color-success)", fontWeight: 600 }}>
-                      <span>+ Excedente Libre</span>
-                      <span>{formatCurrency(payroll.excedenteLibre)}</span>
-                    </div>
-                  )}
-                  <div style={{ borderTop: "2px solid var(--color-border)", paddingTop: "0.5rem", marginTop: "0.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: "1.125rem", fontWeight: "bold" }}>TOTAL A PERCIBIR</span>
-                    <span style={{ fontSize: "1.25rem", fontWeight: "bold", color: "var(--color-primary)" }}>{formatCurrency(payroll.totalRealCobrado)}</span>
-                  </div>
-                </div>
-              </div>
-            </>
+              );
+            })
           )}
         </div>
       </Modal>
@@ -715,13 +713,13 @@ export default function DeliveriesDashboard() {
                     <div>
                       <div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>{entry.company?.name || "Empresa"}</div>
                       <div style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
-                        {entry.hours}h × {formatCurrency(entry.hourlyRate)}/h
+                        {entry.hours}h
                       </div>
                       {entry.notes && <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "0.25rem" }}>"{entry.notes}"</div>}
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontWeight: "bold", color: "var(--color-success)", fontSize: "1.125rem" }}>
-                        {formatCurrency(entry.total)}
+                        {Number(entry.hours || 0).toFixed(1)}h
                       </div>
                       <button 
                         onClick={() => handleDelete(entry._id)}
@@ -768,7 +766,7 @@ export default function DeliveriesDashboard() {
                             setEntryForm({
                               ...entryForm,
                               companyId: c._id,
-                              hourlyRate: c.hourlyRateDefault
+                              hourlyRate: 0
                             });
                           }}
                           style={{
@@ -799,13 +797,6 @@ export default function DeliveriesDashboard() {
                     placeholder="0.0"
                     value={entryForm.hours}
                     onChange={(e) => setEntryForm({...entryForm, hours: e.target.value})}
-                  />
-                  <Input 
-                    label={`PRECIO/H (${formatCurrency(0).replace("0,00", "").trim()})`}
-                    type="number" step="0.01" required 
-                    placeholder="0.00"
-                    value={entryForm.hourlyRate}
-                    onChange={(e) => setEntryForm({...entryForm, hourlyRate: e.target.value})}
                   />
                 </div>
 
