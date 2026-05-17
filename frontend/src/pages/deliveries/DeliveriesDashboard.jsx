@@ -31,7 +31,10 @@ export default function DeliveriesDashboard() {
   
   // Calendar State
   const [currentDate, setCurrentDate] = useState(new Date()); // For month navigation
-  const [selectedDate, setSelectedDate] = useState(new Date()); // Selected specific day
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  }); // Selected specific day (UTC midnight)
 
   // Closing State
   const [isMonthClosed, setIsMonthClosed] = useState(false);
@@ -283,22 +286,25 @@ export default function DeliveriesDashboard() {
   // En modo "horas + cobros", no mostramos calculos de nomina/deducciones.
   const payroll = null;
 
+    const ymdUTC = (d) => {
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(d.getUTCDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    };
+
     // Filter entries for the selected date
     const selectedDateEntries = useMemo(() => {
-      return entries.filter(e => {
-        const entryDate = new Date(e.date); // This converts UTC to Local Time of browser
-        return entryDate.getDate() === selectedDate.getDate() &&
-               entryDate.getMonth() === selectedDate.getMonth() &&
-               entryDate.getFullYear() === selectedDate.getFullYear();
-      });
+      const selectedKey = ymdUTC(selectedDate);
+      return entries.filter(e => ymdUTC(new Date(e.date)) === selectedKey);
     }, [entries, selectedDate]);
 
     // Calendar Generation
     const calendarDays = useMemo(() => {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
+      const firstDay = new Date(Date.UTC(year, month, 1));
+      const lastDay = new Date(Date.UTC(year, month + 1, 0));
       
       const days = [];
       
@@ -314,8 +320,8 @@ export default function DeliveriesDashboard() {
       }
       
       // Fill current month days
-      for (let i = 1; i <= lastDay.getDate(); i++) {
-        days.push(new Date(year, month, i));
+      for (let i = 1; i <= lastDay.getUTCDate(); i++) {
+        days.push(new Date(Date.UTC(year, month, i)));
       }
       
       return days;
@@ -323,23 +329,15 @@ export default function DeliveriesDashboard() {
 
     const hasEntryOnDate = (date) => {
       if (!date) return false;
-      return entries.some(e => {
-        const entryDate = new Date(e.date);
-        return entryDate.getDate() === date.getDate() &&
-               entryDate.getMonth() === date.getMonth() &&
-               entryDate.getFullYear() === date.getFullYear();
-      });
+      const key = ymdUTC(date);
+      return entries.some(e => ymdUTC(new Date(e.date)) === key);
     };
 
     const getDayTotal = (date) => {
       if (!date) return 0;
+      const key = ymdUTC(date);
       return entries
-        .filter(e => {
-          const entryDate = new Date(e.date);
-          return entryDate.getDate() === date.getDate() &&
-                 entryDate.getMonth() === date.getMonth() &&
-                 entryDate.getFullYear() === date.getFullYear();
-        })
+        .filter(e => ymdUTC(new Date(e.date)) === key)
         .reduce((sum, e) => sum + (e.hours || 0), 0);
     };
 
@@ -545,8 +543,9 @@ export default function DeliveriesDashboard() {
             {calendarDays.map((day, idx) => {
               if (!day) return <div key={idx} />;
               
-              const isSelected = day.toDateString() === selectedDate.toDateString();
-              const isToday = day.toDateString() === new Date().toDateString();
+              const isSelected = ymdUTC(day) === ymdUTC(selectedDate);
+              const now = new Date();
+              const isToday = ymdUTC(day) === ymdUTC(new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())));
               const hasData = hasEntryOnDate(day);
               const dayTotal = getDayTotal(day);
 
@@ -574,7 +573,7 @@ export default function DeliveriesDashboard() {
                   }}
                 >
                   <span style={{ fontSize: "0.75rem", fontWeight: isToday ? "bold" : "normal" }}>
-                    {day.getDate()}
+                    {day.getUTCDate()}
                   </span>
                   {hasData && (
                     <div style={{ marginTop: "0px", fontSize: "0.5rem", fontWeight: 600, color: "var(--color-success)", lineHeight: 1 }}>
