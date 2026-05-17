@@ -189,17 +189,17 @@ export default function Login({ onAuthed }) {
                 background: "transparent"
               }}
             >
-              <img
-                src="/logo.png"
-                alt="Mis Finanzas"
-                style={{
-                  width: "110%",
-                  height: "110%",
-                  objectFit: "cover",
-                  objectPosition: "center",
-                  filter: "drop-shadow(0 14px 26px rgba(0,0,0,0.4))"
-                }}
-              />
+	              <img
+	                src="/logo.png"
+	                alt="Mis Finanzas"
+	                style={{
+	                  width: "100%",
+	                  height: "100%",
+	                  objectFit: "cover",
+	                  objectPosition: "50% 58%",
+	                  filter: "drop-shadow(0 14px 26px rgba(0,0,0,0.4))"
+	                }}
+	              />
             </div>
 
             <div style={{ textAlign: "center" }}>
