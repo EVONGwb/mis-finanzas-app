@@ -9,6 +9,10 @@ export default function Login({ onAuthed }) {
   const [loading, setLoading] = useState(false);
   const [activePane, setActivePane] = useState("login"); // login | debt (mobile compact)
   const [isCompactMobile, setIsCompactMobile] = useState(false);
+  const [logoHeightMobile, setLogoHeightMobile] = useState(126); // px max (compact)
+  const [logoHeightDesktop, setLogoHeightDesktop] = useState(156); // px max
+  const [logoScale, setLogoScale] = useState(104); // %
+  const [showDevTuner, setShowDevTuner] = useState(false);
   const [debtCode, setDebtCode] = useState("");
   const [debtLoading, setDebtLoading] = useState(false);
   const [debtError, setDebtError] = useState("");
@@ -29,6 +33,32 @@ export default function Login({ onAuthed }) {
       window.removeEventListener("orientationchange", compute);
     };
   }, []);
+
+  useEffect(() => {
+    // Dev-only tuner (localhost / 127.0.0.1)
+    const host = String(window.location.hostname || "");
+    const isLocal = host === "localhost" || host === "127.0.0.1";
+    if (!isLocal) return;
+
+    const raw = localStorage.getItem("mf_login_logo_tuner");
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Number.isFinite(parsed?.logoHeightMobile)) setLogoHeightMobile(parsed.logoHeightMobile);
+        if (Number.isFinite(parsed?.logoHeightDesktop)) setLogoHeightDesktop(parsed.logoHeightDesktop);
+        if (Number.isFinite(parsed?.logoScale)) setLogoScale(parsed.logoScale);
+      } catch {
+        // ignore
+      }
+    }
+    setShowDevTuner(true);
+  }, []);
+
+  useEffect(() => {
+    if (!showDevTuner) return;
+    const payload = { logoHeightMobile, logoHeightDesktop, logoScale };
+    localStorage.setItem("mf_login_logo_tuner", JSON.stringify(payload));
+  }, [showDevTuner, logoHeightMobile, logoHeightDesktop, logoScale]);
 
   const debtProgress = useMemo(() => {
     const pct = Number(debtData?.porcentajePagado);
@@ -115,6 +145,62 @@ export default function Login({ onAuthed }) {
       }}
     >
       <div style={{ position: "absolute", inset: 0, background: "radial-gradient(1200px 700px at 20% 15%, rgba(16, 185, 129, 0.16), transparent 55%), radial-gradient(1100px 650px at 80% 90%, rgba(34, 211, 238, 0.12), transparent 55%), radial-gradient(900px 600px at 50% 55%, rgba(59, 130, 246, 0.08), transparent 60%)", pointerEvents: "none" }} />
+      {showDevTuner && (
+        <div
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            zIndex: 5,
+            width: 220,
+            padding: "0.6rem 0.65rem",
+            borderRadius: 14,
+            border: "1px solid rgba(148, 163, 184, 0.18)",
+            backgroundColor: "rgba(2, 8, 14, 0.62)",
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
+            color: "var(--color-text)",
+            boxShadow: "0 18px 46px rgba(0,0,0,0.35)"
+          }}
+        >
+          <div style={{ fontWeight: 900, fontSize: "0.85rem", marginBottom: "0.35rem" }}>Logo (dev)</div>
+          <div style={{ display: "grid", gap: "0.4rem" }}>
+            <div style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)", fontWeight: 700 }}>
+              Alto movil: {logoHeightMobile}px
+            </div>
+            <input
+              type="range"
+              min={86}
+              max={170}
+              value={logoHeightMobile}
+              onChange={(e) => setLogoHeightMobile(Number(e.target.value))}
+              style={{ width: "100%" }}
+            />
+            <div style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)", fontWeight: 700 }}>
+              Alto desktop: {logoHeightDesktop}px
+            </div>
+            <input
+              type="range"
+              min={96}
+              max={220}
+              value={logoHeightDesktop}
+              onChange={(e) => setLogoHeightDesktop(Number(e.target.value))}
+              style={{ width: "100%" }}
+            />
+            <div style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)", fontWeight: 700 }}>
+              Zoom: {logoScale}%
+            </div>
+            <input
+              type="range"
+              min={92}
+              max={120}
+              value={logoScale}
+              onChange={(e) => setLogoScale(Number(e.target.value))}
+              style={{ width: "100%" }}
+            />
+          </div>
+        </div>
+      )}
       <div
         style={{
           width: "100%",
@@ -181,7 +267,9 @@ export default function Login({ onAuthed }) {
 	              style={{
 	                width: "100%",
 	                maxWidth: "640px",
-	                height: isCompactMobile ? "clamp(92px, 24vw, 126px)" : "clamp(108px, 19vw, 156px)",
+	                height: isCompactMobile
+	                  ? `clamp(86px, 24vw, ${logoHeightMobile}px)`
+	                  : `clamp(96px, 19vw, ${logoHeightDesktop}px)`,
 	                display: "flex",
 	                alignItems: "center",
 	                justifyContent: "center",
@@ -193,8 +281,8 @@ export default function Login({ onAuthed }) {
 	                src="/logo.png"
 	                alt="Mis Finanzas"
 	                style={{
-	                  width: "104%",
-	                  height: "104%",
+	                  width: `${logoScale}%`,
+	                  height: `${logoScale}%`,
 	                  objectFit: "contain",
 	                  objectPosition: "center",
 	                  filter: "drop-shadow(0 14px 26px rgba(0,0,0,0.4))"
