@@ -181,7 +181,7 @@ export default function Login({ onAuthed }) {
 	              style={{
 	                width: "100%",
 	                maxWidth: "640px",
-	                height: isCompactMobile ? "clamp(82px, 22vw, 112px)" : "clamp(92px, 16vw, 124px)",
+	                height: isCompactMobile ? "clamp(92px, 24vw, 126px)" : "clamp(108px, 19vw, 156px)",
 	                display: "flex",
 	                alignItems: "center",
 	                justifyContent: "center",
@@ -193,8 +193,8 @@ export default function Login({ onAuthed }) {
 	                src="/logo.png"
 	                alt="Mis Finanzas"
 	                style={{
-	                  width: "100%",
-	                  height: "100%",
+	                  width: "104%",
+	                  height: "104%",
 	                  objectFit: "contain",
 	                  objectPosition: "center",
 	                  filter: "drop-shadow(0 14px 26px rgba(0,0,0,0.4))"
