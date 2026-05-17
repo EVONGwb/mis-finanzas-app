@@ -8,7 +8,7 @@ const BankMovementSchema = new mongoose.Schema({
   amount: { type: Number, required: true }, // Positive for income, negative for expense (usually handled by type, but amount can be stored as signed)
   date: { type: Date, default: Date.now },
   relatedId: { type: mongoose.Schema.Types.ObjectId }, // Link to MonthlyClosing or Expense
-  relatedModel: { type: String, enum: ["MonthlyClosing", "Expense", "MonthlyExpenseInstance"] }
+  relatedModel: { type: String, enum: ["MonthlyClosing", "Expense", "MonthlyExpenseInstance", "IncomeReceipt"] }
 }, { timestamps: true });
 
 export const BankMovement = mongoose.model("BankMovement", BankMovementSchema);

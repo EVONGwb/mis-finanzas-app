@@ -24,6 +24,7 @@ import bankRoutes from "./src/routes/bank.routes.js";
 import monthlyExpensesRoutes from "./src/routes/monthlyExpenses.routes.js";
 import billingRoutes from "./src/routes/billing.routes.js";
 import deudaRoutes from "./src/routes/deuda.routes.js";
+import incomeReceiptsRoutes from "./src/routes/incomeReceipts.routes.js";
 import { handleWebhook } from "./src/controllers/billing.controller.js";
 import { notFound } from "./src/middlewares/notFound.js";
 import { errorHandler } from "./src/middlewares/errorHandler.js";
@@ -95,6 +96,7 @@ app.use("/api", deudaRoutes);
 app.use("/api", incomesRoutes);
 app.use("/api", expensesRoutes);
 app.use("/api", summaryRoutes);
+app.use("/api", incomeReceiptsRoutes);
 
 // 404 + errores
 app.use(notFound);

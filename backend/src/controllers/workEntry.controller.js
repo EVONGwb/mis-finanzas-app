@@ -168,7 +168,7 @@ export const createWorkEntry = async (req, res, next) => {
   try {
     const { companyId, date, hours, hourlyRate, notes } = req.body;
 
-    if (!companyId || !date || !hours || hourlyRate === undefined) {
+    if (!companyId || !date || !hours) {
       throw new HttpError(400, "Faltan campos obligatorios");
     }
 
@@ -180,14 +180,15 @@ export const createWorkEntry = async (req, res, next) => {
     const company = await Company.findOne({ _id: companyId, user: req.user._id });
     if (!company) throw new HttpError(404, "Empresa no encontrada");
 
-    const calculatedTotal = parseFloat((Number(hours) * Number(hourlyRate)).toFixed(2));
+    const safeRate = hourlyRate === undefined || hourlyRate === null ? 0 : Number(hourlyRate);
+    const calculatedTotal = parseFloat((Number(hours) * safeRate).toFixed(2));
 
     const entry = await WorkEntry.create({
       user: req.user._id,
       company: companyId,
       date,
       hours: Number(hours),
-      hourlyRate: Number(hourlyRate),
+      hourlyRate: safeRate,
       total: calculatedTotal,
       notes
     });

@@ -24,7 +24,7 @@ const workEntrySchema = new mongoose.Schema({
   },
   hourlyRate: {
     type: Number,
-    required: [true, "El precio por hora es obligatorio"],
+    default: 0,
     min: [0, "El precio por hora no puede ser negativo"]
   },
   total: {

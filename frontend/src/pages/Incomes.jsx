@@ -1,40 +1,73 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../lib/api";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Table, TableRow, TableCell } from "../components/ui/Table";
 import { Modal } from "../components/ui/Modal";
-import { Badge } from "../components/ui/Badge";
 import { useCurrency } from "../context/CurrencyContext";
-import { Plus, Filter, Trash2 } from "lucide-react";
+import { Plus, Filter, Trash2, Building2, Save } from "lucide-react";
 
 export default function Incomes() {
   const { formatCurrency, currency } = useCurrency();
-  const [items, setItems] = useState([]);
+  const [companies, setCompanies] = useState([]);
+  const [entries, setEntries] = useState([]);
+  const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [deletingId, setDeletingId] = useState(null); // Track item being deleted
+  const [deletingId, setDeletingId] = useState(null);
+  const [savingCompanyId, setSavingCompanyId] = useState(null);
+  const [receiptDrafts, setReceiptDrafts] = useState({});
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
-    amount: "",
-    category: "salary",
-    concept: "",
-    source: ""
+    companyId: "",
+    hours: ""
   });
 
   // Filter state
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
 
-  const fetchItems = async () => {
+  const monthRange = useMemo(() => {
+    const m = Number(month);
+    const y = Number(year);
+    const from = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0)).toISOString();
+    const to = new Date(Date.UTC(y, m, 0, 23, 59, 59)).toISOString();
+    return { from, to };
+  }, [month, year]);
+
+  const fetchAll = async () => {
     setLoading(true);
     try {
       setError("");
-      const res = await apiFetch("/incomes");
-      setItems(res.data);
+      const [companiesRes, entriesRes, receiptsRes] = await Promise.all([
+        apiFetch("/companies"),
+        apiFetch(`/work-entries?from=${encodeURIComponent(monthRange.from)}&to=${encodeURIComponent(monthRange.to)}`),
+        apiFetch(`/income-receipts?month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}`)
+      ]);
+      const comps = companiesRes.data || [];
+      setCompanies(comps);
+      setEntries(entriesRes.data || []);
+      setReceipts(receiptsRes.data || []);
+
+      // Prime drafts (do not overwrite user typing)
+      setReceiptDrafts((prev) => {
+        const next = { ...prev };
+        (receiptsRes.data || []).forEach((r) => {
+          const id = r.company?._id || r.company;
+          if (!id) return;
+          const key = String(id);
+          if (next[key] === undefined) next[key] = String(r.amountReceived ?? "");
+        });
+        return next;
+      });
+
+      // Default company selection for modal
+      if (!formData.companyId && comps.length > 0) {
+        setFormData((prev) => ({ ...prev, companyId: String(comps[0]._id) }));
+      }
     } catch (e) {
       setError(e.message || "Error API");
     } finally {
@@ -51,34 +84,44 @@ export default function Incomes() {
   }, [currency]);
 
   useEffect(() => {
-    fetchItems();
+    fetchAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
+
+  useEffect(() => {
+    fetchAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [month, year]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await apiFetch("/incomes", {
+      await apiFetch("/work-entries", {
         method: "POST",
-        body: formData
+        body: {
+          companyId: formData.companyId,
+          date: formData.date,
+          hours: Number(formData.hours),
+          // Horas solamente: el backend permite hourlyRate opcional (default 0)
+          hourlyRate: 0
+        }
       });
       setIsModalOpen(false);
-      setFormData({ ...formData, amount: "", concept: "", source: "" });
-      fetchItems();
+      setFormData((prev) => ({ ...prev, hours: "" }));
+      fetchAll();
     } catch (e) {
       alert(e.message);
     }
   };
 
   const handleDelete = async (id) => {
-    // Eliminar confirmación: if (!window.confirm("¿Estás seguro de que quieres eliminar este ingreso?")) return;
-    
     setDeletingId(id);
     try {
-      await apiFetch(`/incomes/${id}`, {
+      await apiFetch(`/work-entries/${id}`, {
         method: "DELETE"
       });
       // Remove from UI immediately
-      setItems(items.filter(item => item._id !== id));
+      setEntries((prev) => prev.filter((item) => item._id !== id));
     } catch (e) {
       alert(e.message || "Error al eliminar");
     } finally {
@@ -86,20 +129,60 @@ export default function Incomes() {
     }
   };
 
-  const filteredItems = items.filter(item => {
-    const d = new Date(item.date);
-    return d.getMonth() + 1 === parseInt(month) && d.getFullYear() === parseInt(year);
-  });
+  const receiptByCompanyId = useMemo(() => {
+    const map = new Map();
+    (receipts || []).forEach((r) => {
+      const id = r.company?._id || r.company;
+      if (id) map.set(String(id), r);
+    });
+    return map;
+  }, [receipts]);
+
+  const hoursByCompany = useMemo(() => {
+    const map = new Map();
+    (entries || []).forEach((e) => {
+      const cid = e.company?._id || e.company;
+      const name = e.company?.name;
+      if (!cid) return;
+      const key = String(cid);
+      const prev = map.get(key) || { companyId: key, companyName: name || "Empresa", totalHours: 0 };
+      prev.totalHours += Number(e.hours || 0);
+      map.set(key, prev);
+    });
+    return Array.from(map.values()).sort((a, b) => String(a.companyName).localeCompare(String(b.companyName)));
+  }, [entries]);
+
+  const saveReceipt = async (companyId, amountReceived) => {
+    setSavingCompanyId(companyId);
+    try {
+      await apiFetch("/income-receipts", {
+        method: "POST",
+        body: {
+          companyId,
+          month: Number(month),
+          year: Number(year),
+          amountReceived: Number(amountReceived || 0)
+        }
+      });
+      await fetchAll();
+    } catch (e) {
+      alert(e.message || "Error al guardar el cobro");
+    } finally {
+      setSavingCompanyId(null);
+    }
+  };
 
   return (
     <div className="animate-fade-in">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.875rem" }}>Ingresos</h1>
-          <p style={{ color: "var(--color-text-secondary)" }}>Registro detallado de tus ingresos</p>
+          <h1 style={{ fontSize: "1.875rem" }}>Mis ingresos</h1>
+          <p style={{ color: "var(--color-text-secondary)" }}>
+            Apunta horas por empresa y registra el dinero recibido al cierre de mes
+          </p>
         </div>
         <Button onClick={() => setIsModalOpen(true)}>
-          <Plus size={18} /> Nuevo Ingreso
+          <Plus size={18} /> Añadir horas
         </Button>
       </div>
 
@@ -143,19 +226,99 @@ export default function Incomes() {
         </div>
       </Card>
 
-      <Card padding="0">
-        <Table headers={["Fecha", "Concepto", "Categoría", "Monto", "Acciones"]}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1rem" }}>
+        <Card padding="0">
+          <div style={{ padding: "1rem 1rem 0.25rem 1rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              <Building2 size={18} />
+              <div style={{ fontWeight: 850 }}>Horas del mes (por empresa)</div>
+            </div>
+          </div>
+          <Table headers={["Empresa", "Horas (mes)", "Cobrado (mes)", "Acciones"]}>
+            {loading ? (
+              <TableRow><TableCell>Cargando...</TableCell></TableRow>
+            ) : companies.length === 0 ? (
+              <TableRow><TableCell className="text-secondary">Crea una empresa primero en “Deliveries / Empresas”</TableCell></TableRow>
+            ) : (
+              companies.map((c) => {
+                const cid = String(c._id);
+                const hoursRow = hoursByCompany.find((x) => x.companyId === cid);
+                const receipt = receiptByCompanyId.get(cid);
+                const amount = receipt?.amountReceived ?? "";
+                const draft = receiptDrafts[cid] ?? (amount === "" ? "" : String(amount));
+                return (
+                  <TableRow key={cid}>
+                    <TableCell>{c.name}</TableCell>
+                    <TableCell className="font-bold">{Number(hoursRow?.totalHours || 0).toFixed(2)} h</TableCell>
+                    <TableCell className="font-bold text-success">
+                      {amount === "" ? "-" : `+${formatCurrency(amount)}`}
+                    </TableCell>
+                    <TableCell>
+                      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+                        <input
+                          value={draft}
+                          inputMode="decimal"
+                          placeholder="0.00"
+                          style={{
+                            width: 140,
+                            padding: "0.55rem 0.7rem",
+                            borderRadius: "var(--radius-sm)",
+                            border: "1px solid var(--color-border)",
+                            background: "rgba(15, 23, 42, 0.18)",
+                            color: "var(--color-text)"
+                          }}
+                          onChange={(e) => setReceiptDrafts((prev) => ({ ...prev, [cid]: e.target.value }))}
+                          onKeyDown={async (e) => {
+                            if (e.key !== "Enter") return;
+                            await saveReceipt(cid, e.currentTarget.value);
+                          }}
+                        />
+                        <button
+                          type="button"
+                          title="Guardar cobro (se refleja en Banco)"
+                          onClick={async () => {
+                            await saveReceipt(cid, receiptDrafts[cid] ?? "0");
+                          }}
+                          disabled={savingCompanyId === cid}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 38,
+                            height: 38,
+                            borderRadius: 10,
+                            border: "1px solid var(--color-border)",
+                            background: "rgba(15, 23, 42, 0.18)",
+                            cursor: savingCompanyId === cid ? "wait" : "pointer",
+                            opacity: savingCompanyId === cid ? 0.6 : 1
+                          }}
+                        >
+                          <Save size={18} />
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </Table>
+        </Card>
+
+        <Card padding="0">
+          <div style={{ padding: "1rem 1rem 0.25rem 1rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", flexWrap: "wrap" }}>
+            <div style={{ fontWeight: 850 }}>Detalle de horas (por día)</div>
+          </div>
+          <Table headers={["Fecha", "Empresa", "Horas", "Acciones"]}>
           {loading ? (
             <TableRow><TableCell>Cargando...</TableCell></TableRow>
-          ) : filteredItems.length === 0 ? (
-            <TableRow><TableCell className="text-secondary">No hay ingresos en este periodo</TableCell></TableRow>
+          ) : entries.length === 0 ? (
+            <TableRow><TableCell className="text-secondary">No hay horas registradas en este periodo</TableCell></TableRow>
           ) : (
-            filteredItems.map(item => (
+            entries.map(item => (
               <TableRow key={item._id}>
                 <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
-                <TableCell>{item.concept || "-"}</TableCell>
-                <TableCell><Badge variant="success">{item.category}</Badge></TableCell>
-                <TableCell className="font-bold text-success">+{formatCurrency(item.amount)}</TableCell>
+                <TableCell>{item.company?.name || "-"}</TableCell>
+                <TableCell className="font-bold">{Number(item.hours || 0).toFixed(2)} h</TableCell>
                 <TableCell>
                   <button 
                     onClick={() => handleDelete(item._id)}
@@ -177,10 +340,24 @@ export default function Incomes() {
             ))
           )}
         </Table>
-      </Card>
+        </Card>
+      </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Nuevo Ingreso">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Añadir horas">
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>Empresa</label>
+            <select
+              value={formData.companyId}
+              onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
+              style={{ padding: "0.75rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)", width: "100%" }}
+              required
+            >
+              {companies.map((c) => (
+                <option key={c._id} value={c._id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
           <Input 
             label="Fecha" 
             type="date" 
@@ -189,33 +366,16 @@ export default function Incomes() {
             required
           />
           <Input 
-            label={`Monto (${formatCurrency(0).replace("0,00", "").trim()})`} 
+            label="Horas" 
             type="number" 
-            value={formData.amount} 
-            onChange={(e) => setFormData({...formData, amount: e.target.value})}
-            placeholder="0.00"
+            value={formData.hours} 
+            onChange={(e) => setFormData({...formData, hours: e.target.value})}
+            placeholder="0.0"
+            step="0.25"
+            min="0"
             required
           />
-          <Input 
-            label="Concepto" 
-            value={formData.concept} 
-            onChange={(e) => setFormData({...formData, concept: e.target.value})}
-            placeholder="Ej. Nómina"
-          />
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <label style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>Categoría</label>
-            <select 
-              value={formData.category} 
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
-              style={{ padding: "0.75rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--color-border)", width: "100%" }}
-            >
-              <option value="salary">Salario</option>
-              <option value="business">Negocio</option>
-              <option value="investment">Inversión</option>
-              <option value="other">Otro</option>
-            </select>
-          </div>
-          <Button type="submit" style={{ marginTop: "1rem" }}>Guardar Ingreso</Button>
+          <Button type="submit" style={{ marginTop: "1rem" }}>Guardar horas</Button>
         </form>
       </Modal>
     </div>
