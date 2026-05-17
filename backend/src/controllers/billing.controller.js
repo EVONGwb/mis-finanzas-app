@@ -1,13 +1,27 @@
-import Stripe from "stripe";
 import { User } from "../models/user.model.js";
 import { env } from "../config/env.js";
 import { HttpError } from "../utils/httpError.js";
 
-const stripe = env.STRIPE_SECRET_KEY ? new Stripe(env.STRIPE_SECRET_KEY) : null;
+let stripeClient = null;
+let stripeInitTried = false;
 
 const getStripe = () => {
-  if (!stripe) throw new HttpError(500, "Stripe no configurado");
-  return stripe;
+  if (!env.STRIPE_SECRET_KEY) throw new HttpError(500, "Stripe no configurado");
+  // Lazy-load Stripe so a broken/missing Stripe install doesn't take down the whole API.
+  // If Stripe fails to load, only billing routes fail instead of the entire server.
+  return (async () => {
+    if (stripeClient) return stripeClient;
+    if (stripeInitTried) throw new HttpError(500, "Stripe no disponible");
+    stripeInitTried = true;
+    try {
+      const mod = await import("stripe");
+      const Stripe = mod.default || mod;
+      stripeClient = new Stripe(env.STRIPE_SECRET_KEY);
+      return stripeClient;
+    } catch (e) {
+      throw new HttpError(500, "Stripe no disponible");
+    }
+  })();
 };
 
 const getMonthlyPriceId = () => {
@@ -19,7 +33,7 @@ const getMonthlyPriceId = () => {
 
 export const createCheckoutSession = async (req, res, next) => {
   try {
-    const stripeClient = getStripe();
+    const stripeClient = await getStripe();
     const user = await User.findById(req.user._id);
     if (!user) throw new HttpError(404, "Usuario no encontrado");
 
@@ -61,7 +75,7 @@ export const createCheckoutSession = async (req, res, next) => {
 
 export const createPortalSession = async (req, res, next) => {
   try {
-    const stripeClient = getStripe();
+    const stripeClient = await getStripe();
     const user = await User.findById(req.user._id);
     if (!user || !user.stripeCustomerId) {
       throw new HttpError(400, "No tienes suscripción activa para gestionar");
@@ -83,7 +97,7 @@ export const handleWebhook = async (req, res, next) => {
   let event;
 
   try {
-    const stripeClient = getStripe();
+    const stripeClient = await getStripe();
     if (!env.STRIPE_WEBHOOK_SECRET) {
       throw new HttpError(500, "Stripe no configurado");
     }
