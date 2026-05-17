@@ -193,7 +193,7 @@ export default function Login({ onAuthed }) {
             <input
               type="range"
               min={92}
-              max={120}
+              max={160}
               value={logoScale}
               onChange={(e) => setLogoScale(Number(e.target.value))}
               style={{ width: "100%" }}
