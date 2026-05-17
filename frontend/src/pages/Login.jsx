@@ -251,38 +251,7 @@ export default function Login({ onAuthed }) {
                 </div>
               </div>
 
-              {!isCompactMobile && (
-              <div style={{ marginTop: "1.35rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "clamp(0.75rem, 2.6vw, 0.9rem)" }}>
-              <div style={{ padding: "0.85rem 0.9rem", borderRadius: "16px", border: "1px solid rgba(148, 163, 184, 0.14)", backgroundColor: "rgba(15, 23, 42, 0.18)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "var(--color-text)", fontWeight: 850 }}>
-                  <span style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(15, 23, 42, 0.35)", border: "1px solid rgba(148, 163, 184, 0.14)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="var(--color-text)" strokeWidth="2" strokeLinecap="round" />
-                      <path d="M6 11h12v10H6V11Z" stroke="var(--color-text)" strokeWidth="2" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                  Privado
-                </div>
-                <div style={{ marginTop: "0.35rem", color: "var(--color-text-secondary)", fontWeight: 650, fontSize: "0.9rem" }}>
-                  Tu información está protegida
-                </div>
-              </div>
-              <div style={{ padding: "0.85rem 0.9rem", borderRadius: "16px", border: "1px solid rgba(148, 163, 184, 0.14)", backgroundColor: "rgba(15, 23, 42, 0.18)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", color: "var(--color-text)", fontWeight: 850 }}>
-                  <span style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "rgba(15, 23, 42, 0.35)", border: "1px solid rgba(148, 163, 184, 0.14)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 2a10 10 0 1 0 10 10" stroke="var(--color-text)" strokeWidth="2" strokeLinecap="round" />
-                      <path d="M12 7v6l4 2" stroke="var(--color-text)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                  Eficiente
-                </div>
-                <div style={{ marginTop: "0.35rem", color: "var(--color-text-secondary)", fontWeight: 650, fontSize: "0.9rem" }}>
-                  Gestiona tus finanzas
-                </div>
-              </div>
-            </div>
-            )}
+              {/* Tarjetas informativas eliminadas por solicitud (Privado / Eficiente). */}
           </>
           )
         )}
