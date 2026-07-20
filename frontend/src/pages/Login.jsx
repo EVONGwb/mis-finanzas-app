@@ -379,7 +379,7 @@ export default function Login({ onAuthed }) {
               {Array.isArray(debtData.historialPagos) && debtData.historialPagos.length > 0 && (
                 <div style={{ marginTop: "1rem", paddingTop: "0.95rem", borderTop: "1px solid rgba(148, 163, 184, 0.14)" }}>
                   <div style={{ color: "rgba(226, 232, 240, 0.92)", fontWeight: 900, fontSize: "1rem", marginBottom: "0.65rem" }}>
-                    Historial de devoluciones
+                    {debtData.tipo === "credit" ? "Historial de cobros" : "Historial de devoluciones"}
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
                     {debtData.historialPagos.slice(0, 20).map((p, idx) => (

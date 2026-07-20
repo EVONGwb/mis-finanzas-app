@@ -72,12 +72,17 @@ export default function Credits() {
       const res = await apiFetch("/credits");
       if (res && res.data) {
         setData(res.data);
+        return res.data;
       } else {
-        setData({ summary: { totalPending: 0, totalCollectedGlobal: 0, globalProgress: 0 }, list: [] });
+        const empty = { summary: { totalPending: 0, totalCollectedGlobal: 0, globalProgress: 0 }, list: [] };
+        setData(empty);
+        return empty;
       }
     } catch (error) {
       console.error("Error loading credits:", error);
-      setData({ summary: { totalPending: 0, totalCollectedGlobal: 0, globalProgress: 0 }, list: [] });
+      const empty = { summary: { totalPending: 0, totalCollectedGlobal: 0, globalProgress: 0 }, list: [] };
+      setData(empty);
+      return empty;
     } finally {
       setLoading(false);
     }
@@ -107,19 +112,31 @@ export default function Credits() {
     e.preventDefault();
     if (!selectedCredit) return;
     try {
-      await apiFetch(`/credits/${selectedCredit._id}/payments`, {
+      const res = await apiFetch(`/credits/${selectedCredit._id}/payments`, {
         method: "POST",
         body: paymentForm
       });
 
       setIsPaymentModalOpen(false);
       setPaymentForm({ amount: "", date: new Date().toISOString().split("T")[0], note: "" });
-      fetchCredits();
-      if (isDetailModalOpen) {
-        setIsDetailModalOpen(false);
-      }
+      if (res?.data) setSelectedCredit(res.data);
+      await fetchCredits();
     } catch (error) {
       alert(error.message);
+    }
+  };
+
+  const handleDeletePayment = async (paymentId) => {
+    if (!selectedCredit || !paymentId) return;
+    if (!window.confirm("¿Eliminar este cobro del historial?")) return;
+    try {
+      const res = await apiFetch(`/credits/${selectedCredit._id}/payments/${paymentId}`, {
+        method: "DELETE"
+      });
+      if (res?.data) setSelectedCredit(res.data);
+      await fetchCredits();
+    } catch (error) {
+      alert(error.message || "Error al eliminar el cobro");
     }
   };
 
@@ -630,12 +647,65 @@ export default function Credits() {
                </Button>
             </div>
 
-            {/* Timeline Placeholder */}
+            {/* Historial de cobros */}
             <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1.5rem" }}>
-              <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Historial</h3>
-              <div style={{ padding: "1rem", textAlign: "center", color: "var(--color-text-secondary)", fontStyle: "italic" }}>
-                 (Historial de cobros próximamente)
-              </div>
+              <h3 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Historial de cobros</h3>
+              {(!selectedCredit.payments || selectedCredit.payments.length === 0) ? (
+                <div style={{ padding: "1rem", textAlign: "center", color: "var(--color-text-secondary)", fontStyle: "italic", backgroundColor: "var(--color-surface-hover)", borderRadius: "var(--radius-md)" }}>
+                  No hay cobros registrados todavía
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  {[...selectedCredit.payments]
+                    .sort((a, b) => new Date(b?.date || 0) - new Date(a?.date || 0))
+                    .map((payment, idx) => (
+                      <div
+                        key={payment._id || `${payment.date}-${idx}`}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          gap: "0.75rem",
+                          padding: "0.85rem",
+                          backgroundColor: "var(--color-surface-hover)",
+                          border: "1px solid var(--color-border)",
+                          borderRadius: "var(--radius-md)"
+                        }}
+                      >
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 800, color: "var(--color-success)" }}>
+                            +{formatCurrency(payment.amount || 0)}
+                          </div>
+                          <div style={{ marginTop: "0.25rem", color: "var(--color-text-secondary)", fontSize: "0.85rem", fontWeight: 600 }}>
+                            {payment.date
+                              ? new Date(payment.date).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })
+                              : "Sin fecha"}
+                          </div>
+                          {payment.note ? (
+                            <div style={{ marginTop: "0.25rem", color: "var(--color-text-secondary)", fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {payment.note}
+                            </div>
+                          ) : null}
+                        </div>
+                        <button
+                          type="button"
+                          title="Eliminar cobro"
+                          onClick={() => handleDeletePayment(payment._id)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            color: "var(--color-danger)",
+                            cursor: "pointer",
+                            padding: "0.25rem",
+                            flex: "0 0 auto"
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
         </Modal>
       )}
