@@ -154,7 +154,6 @@ export const consultarCreditPublic = async (req, res, next) => {
     const historialPagos = payments
       .slice()
       .sort((a, b) => new Date(b?.date || 0) - new Date(a?.date || 0))
-      .slice(0, 20)
       .map((p) => ({
         amount: Math.max(0, Number(p.amount) || 0),
         date: p.date,

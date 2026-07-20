@@ -108,7 +108,7 @@ export default function Login({ onAuthed }) {
   return (
     <div
       style={{
-        height: "100dvh",
+        minHeight: "100dvh",
         display: "flex",
         alignItems: "flex-start",
         justifyContent: "center",
@@ -116,7 +116,8 @@ export default function Login({ onAuthed }) {
         fontFamily: "var(--font-family)",
         position: "relative",
         overflowX: "hidden",
-        overflowY: "hidden"
+        overflowY: "auto",
+        WebkitOverflowScrolling: "touch"
       }}
     >
       <div style={{ position: "absolute", inset: 0, background: "radial-gradient(1200px 700px at 20% 15%, rgba(16, 185, 129, 0.16), transparent 55%), radial-gradient(1100px 650px at 80% 90%, rgba(34, 211, 238, 0.12), transparent 55%), radial-gradient(900px 600px at 50% 55%, rgba(59, 130, 246, 0.08), transparent 60%)", pointerEvents: "none" }} />
@@ -128,7 +129,7 @@ export default function Login({ onAuthed }) {
           flexDirection: "column",
           gap: isCompactMobile ? "0.7rem" : "clamp(0.85rem, 2.6vw, 1.25rem)",
           position: "relative",
-          height: "100%",
+          minHeight: "100%",
           paddingBottom: isCompactMobile ? "0.5rem" : "clamp(1rem, 4vw, 2.25rem)"
         }}
       >
@@ -382,7 +383,7 @@ export default function Login({ onAuthed }) {
                     {debtData.tipo === "credit" ? "Historial de cobros" : "Historial de devoluciones"}
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                    {debtData.historialPagos.slice(0, 20).map((p, idx) => (
+                    {debtData.historialPagos.map((p, idx) => (
                       <div key={`${String(p?.date || "")}-${idx}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.75rem", padding: "0.75rem 0.85rem", borderRadius: "14px", border: "1px solid rgba(148, 163, 184, 0.14)", backgroundColor: "rgba(2, 8, 14, 0.22)" }}>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ color: "var(--color-text)", fontWeight: 850 }}>
