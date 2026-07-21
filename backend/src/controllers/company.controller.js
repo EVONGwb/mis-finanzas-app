@@ -12,6 +12,11 @@ function parseRate(value) {
   return Number(match[0].replace(",", "."));
 }
 
+function parseOptionalRate(value) {
+  if (value === undefined || value === null || String(value).trim() === "") return 0;
+  return parseRate(value);
+}
+
 // GET /api/companies
 export const getCompanies = async (req, res, next) => {
   try {
@@ -29,6 +34,7 @@ export const getCompanies = async (req, res, next) => {
           return {
             ...company,
             hourlyRateDefault: override.hourlyRateDefault ?? company.hourlyRateDefault,
+            nightHourlyRateDefault: override.nightHourlyRateDefault ?? company.nightHourlyRateDefault,
             deductions: { ...company.deductions, ...override.deductions },
             supplements: { ...company.supplements, ...override.supplements },
             limitRule: { ...company.limitRule, ...override.limitRule }
@@ -47,17 +53,23 @@ export const getCompanies = async (req, res, next) => {
 // POST /api/companies
 export const createCompany = async (req, res, next) => {
   try {
-    const { name, hourlyRateDefault, description, deductions, supplements, limitRule } = req.body;
+    const { name, hourlyRateDefault, nightHourlyRateDefault, description, deductions, supplements, limitRule } = req.body;
     
     // Validación básica
     if (!name || hourlyRateDefault === undefined) {
       throw new HttpError(400, "Nombre y precio/hora son obligatorios");
     }
 
+    const numericRate = parseRate(hourlyRateDefault);
+    const numericNightRate = parseOptionalRate(nightHourlyRateDefault);
+    if (!Number.isFinite(numericRate) || numericRate < 0) throw new HttpError(400, "Precio/hora inválido");
+    if (!Number.isFinite(numericNightRate) || numericNightRate < 0) throw new HttpError(400, "Precio/hora nocturna inválido");
+
     const company = await Company.create({
       user: req.user._id,
       name,
-      hourlyRateDefault,
+      hourlyRateDefault: numericRate,
+      nightHourlyRateDefault: numericNightRate,
       description,
       deductions,
       supplements,
@@ -78,7 +90,7 @@ export const updateCompany = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { month, year } = req.query;
-    const { name, hourlyRateDefault, isActive, description, deductions, supplements, limitRule } = req.body;
+    const { name, hourlyRateDefault, nightHourlyRateDefault, isActive, description, deductions, supplements, limitRule } = req.body;
 
     const company = await Company.findOne({ _id: id, user: req.user._id });
     if (!company) throw new HttpError(404, "Empresa no encontrada");
@@ -100,6 +112,7 @@ export const updateCompany = async (req, res, next) => {
           month: m,
           year: y,
           hourlyRateDefault: baseObj.hourlyRateDefault,
+          nightHourlyRateDefault: baseObj.nightHourlyRateDefault,
           deductions: { ...baseObj.deductions },
           supplements: { ...baseObj.supplements },
           limitRule: { ...baseObj.limitRule }
@@ -112,6 +125,11 @@ export const updateCompany = async (req, res, next) => {
         if (!Number.isFinite(numericRate) || numericRate < 0) throw new HttpError(400, "Precio/hora inválido");
         override.hourlyRateDefault = numericRate;
       }
+      if (nightHourlyRateDefault !== undefined) {
+        const numericNightRate = parseOptionalRate(nightHourlyRateDefault);
+        if (!Number.isFinite(numericNightRate) || numericNightRate < 0) throw new HttpError(400, "Precio/hora nocturna inválido");
+        override.nightHourlyRateDefault = numericNightRate;
+      }
       if (deductions) override.deductions = { ...override.deductions, ...deductions };
       if (supplements) override.supplements = { ...override.supplements, ...supplements };
       if (limitRule) override.limitRule = { ...override.limitRule, ...limitRule };
@@ -121,6 +139,11 @@ export const updateCompany = async (req, res, next) => {
         const numericRate = parseRate(hourlyRateDefault);
         if (!Number.isFinite(numericRate) || numericRate < 0) throw new HttpError(400, "Precio/hora inválido");
         company.hourlyRateDefault = numericRate;
+      }
+      if (nightHourlyRateDefault !== undefined) {
+        const numericNightRate = parseOptionalRate(nightHourlyRateDefault);
+        if (!Number.isFinite(numericNightRate) || numericNightRate < 0) throw new HttpError(400, "Precio/hora nocturna inválido");
+        company.nightHourlyRateDefault = numericNightRate;
       }
       if (deductions) {
         company.deductions = { ...company.toObject().deductions, ...deductions };
@@ -209,6 +232,7 @@ export const updateCompany = async (req, res, next) => {
       if (override) {
         Object.assign(merged, {
           hourlyRateDefault: override.hourlyRateDefault,
+          nightHourlyRateDefault: override.nightHourlyRateDefault,
           deductions: override.deductions,
           supplements: override.supplements,
           limitRule: override.limitRule

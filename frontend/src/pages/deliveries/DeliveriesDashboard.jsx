@@ -56,10 +56,13 @@ export default function DeliveriesDashboard() {
     notes: ""
   });
 
+  const [companyFormMode, setCompanyFormMode] = useState("simple");
+
   const [companyForm, setCompanyForm] = useState({
     id: null,
     name: "",
     hourlyRateDefault: "",
+    nightHourlyRateDefault: "",
     description: "",
     deductions: {
       commonContingencies: 4.85,
@@ -224,9 +227,34 @@ export default function DeliveriesDashboard() {
         : `/companies`;
       const method = isEdit ? "PATCH" : "POST";
 
-      const payload = {
+      const isSimpleCreate = !isEdit && companyFormMode === "simple";
+      const payload = isSimpleCreate ? {
+        name: companyForm.name.trim(),
+        hourlyRateDefault: 0,
+        nightHourlyRateDefault: 0,
+        description: "",
+        deductions: {
+          commonContingencies: 0,
+          unemploymentAccident: 0,
+          irpf: 0,
+          other: 0,
+          otherConcept: ""
+        },
+        supplements: {
+          benefits: 0,
+          agreementBonus: 0,
+          proratedPayments: 0,
+          voluntaryImprovement: 0,
+          other: 0
+        },
+        limitRule: {
+          enabled: false,
+          amount: 0
+        }
+      } : {
         name: companyForm.name,
         hourlyRateDefault: companyForm.hourlyRateDefault,
+        nightHourlyRateDefault: companyForm.nightHourlyRateDefault,
         description: companyForm.description,
         deductions: companyForm.deductions,
         supplements: companyForm.supplements,
@@ -249,6 +277,7 @@ export default function DeliveriesDashboard() {
       id: null,
       name: "",
       hourlyRateDefault: "",
+      nightHourlyRateDefault: "",
       description: "",
       deductions: {
         commonContingencies: 4.85,
@@ -269,13 +298,16 @@ export default function DeliveriesDashboard() {
         amount: 1600
       }
     });
+    setCompanyFormMode("simple");
   };
 
   const handleEditCompany = (company) => {
+    setCompanyFormMode("complete");
     setCompanyForm({
       id: company._id,
       name: company.name,
       hourlyRateDefault: company.hourlyRateDefault,
+      nightHourlyRateDefault: company.nightHourlyRateDefault ?? "",
       description: company.description || "",
       deductions: {
         commonContingencies: company.deductions?.commonContingencies ?? 4.85,
@@ -900,45 +932,72 @@ export default function DeliveriesDashboard() {
         title={companyForm.id ? "Editar Empresa" : "Nueva Empresa"}
       >
         <form onSubmit={handleSaveCompany} style={{ display: "grid", gap: "1rem" }}>
-          {/* ... (Existing Company Form Content) ... */}
+          {!companyForm.id && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", padding: "0.35rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", background: "rgba(15, 23, 42, 0.18)" }}>
+              <Button
+                type="button"
+                variant={companyFormMode === "simple" ? "primary" : "ghost"}
+                onClick={() => setCompanyFormMode("simple")}
+              >
+                Simple
+              </Button>
+              <Button
+                type="button"
+                variant={companyFormMode === "complete" ? "primary" : "ghost"}
+                onClick={() => setCompanyFormMode("complete")}
+              >
+                Completo
+              </Button>
+            </div>
+          )}
+
           <Input 
-            label="Nombre de la Empresa" required placeholder="Ej: Uber..."
+            label="Nombre de la Empresa" required placeholder="Ej: MRJ..."
             value={companyForm.name} onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})}
           />
-          <Input 
-            label={`Precio Hora Estándar (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" required placeholder="Ej: 15.50"
-            value={companyForm.hourlyRateDefault} onChange={(e) => setCompanyForm({...companyForm, hourlyRateDefault: e.target.value})}
-          />
-          <Input 
-            label="Descripción (Opcional)" placeholder="Notas..."
-            value={companyForm.description} onChange={(e) => setCompanyForm({...companyForm, description: e.target.value})}
-          />
-          <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
-          <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Deducciones (%)</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <Input label="Contingencias" type="number" step="0.01" value={companyForm.deductions?.commonContingencies || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, commonContingencies: parseFloat(e.target.value) || 0 }})} />
-            <Input label="Desempleo" type="number" step="0.01" value={companyForm.deductions?.unemploymentAccident || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, unemploymentAccident: parseFloat(e.target.value) || 0 }})} />
-            <Input label="IRPF" type="number" step="0.01" value={companyForm.deductions?.irpf || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, irpf: parseFloat(e.target.value) || 0 }})} />
-            <Input label="Otras" type="number" step="0.01" value={companyForm.deductions?.other || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, other: parseFloat(e.target.value) || 0 }})} />
-          </div>
-          <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
-          <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Complementos (Aumentan Nómina)</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-            <Input label={`Beneficios (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.benefits || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, benefits: parseFloat(e.target.value) || 0 }})} />
-            <Input label={`Plus Convenio (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.agreementBonus || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, agreementBonus: parseFloat(e.target.value) || 0 }})} />
-            <Input label={`Prorrata Pagas (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.proratedPayments || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, proratedPayments: parseFloat(e.target.value) || 0 }})} />
-            <Input label={`Mejora Voluntaria (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.voluntaryImprovement || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, voluntaryImprovement: parseFloat(e.target.value) || 0 }})} />
-            <Input label={`Otros (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.other || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, other: parseFloat(e.target.value) || 0 }})} />
-          </div>
-          <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Límite Salarial</h3>
-            <label style={{ display: "flex", gap: "0.5rem", fontSize: "0.875rem" }}>
-              <input type="checkbox" checked={companyForm.limitRule?.enabled || false} onChange={(e) => setCompanyForm({...companyForm, limitRule: { ...companyForm.limitRule, enabled: e.target.checked }})} /> Activar
-            </label>
-          </div>
-          {companyForm.limitRule?.enabled && (
-             <Input label={`Límite (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.limitRule?.amount || 1600} onChange={(e) => setCompanyForm({...companyForm, limitRule: { ...companyForm.limitRule, amount: parseFloat(e.target.value) || 0 }})} />
+
+          {(companyForm.id || companyFormMode === "complete") && (
+            <>
+              <Input 
+                label={`Precio Hora Estándar (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" required placeholder="Ej: 15.50"
+                value={companyForm.hourlyRateDefault} onChange={(e) => setCompanyForm({...companyForm, hourlyRateDefault: e.target.value})}
+              />
+              <Input 
+                label={`Precio Hora Nocturna (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" placeholder="Ej: 18.00"
+                value={companyForm.nightHourlyRateDefault} onChange={(e) => setCompanyForm({...companyForm, nightHourlyRateDefault: e.target.value})}
+              />
+              <Input 
+                label="Descripción (Opcional)" placeholder="Notas..."
+                value={companyForm.description} onChange={(e) => setCompanyForm({...companyForm, description: e.target.value})}
+              />
+              <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
+              <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Deducciones (%)</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <Input label="Contingencias" type="number" step="0.01" value={companyForm.deductions?.commonContingencies || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, commonContingencies: parseFloat(e.target.value) || 0 }})} />
+                <Input label="Desempleo" type="number" step="0.01" value={companyForm.deductions?.unemploymentAccident || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, unemploymentAccident: parseFloat(e.target.value) || 0 }})} />
+                <Input label="IRPF" type="number" step="0.01" value={companyForm.deductions?.irpf || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, irpf: parseFloat(e.target.value) || 0 }})} />
+                <Input label="Otras" type="number" step="0.01" value={companyForm.deductions?.other || 0} onChange={(e) => setCompanyForm({...companyForm, deductions: { ...companyForm.deductions, other: parseFloat(e.target.value) || 0 }})} />
+              </div>
+              <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
+              <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Complementos (Aumentan Nómina)</h3>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <Input label={`Beneficios (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.benefits || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, benefits: parseFloat(e.target.value) || 0 }})} />
+                <Input label={`Plus Convenio (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.agreementBonus || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, agreementBonus: parseFloat(e.target.value) || 0 }})} />
+                <Input label={`Prorrata Pagas (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.proratedPayments || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, proratedPayments: parseFloat(e.target.value) || 0 }})} />
+                <Input label={`Mejora Voluntaria (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.voluntaryImprovement || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, voluntaryImprovement: parseFloat(e.target.value) || 0 }})} />
+                <Input label={`Otros (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.supplements?.other || 0} onChange={(e) => setCompanyForm({...companyForm, supplements: { ...companyForm.supplements, other: parseFloat(e.target.value) || 0 }})} />
+              </div>
+              <hr style={{ border: "0", borderTop: "1px solid var(--color-border)", margin: "0.5rem 0" }} />
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <h3 style={{ fontSize: "1rem", fontWeight: 600 }}>Límite Salarial</h3>
+                <label style={{ display: "flex", gap: "0.5rem", fontSize: "0.875rem" }}>
+                  <input type="checkbox" checked={companyForm.limitRule?.enabled || false} onChange={(e) => setCompanyForm({...companyForm, limitRule: { ...companyForm.limitRule, enabled: e.target.checked }})} /> Activar
+                </label>
+              </div>
+              {companyForm.limitRule?.enabled && (
+                 <Input label={`Límite (${formatCurrency(0).replace("0,00", "").trim()})`} type="number" step="0.01" value={companyForm.limitRule?.amount || 1600} onChange={(e) => setCompanyForm({...companyForm, limitRule: { ...companyForm.limitRule, amount: parseFloat(e.target.value) || 0 }})} />
+              )}
+            </>
           )}
           <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
             <Button type="button" variant="ghost" onClick={() => { setIsCompanyModalOpen(false); resetCompanyForm(); }} style={{ flex: 1 }}>Cancelar</Button>

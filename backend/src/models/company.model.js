@@ -17,6 +17,11 @@ const companySchema = new mongoose.Schema({
     required: [true, "El precio por hora estándar es obligatorio"],
     min: [0, "El precio por hora no puede ser negativo"]
   },
+  nightHourlyRateDefault: {
+    type: Number,
+    default: 0,
+    min: [0, "El precio por hora nocturna no puede ser negativo"]
+  },
   isActive: {
     type: Boolean,
     default: true
@@ -49,6 +54,7 @@ const companySchema = new mongoose.Schema({
     month: { type: Number, required: true },
     year: { type: Number, required: true },
     hourlyRateDefault: Number,
+    nightHourlyRateDefault: Number,
     deductions: {
       commonContingencies: Number,
       unemploymentAccident: Number,
