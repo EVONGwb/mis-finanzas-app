@@ -330,6 +330,7 @@ export default function DeliveriesDashboard() {
   const [isReceiptsModalOpen, setIsReceiptsModalOpen] = useState(false);
 
   const [receiptDrafts, setReceiptDrafts] = useState({});
+  const [extraReceiptEnabled, setExtraReceiptEnabled] = useState({});
   const [savingCompanyId, setSavingCompanyId] = useState(null);
   
   // Form State
@@ -431,6 +432,19 @@ export default function DeliveriesDashboard() {
               payroll: formatReceiptDraft(r.payrollAmount ?? r.amountReceived),
               extra: formatReceiptDraft(r.extraAmount)
             };
+          }
+        });
+        return next;
+      });
+
+      setExtraReceiptEnabled((prev) => {
+        const next = { ...prev };
+        (receiptsRes.data || []).forEach((r) => {
+          const cid = r.company?._id || r.company;
+          if (!cid) return;
+          const key = String(cid);
+          if (next[key] === undefined && Number(r.extraAmount || 0) > 0) {
+            next[key] = true;
           }
         });
         return next;
@@ -798,6 +812,7 @@ export default function DeliveriesDashboard() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
       const draft = receiptDrafts[String(companyId)] || {};
+      const isExtraEnabled = !!extraReceiptEnabled[String(companyId)];
       await apiFetch("/income-receipts", {
         method: "POST",
         body: {
@@ -805,7 +820,7 @@ export default function DeliveriesDashboard() {
           year,
           month,
           payrollAmount: parseMoneyDraft(draft.payroll),
-          extraAmount: parseMoneyDraft(draft.extra)
+          extraAmount: isExtraEnabled ? parseMoneyDraft(draft.extra) : 0
         }
       });
       await fetchData();
@@ -1029,7 +1044,8 @@ export default function DeliveriesDashboard() {
               const draft = receiptDrafts[cid] || { payroll: "", extra: "" };
               const payrollValue = draft.payroll ?? "";
               const extraValue = draft.extra ?? "";
-              const totalDraft = parseMoneyDraft(payrollValue) + parseMoneyDraft(extraValue);
+              const isExtraEnabled = !!extraReceiptEnabled[cid];
+              const totalDraft = parseMoneyDraft(payrollValue) + (isExtraEnabled ? parseMoneyDraft(extraValue) : 0);
               return (
                 <div key={cid} style={{ display: "grid", gap: "0.75rem", padding: "0.85rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", background: "var(--color-surface)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem" }}>
@@ -1060,26 +1076,72 @@ export default function DeliveriesDashboard() {
                     />
                   </label>
 
-                  <label style={{ display: "grid", gap: "0.35rem", padding: "0.7rem", border: "1px solid rgba(148, 163, 184, 0.14)", borderRadius: "var(--radius-md)", background: "rgba(15, 23, 42, 0.12)" }}>
-                    <span style={{ color: "var(--color-text-secondary)", fontSize: "0.82rem", fontWeight: 700 }}>Cobro extra</span>
-                    <input
-                      value={extraValue}
-                      onChange={(e) => setReceiptDrafts((prev) => ({
-                        ...prev,
-                        [cid]: { ...(prev[cid] || {}), extra: formatMoneyInput(e.target.value) }
-                      }))}
-                      inputMode="decimal"
-                      placeholder=""
+                  {isExtraEnabled ? (
+                    <label style={{ display: "grid", gap: "0.35rem", padding: "0.7rem", border: "1px solid rgba(148, 163, 184, 0.14)", borderRadius: "var(--radius-md)", background: "rgba(15, 23, 42, 0.12)" }}>
+                      <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", color: "var(--color-text-secondary)", fontSize: "0.82rem", fontWeight: 700 }}>
+                        Cobro extra
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setExtraReceiptEnabled((prev) => ({ ...prev, [cid]: false }));
+                            setReceiptDrafts((prev) => ({
+                              ...prev,
+                              [cid]: { ...(prev[cid] || {}), extra: "" }
+                            }));
+                          }}
+                          style={{
+                            border: 0,
+                            background: "transparent",
+                            color: "var(--color-text-secondary)",
+                            cursor: "pointer",
+                            fontWeight: 700,
+                            fontSize: "0.78rem"
+                          }}
+                        >
+                          Quitar
+                        </button>
+                      </span>
+                      <input
+                        value={extraValue}
+                        onChange={(e) => setReceiptDrafts((prev) => ({
+                          ...prev,
+                          [cid]: { ...(prev[cid] || {}), extra: formatMoneyInput(e.target.value) }
+                        }))}
+                        inputMode="decimal"
+                        placeholder=""
+                        style={{
+                          width: "100%",
+                          padding: "0.6rem 0.75rem",
+                          borderRadius: "var(--radius-sm)",
+                          border: "1px solid var(--color-border)",
+                          background: "rgba(15, 23, 42, 0.18)",
+                          color: "var(--color-text)"
+                        }}
+                      />
+                    </label>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setExtraReceiptEnabled((prev) => ({ ...prev, [cid]: true }))}
                       style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "0.5rem",
                         width: "100%",
-                        padding: "0.6rem 0.75rem",
-                        borderRadius: "var(--radius-sm)",
-                        border: "1px solid var(--color-border)",
-                        background: "rgba(15, 23, 42, 0.18)",
-                        color: "var(--color-text)"
+                        minHeight: 40,
+                        borderRadius: 12,
+                        border: "1px dashed var(--color-border)",
+                        background: "rgba(15, 23, 42, 0.12)",
+                        color: "var(--color-text-secondary)",
+                        cursor: "pointer",
+                        fontWeight: 800
                       }}
-                    />
-                  </label>
+                    >
+                      <Plus size={16} />
+                      Añadir cobro extra
+                    </button>
+                  )}
 
                   <button
                     type="button"
