@@ -16,8 +16,121 @@ import {
   FileText,
   Lock,
   AlertTriangle,
-  Save
+  Save,
+  Upload
 } from "lucide-react";
+
+const MONEY_PATTERN = /-?\d{1,3}(?:[.\s]\d{3})*(?:[,.]\d{1,2})?|-?\d+(?:[,.]\d{1,2})?/g;
+
+function parsePayrollNumber(value) {
+  const raw = String(value ?? "").trim().replace(/\s/g, "").replace(/[^\d.,-]/g, "");
+  if (!raw) return null;
+  const lastComma = raw.lastIndexOf(",");
+  const lastDot = raw.lastIndexOf(".");
+  let normalized = raw;
+
+  if (lastComma > -1 && lastDot > -1) {
+    normalized = lastComma > lastDot
+      ? raw.replace(/\./g, "").replace(",", ".")
+      : raw.replace(/,/g, "");
+  } else if (lastComma > -1) {
+    normalized = raw.replace(",", ".");
+  } else {
+    normalized = raw.replace(/\.(?=\d{3}(?:\.|$))/g, "");
+  }
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function normalizePayrollText(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function compactNumber(value) {
+  if (!Number.isFinite(value)) return "";
+  return Number(value.toFixed(2)).toString();
+}
+
+function lineValue(lines, keywordGroups, { max = 100000, min = 0 } = {}) {
+  for (const line of lines) {
+    const normalizedLine = normalizePayrollText(line);
+    const matchesKeywords = keywordGroups.every((group) =>
+      group.some((keyword) => normalizedLine.includes(keyword))
+    );
+    if (!matchesKeywords) continue;
+
+    const values = Array.from(line.matchAll(MONEY_PATTERN))
+      .map((match) => parsePayrollNumber(match[0]))
+      .filter((number) => number !== null && number >= min && number <= max);
+
+    if (values.length > 0) return values[values.length - 1];
+  }
+  return null;
+}
+
+function inferCompanyNameFromFile(fileName) {
+  return String(fileName || "")
+    .replace(/\.[^.]+$/, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b(nomina|nómina|payroll|recibo|salario|salary)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function inferPayrollFields(text, fileName) {
+  const lines = String(text || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const inferred = {
+    name: inferCompanyNameFromFile(fileName),
+    hourlyRateDefault: lineValue(lines, [["hora", "h."], ["normal", "ordinaria", "estandar"]], { max: 200 }),
+    nightHourlyRateDefault: lineValue(lines, [["hora", "h.", "precio", "valor", "importe", "tarifa"], ["nocturn"]], { max: 200 }),
+    deductions: {
+      commonContingencies: lineValue(lines, [["contingencia"]], { max: 100 }),
+      unemploymentAccident: lineValue(lines, [["desempleo"]], { max: 100 }),
+      irpf: lineValue(lines, [["irpf"]], { max: 100 }),
+      other: lineValue(lines, [["otras", "otros"], ["deduccion", "deducciones"]], { max: 100 })
+    },
+    supplements: {
+      benefits: lineValue(lines, [["beneficio", "beneficios"]], { max: 100000 }),
+      agreementBonus: lineValue(lines, [["plus"], ["convenio"]], { max: 100000 }),
+      proratedPayments: lineValue(lines, [["prorrata", "pagas"]], { max: 100000 }),
+      voluntaryImprovement: lineValue(lines, [["mejora"], ["voluntaria"]], { max: 100000 }),
+      other: lineValue(lines, [["hora", "horas"], ["extra", "extraordinaria"]], { max: 100000 })
+    }
+  };
+
+  if (inferred.hourlyRateDefault === null) {
+    inferred.hourlyRateDefault = lineValue(lines, [["precio", "valor", "importe"], ["hora", "h."]], { max: 200 });
+  }
+
+  return inferred;
+}
+
+async function extractPayrollText(file) {
+  if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+    const pdfjsLib = await import("pdfjs-dist");
+    const worker = await import("pdfjs-dist/build/pdf.worker.mjs?url");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
+
+    const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+    const pages = [];
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const content = await page.getTextContent();
+      pages.push(content.items.map((item) => item.str).join("\n"));
+    }
+    return pages.join("\n");
+  }
+
+  if (file.type.startsWith("text/") || /\.(txt|csv)$/i.test(file.name)) {
+    return file.text();
+  }
+
+  throw new Error("Formato no compatible. Usa PDF con texto o TXT.");
+}
 
 export default function DeliveriesDashboard() {
   const { formatCurrency } = useCurrency();
@@ -57,6 +170,7 @@ export default function DeliveriesDashboard() {
   });
 
   const [companyFormMode, setCompanyFormMode] = useState("simple");
+  const [payrollImportStatus, setPayrollImportStatus] = useState({ type: "idle", message: "" });
 
   const [companyForm, setCompanyForm] = useState({
     id: null,
@@ -215,6 +329,63 @@ export default function DeliveriesDashboard() {
     }
   };
 
+  const handlePayrollUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setPayrollImportStatus({ type: "loading", message: "Leyendo nómina..." });
+      const text = await extractPayrollText(file);
+      const inferred = inferPayrollFields(text, file.name);
+      const detected = [];
+
+      setCompanyFormMode("complete");
+      setCompanyForm((prev) => {
+        const next = {
+          ...prev,
+          name: prev.name || inferred.name,
+          deductions: { ...prev.deductions },
+          supplements: { ...prev.supplements }
+        };
+
+        if (inferred.hourlyRateDefault !== null) {
+          next.hourlyRateDefault = compactNumber(inferred.hourlyRateDefault);
+          detected.push("hora normal");
+        }
+        if (inferred.nightHourlyRateDefault !== null) {
+          next.nightHourlyRateDefault = compactNumber(inferred.nightHourlyRateDefault);
+          detected.push("hora nocturna");
+        }
+
+        Object.entries(inferred.deductions).forEach(([key, value]) => {
+          if (value === null) return;
+          next.deductions[key] = value;
+          detected.push(key === "irpf" ? "IRPF" : "deducciones");
+        });
+
+        Object.entries(inferred.supplements).forEach(([key, value]) => {
+          if (value === null) return;
+          next.supplements[key] = value;
+          detected.push(key === "other" ? "extras" : "complementos");
+        });
+
+        return next;
+      });
+
+      const uniqueDetected = Array.from(new Set(detected));
+      setPayrollImportStatus({
+        type: uniqueDetected.length > 0 ? "success" : "warning",
+        message: uniqueDetected.length > 0
+          ? `Datos detectados: ${uniqueDetected.join(", ")}.`
+          : "No se detectaron importes claros; revisa la nómina o introduce los datos manualmente."
+      });
+    } catch (error) {
+      setPayrollImportStatus({ type: "error", message: error.message || "No se pudo leer la nómina." });
+    } finally {
+      event.target.value = "";
+    }
+  };
+
   // --- Company Management Handlers (Same as before) ---
   const handleSaveCompany = async (e) => {
     e.preventDefault();
@@ -299,10 +470,12 @@ export default function DeliveriesDashboard() {
       }
     });
     setCompanyFormMode("simple");
+    setPayrollImportStatus({ type: "idle", message: "" });
   };
 
   const handleEditCompany = (company) => {
     setCompanyFormMode("complete");
+    setPayrollImportStatus({ type: "idle", message: "" });
     setCompanyForm({
       id: company._id,
       name: company.name,
@@ -507,7 +680,7 @@ export default function DeliveriesDashboard() {
             </Button>
           ) : null}
 
-          <Button variant="outline" size="sm" onClick={() => setIsCompanyModalOpen(true)}>
+          <Button variant="outline" size="sm" onClick={() => { resetCompanyForm(); setIsCompanyModalOpen(true); }}>
             Empresas
           </Button>
           <Button variant="outline" size="sm" onClick={() => setIsReceiptsModalOpen(true)}>
@@ -950,6 +1123,50 @@ export default function DeliveriesDashboard() {
               </Button>
             </div>
           )}
+
+          <div style={{ display: "grid", gap: "0.55rem", padding: "0.85rem", border: "1px dashed var(--color-border)", borderRadius: "var(--radius-md)", background: "rgba(15, 23, 42, 0.14)" }}>
+            <input
+              id="company-payroll-upload"
+              type="file"
+              accept=".pdf,.txt,.csv,application/pdf,text/plain"
+              onChange={handlePayrollUpload}
+              style={{ display: "none" }}
+            />
+            <label
+              htmlFor="company-payroll-upload"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.5rem",
+                minHeight: 42,
+                padding: "0.75rem 1rem",
+                borderRadius: "var(--radius-full)",
+                border: "1px solid var(--color-border)",
+                color: "var(--color-text)",
+                background: "rgba(15, 23, 42, 0.22)",
+                fontWeight: 700,
+                cursor: "pointer"
+              }}
+            >
+              <Upload size={18} />
+              Cargar nómina
+            </label>
+            {payrollImportStatus.message && (
+              <div
+                style={{
+                  fontSize: "0.82rem",
+                  color: payrollImportStatus.type === "error"
+                    ? "var(--color-danger)"
+                    : payrollImportStatus.type === "success"
+                      ? "var(--color-success)"
+                      : "var(--color-text-secondary)"
+                }}
+              >
+                {payrollImportStatus.message}
+              </div>
+            )}
+          </div>
 
           <Input 
             label="Nombre de la Empresa" required placeholder="Ej: MRJ..."
