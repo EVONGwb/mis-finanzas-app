@@ -72,6 +72,25 @@ export default function Bank() {
     }
   };
 
+  const handleResetBank = async () => {
+    const label = `${monthName} ${year}`;
+    const warning = `Esto reiniciara Banco desde ${label}. Se eliminaran movimientos y cierres anteriores a ese mes, pero se conservara ${label} en adelante. Escribe RESET para confirmar.`;
+    if (window.prompt(warning) !== "RESET") return;
+
+    try {
+      const res = await apiFetch("/bank/reset", {
+        method: "POST",
+        body: { month, year, confirm: "RESET" }
+      });
+      const deletedMovements = res.data?.deletedMovements ?? 0;
+      const deletedClosings = res.data?.deletedClosings ?? 0;
+      alert(`Banco reiniciado desde ${label}. Movimientos eliminados: ${deletedMovements}. Cierres eliminados: ${deletedClosings}.`);
+      fetchData();
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
   const monthName = new Date(year, month - 1).toLocaleString('es-ES', { month: 'long' });
   
   // Derived state for Closings Tab
@@ -189,6 +208,19 @@ export default function Bank() {
                   <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "var(--color-primary)" }}>{formatCurrency(data.monthStats.finalBalance)}</span>
                 </Card>
               </div>
+
+              <Card style={{ padding: "1rem", display: "grid", gap: "0.75rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-warning)", fontWeight: 700 }}>
+                  <AlertCircle size={18} />
+                  Reiniciar Banco
+                </div>
+                <p style={{ margin: 0, color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
+                  Usa el mes seleccionado como nuevo inicio. Se eliminan movimientos y cierres anteriores; los datos de {monthName} {year} en adelante se conservan.
+                </p>
+                <Button variant="danger" onClick={handleResetBank} style={{ width: "100%" }}>
+                  <AlertCircle size={18} style={{ marginRight: "0.5rem" }} /> Reiniciar desde este mes
+                </Button>
+              </Card>
             </div>
           )}
 

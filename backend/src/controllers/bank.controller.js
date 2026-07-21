@@ -254,3 +254,53 @@ export async function openMonth(req, res, next) {
     next(e);
   }
 }
+
+export async function resetBankFromMonth(req, res, next) {
+  try {
+    const userId = req.user._id;
+    const { month, year, confirm } = req.body;
+    const m = Number(month);
+    const y = Number(year);
+
+    if (confirm !== "RESET") {
+      return res.status(400).json({ ok: false, error: { message: "Confirmacion requerida" } });
+    }
+    if (!Number.isFinite(m) || m < 1 || m > 12 || !Number.isFinite(y) || y < 1970) {
+      return res.status(400).json({ ok: false, error: { message: "Mes/ano invalido" } });
+    }
+
+    const start = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0));
+    const oldClosings = await MonthlyClosing.find({
+      user: userId,
+      $or: [
+        { year: { $lt: y } },
+        { year: y, month: { $lt: m } }
+      ]
+    }).select({ _id: 1 }).lean();
+    const oldClosingIds = oldClosings.map((closing) => closing._id);
+
+    const movementResult = await BankMovement.deleteMany({
+      user: userId,
+      $or: [
+        { date: { $lt: start } },
+        { relatedModel: "MonthlyClosing", relatedId: { $in: oldClosingIds } }
+      ]
+    });
+
+    const closingResult = await MonthlyClosing.deleteMany({
+      user: userId,
+      _id: { $in: oldClosingIds }
+    });
+
+    res.json({
+      ok: true,
+      data: {
+        from: start.toISOString(),
+        deletedMovements: movementResult.deletedCount || 0,
+        deletedClosings: closingResult.deletedCount || 0
+      }
+    });
+  } catch (e) {
+    next(e);
+  }
+}
