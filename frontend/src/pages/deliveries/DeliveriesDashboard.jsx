@@ -510,7 +510,17 @@ export default function DeliveriesDashboard() {
         setPayrollImportStatus({ type: "loading", message });
       });
       const inferred = inferPayrollFields(text, file.name);
-      const detected = [];
+      const detected = [
+        inferred.name ? "empresa" : null,
+        inferred.hourlyRateDefault !== null ? "hora normal" : null,
+        inferred.nightHourlyRateDefault !== null ? "hora nocturna" : null,
+        ...Object.entries(inferred.deductions)
+          .filter(([, value]) => value !== null)
+          .map(([key]) => key === "irpf" ? "IRPF" : "deducciones"),
+        ...Object.entries(inferred.supplements)
+          .filter(([, value]) => value !== null)
+          .map(([key]) => key === "other" ? "extras" : "complementos")
+      ].filter(Boolean);
 
       setCompanyFormMode("complete");
       setCompanyForm((prev) => {
@@ -521,27 +531,21 @@ export default function DeliveriesDashboard() {
           supplements: { ...prev.supplements }
         };
 
-        if (!prev.name && inferred.name) detected.push("empresa");
-
         if (inferred.hourlyRateDefault !== null) {
           next.hourlyRateDefault = compactNumber(inferred.hourlyRateDefault);
-          detected.push("hora normal");
         }
         if (inferred.nightHourlyRateDefault !== null) {
           next.nightHourlyRateDefault = compactNumber(inferred.nightHourlyRateDefault);
-          detected.push("hora nocturna");
         }
 
         Object.entries(inferred.deductions).forEach(([key, value]) => {
           if (value === null) return;
           next.deductions[key] = value;
-          detected.push(key === "irpf" ? "IRPF" : "deducciones");
         });
 
         Object.entries(inferred.supplements).forEach(([key, value]) => {
           if (value === null) return;
           next.supplements[key] = value;
-          detected.push(key === "other" ? "extras" : "complementos");
         });
 
         return next;
