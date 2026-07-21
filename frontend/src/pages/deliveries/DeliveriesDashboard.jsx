@@ -109,27 +109,118 @@ function inferPayrollFields(text, fileName) {
   return inferred;
 }
 
-async function extractPayrollText(file) {
+function hasUsefulPayrollText(text) {
+  const normalized = normalizePayrollText(text);
+  const keywords = ["irpf", "contingencia", "desempleo", "hora", "tarifa", "precio", "nocturn", "plus", "prorrata", "nomina"];
+  return normalized.length > 120 && keywords.some((keyword) => normalized.includes(keyword));
+}
+
+async function extractPdfText(pdf) {
+  const pages = [];
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+    const rows = new Map();
+
+    content.items.forEach((item) => {
+      const [, , , , x, y] = item.transform || [];
+      const rowKey = Math.round(Number(y || 0) / 4) * 4;
+      if (!rows.has(rowKey)) rows.set(rowKey, []);
+      rows.get(rowKey).push({ x: Number(x || 0), text: item.str });
+    });
+
+    const pageText = Array.from(rows.entries())
+      .sort((a, b) => b[0] - a[0])
+      .map(([, items]) => items
+        .sort((a, b) => a.x - b.x)
+        .map((item) => item.text)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim()
+      )
+      .filter(Boolean)
+      .join("\n");
+
+    pages.push(pageText);
+  }
+  return pages.join("\n");
+}
+
+async function extractPdfTextWithOcr(pdf, onProgress) {
+  const { createWorker } = await import("tesseract.js");
+  onProgress?.("PDF sin texto claro. Aplicando OCR...");
+  const worker = await createWorker("spa+eng", 1, {
+    logger: (message) => {
+      if (message.status === "recognizing text") {
+        onProgress?.(`Reconociendo nómina... ${Math.round((message.progress || 0) * 100)}%`);
+      }
+    }
+  });
+
+  try {
+    const pages = [];
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      onProgress?.(`Analizando página ${pageNumber} de ${pdf.numPages}...`);
+      const page = await pdf.getPage(pageNumber);
+      const viewport = page.getViewport({ scale: 2.2 });
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({ canvasContext: context, viewport }).promise;
+      const { data } = await worker.recognize(canvas);
+      pages.push(data.text || "");
+    }
+    return pages.join("\n");
+  } finally {
+    await worker.terminate();
+  }
+}
+
+async function extractImageText(file, onProgress) {
+  const { createWorker } = await import("tesseract.js");
+  onProgress?.("Aplicando OCR a la imagen...");
+  const worker = await createWorker("spa+eng", 1, {
+    logger: (message) => {
+      if (message.status === "recognizing text") {
+        onProgress?.(`Reconociendo nómina... ${Math.round((message.progress || 0) * 100)}%`);
+      }
+    }
+  });
+  const url = URL.createObjectURL(file);
+
+  try {
+    const { data } = await worker.recognize(url);
+    return data.text || "";
+  } finally {
+    URL.revokeObjectURL(url);
+    await worker.terminate();
+  }
+}
+
+async function extractPayrollText(file, onProgress) {
   if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
     const pdfjsLib = await import("pdfjs-dist");
     const worker = await import("pdfjs-dist/build/pdf.worker.mjs?url");
     pdfjsLib.GlobalWorkerOptions.workerSrc = worker.default;
 
     const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
-    const pages = [];
-    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-      const page = await pdf.getPage(pageNumber);
-      const content = await page.getTextContent();
-      pages.push(content.items.map((item) => item.str).join("\n"));
-    }
-    return pages.join("\n");
+    onProgress?.("Leyendo texto del PDF...");
+    const text = await extractPdfText(pdf);
+    if (hasUsefulPayrollText(text)) return text;
+    return extractPdfTextWithOcr(pdf, onProgress);
+  }
+
+  if (file.type.startsWith("image/") || /\.(png|jpe?g|webp)$/i.test(file.name)) {
+    return extractImageText(file, onProgress);
   }
 
   if (file.type.startsWith("text/") || /\.(txt|csv)$/i.test(file.name)) {
     return file.text();
   }
 
-  throw new Error("Formato no compatible. Usa PDF con texto o TXT.");
+  throw new Error("Formato no compatible. Usa PDF, imagen o TXT.");
 }
 
 export default function DeliveriesDashboard() {
@@ -335,7 +426,9 @@ export default function DeliveriesDashboard() {
 
     try {
       setPayrollImportStatus({ type: "loading", message: "Leyendo nómina..." });
-      const text = await extractPayrollText(file);
+      const text = await extractPayrollText(file, (message) => {
+        setPayrollImportStatus({ type: "loading", message });
+      });
       const inferred = inferPayrollFields(text, file.name);
       const detected = [];
 
@@ -1128,7 +1221,7 @@ export default function DeliveriesDashboard() {
             <input
               id="company-payroll-upload"
               type="file"
-              accept=".pdf,.txt,.csv,application/pdf,text/plain"
+              accept=".pdf,.txt,.csv,.png,.jpg,.jpeg,.webp,application/pdf,text/plain,image/*"
               onChange={handlePayrollUpload}
               style={{ display: "none" }}
             />
