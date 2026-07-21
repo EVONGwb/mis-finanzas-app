@@ -51,35 +51,50 @@ export function Header({ onMenuClick, user }) {
         </button>
 
         {/* Logo and App Name */}
-        {!logoError ? (
-          <img 
-            src="/logo.png?v=2" 
-            alt="Mis Finanzas" 
-            style={{ 
-              height: "40px", 
-              width: "auto", 
-              maxWidth: "140px",
-              objectFit: "contain",
-              // borderRadius: "8px",
-            }}
-            onError={() => setLogoError(true)}
-          />
-        ) : (
-          <div style={{ 
-            width: "40px", height: "40px", 
-            borderRadius: "12px", 
-            background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "white", fontWeight: "bold",
-            fontSize: "1.2rem",
-            boxShadow: "0 4px 10px rgba(16, 185, 129, 0.3)"
-          }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-          </div>
-        )}
-        <div>
+        <button
+          type="button"
+          onClick={() => navigate("/dashboard")}
+          aria-label="Ir al inicio"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            border: 0,
+            background: "transparent",
+            color: "inherit",
+            padding: 0,
+            cursor: "pointer",
+            fontFamily: "var(--font-family)"
+          }}
+        >
+          {!logoError ? (
+            <img 
+              src="/logo.png?v=2" 
+              alt="Mis Finanzas" 
+              style={{ 
+                height: "40px", 
+                width: "auto", 
+                maxWidth: "140px",
+                objectFit: "contain",
+                // borderRadius: "8px",
+              }}
+              onError={() => setLogoError(true)}
+            />
+          ) : (
+            <div style={{ 
+              width: "40px", height: "40px", 
+              borderRadius: "12px", 
+              background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "white", fontWeight: "bold",
+              fontSize: "1.2rem",
+              boxShadow: "0 4px 10px rgba(16, 185, 129, 0.3)"
+            }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+            </div>
+          )}
           <h1 style={{ fontSize: "1.25rem", fontWeight: 900, color: "var(--color-text)", lineHeight: 1.1, letterSpacing: "-0.5px" }}>Mis Finanzas</h1>
-        </div>
+        </button>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
