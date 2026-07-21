@@ -479,7 +479,7 @@ export default function DeliveriesDashboard() {
           <div>
             <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <Briefcase className="text-primary" size={24} /> 
-              Mis ingresos
+              H & C
             </h1>
             <p style={{ color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
               {currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase()}
