@@ -83,6 +83,13 @@ export default function DeliveriesDashboard() {
 
   // Initial Load (removed to prevent duplicate with currentDate effect)
 
+  const formatReceiptDraft = (value) => {
+    if (value === undefined || value === null || value === "") return "";
+    const parsed = Number(String(value).trim().replace(",", "."));
+    if (Number.isFinite(parsed) && parsed === 0) return "";
+    return String(value);
+  };
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -114,8 +121,8 @@ export default function DeliveriesDashboard() {
           const key = String(cid);
           if (next[key] === undefined) {
             next[key] = {
-              payroll: String(r.payrollAmount ?? r.amountReceived ?? ""),
-              extra: String(r.extraAmount ?? "")
+              payroll: formatReceiptDraft(r.payrollAmount ?? r.amountReceived),
+              extra: formatReceiptDraft(r.extraAmount)
             };
           }
         });
@@ -634,7 +641,7 @@ export default function DeliveriesDashboard() {
                         [cid]: { ...(prev[cid] || {}), payroll: e.target.value }
                       }))}
                       inputMode="decimal"
-                      placeholder="0.00"
+                      placeholder=""
                       style={{
                         width: "100%",
                         padding: "0.6rem 0.75rem",
@@ -655,7 +662,7 @@ export default function DeliveriesDashboard() {
                         [cid]: { ...(prev[cid] || {}), extra: e.target.value }
                       }))}
                       inputMode="decimal"
-                      placeholder="0.00"
+                      placeholder=""
                       style={{
                         width: "100%",
                         padding: "0.6rem 0.75rem",

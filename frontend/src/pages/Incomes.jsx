@@ -38,6 +38,18 @@ export default function Incomes() {
     return { from, to };
   }, [month, year]);
 
+  const formatReceiptDraft = (value) => {
+    if (value === undefined || value === null || value === "") return "";
+    const parsed = Number(String(value).trim().replace(",", "."));
+    if (Number.isFinite(parsed) && parsed === 0) return "";
+    return String(value);
+  };
+
+  const parseMoneyDraft = (value) => {
+    const parsed = Number(String(value ?? "").trim().replace(",", "."));
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  };
+
   const fetchAll = async () => {
     setLoading(true);
     try {
@@ -59,7 +71,7 @@ export default function Incomes() {
           const id = r.company?._id || r.company;
           if (!id) return;
           const key = String(id);
-          if (next[key] === undefined) next[key] = String(r.amountReceived ?? "");
+          if (next[key] === undefined) next[key] = formatReceiptDraft(r.amountReceived);
         });
         return next;
       });
@@ -161,7 +173,7 @@ export default function Incomes() {
           companyId,
           month: Number(month),
           year: Number(year),
-          amountReceived: Number(amountReceived || 0)
+          amountReceived: parseMoneyDraft(amountReceived)
         }
       });
       await fetchAll();
@@ -245,7 +257,7 @@ export default function Incomes() {
                 const hoursRow = hoursByCompany.find((x) => x.companyId === cid);
                 const receipt = receiptByCompanyId.get(cid);
                 const amount = receipt?.amountReceived ?? "";
-                const draft = receiptDrafts[cid] ?? (amount === "" ? "" : String(amount));
+                const draft = receiptDrafts[cid] ?? formatReceiptDraft(amount);
                 return (
                   <TableRow key={cid}>
                     <TableCell>{c.name}</TableCell>
@@ -258,7 +270,7 @@ export default function Incomes() {
                         <input
                           value={draft}
                           inputMode="decimal"
-                          placeholder="0.00"
+                          placeholder=""
                           style={{
                             width: 140,
                             padding: "0.55rem 0.7rem",
