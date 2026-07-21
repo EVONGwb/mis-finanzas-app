@@ -6,7 +6,9 @@ const IncomeReceiptSchema = new mongoose.Schema(
     company: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true, index: true },
     year: { type: Number, required: true, min: 1970, max: 3000, index: true },
     month: { type: Number, required: true, min: 1, max: 12, index: true },
-    amountReceived: { type: Number, required: true, min: 0 }
+    amountReceived: { type: Number, required: true, min: 0 },
+    payrollAmount: { type: Number, default: 0, min: 0 },
+    extraAmount: { type: Number, default: 0, min: 0 }
   },
   { timestamps: true }
 );
@@ -14,4 +16,3 @@ const IncomeReceiptSchema = new mongoose.Schema(
 IncomeReceiptSchema.index({ user: 1, company: 1, year: 1, month: 1 }, { unique: true });
 
 export const IncomeReceipt = mongoose.model("IncomeReceipt", IncomeReceiptSchema);
-

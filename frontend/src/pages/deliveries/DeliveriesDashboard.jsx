@@ -112,7 +112,12 @@ export default function DeliveriesDashboard() {
           const cid = r.company?._id || r.company;
           if (!cid) return;
           const key = String(cid);
-          if (next[key] === undefined) next[key] = String(r.amountReceived ?? "");
+          if (next[key] === undefined) {
+            next[key] = {
+              payroll: String(r.payrollAmount ?? r.amountReceived ?? ""),
+              extra: String(r.extraAmount ?? "")
+            };
+          }
         });
         return next;
       });
@@ -356,6 +361,11 @@ export default function DeliveriesDashboard() {
     return (receipts || []).reduce((sum, r) => sum + Number(r.amountReceived || 0), 0);
   }, [receipts]);
 
+  const parseMoneyDraft = (value) => {
+    const parsed = Number(String(value ?? "").trim().replace(",", "."));
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  };
+
   const avgHoursPerWorkedDay = useMemo(() => {
     const days = new Set();
     (entries || []).forEach((e) => {
@@ -373,10 +383,16 @@ export default function DeliveriesDashboard() {
     try {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth() + 1;
-      const raw = receiptDrafts[String(companyId)] ?? "0";
+      const draft = receiptDrafts[String(companyId)] || {};
       await apiFetch("/income-receipts", {
         method: "POST",
-        body: { companyId, year, month, amountReceived: Number(raw || 0) }
+        body: {
+          companyId,
+          year,
+          month,
+          payrollAmount: parseMoneyDraft(draft.payroll),
+          extraAmount: parseMoneyDraft(draft.extra)
+        }
       });
       await fetchData();
     } catch (e) {
@@ -596,46 +612,85 @@ export default function DeliveriesDashboard() {
           ) : (
             companies.map((c) => {
               const cid = String(c._id);
-              const v = receiptDrafts[cid] ?? "";
+              const draft = receiptDrafts[cid] || { payroll: "", extra: "" };
+              const payrollValue = draft.payroll ?? "";
+              const extraValue = draft.extra ?? "";
+              const totalDraft = parseMoneyDraft(payrollValue) + parseMoneyDraft(extraValue);
               return (
-                <div key={cid} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", padding: "0.75rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", background: "var(--color-surface)" }}>
-                  <div style={{ fontWeight: 700, minWidth: 0 }}>{c.name}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: "0 0 auto" }}>
+                <div key={cid} style={{ display: "grid", gap: "0.75rem", padding: "0.85rem", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", background: "var(--color-surface)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem" }}>
+                    <div style={{ fontWeight: 800, minWidth: 0 }}>{c.name}</div>
+                    <div style={{ color: "var(--color-success)", fontWeight: 800, whiteSpace: "nowrap" }}>
+                      {formatCurrency(totalDraft)}
+                    </div>
+                  </div>
+
+                  <label style={{ display: "grid", gap: "0.35rem" }}>
+                    <span style={{ color: "var(--color-text-secondary)", fontSize: "0.82rem", fontWeight: 700 }}>Nómina</span>
                     <input
-                      value={v}
-                      onChange={(e) => setReceiptDrafts((prev) => ({ ...prev, [cid]: e.target.value }))}
+                      value={payrollValue}
+                      onChange={(e) => setReceiptDrafts((prev) => ({
+                        ...prev,
+                        [cid]: { ...(prev[cid] || {}), payroll: e.target.value }
+                      }))}
                       inputMode="decimal"
                       placeholder="0.00"
                       style={{
-                        width: 140,
-                        padding: "0.55rem 0.7rem",
+                        width: "100%",
+                        padding: "0.6rem 0.75rem",
                         borderRadius: "var(--radius-sm)",
                         border: "1px solid var(--color-border)",
                         background: "rgba(15, 23, 42, 0.18)",
                         color: "var(--color-text)"
                       }}
                     />
-                    <button
-                      type="button"
-                      title="Guardar"
-                      onClick={() => saveReceipt(cid)}
-                      disabled={savingCompanyId === cid}
+                  </label>
+
+                  <label style={{ display: "grid", gap: "0.35rem", padding: "0.7rem", border: "1px solid rgba(148, 163, 184, 0.14)", borderRadius: "var(--radius-md)", background: "rgba(15, 23, 42, 0.12)" }}>
+                    <span style={{ color: "var(--color-text-secondary)", fontSize: "0.82rem", fontWeight: 700 }}>Cobro extra</span>
+                    <input
+                      value={extraValue}
+                      onChange={(e) => setReceiptDrafts((prev) => ({
+                        ...prev,
+                        [cid]: { ...(prev[cid] || {}), extra: e.target.value }
+                      }))}
+                      inputMode="decimal"
+                      placeholder="0.00"
                       style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: 40,
-                        height: 40,
-                        borderRadius: 10,
+                        width: "100%",
+                        padding: "0.6rem 0.75rem",
+                        borderRadius: "var(--radius-sm)",
                         border: "1px solid var(--color-border)",
                         background: "rgba(15, 23, 42, 0.18)",
-                        cursor: savingCompanyId === cid ? "wait" : "pointer",
-                        opacity: savingCompanyId === cid ? 0.6 : 1
+                        color: "var(--color-text)"
                       }}
-                    >
-                      <Save size={18} />
-                    </button>
-                  </div>
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    title="Guardar"
+                    onClick={() => saveReceipt(cid)}
+                    disabled={savingCompanyId === cid}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.5rem",
+                      width: "100%",
+                      minHeight: 42,
+                      borderRadius: 12,
+                      border: "1px solid var(--color-border)",
+                      background: "rgba(15, 23, 42, 0.18)",
+                      color: "var(--color-text)",
+                      cursor: savingCompanyId === cid ? "wait" : "pointer",
+                      opacity: savingCompanyId === cid ? 0.6 : 1,
+                      fontWeight: 800
+                    }}
+                  >
+                    <Save size={18} />
+                    Guardar en Banco
+                  </button>
                 </div>
               );
             })

@@ -10,6 +10,11 @@ function monthBoundsUTC(year, month) {
   return { start, end, receiptDate };
 }
 
+function parseAmount(value) {
+  const parsed = Number(String(value ?? "").trim().replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : NaN;
+}
+
 // GET /api/income-receipts?month=5&year=2026
 export async function listIncomeReceipts(req, res, next) {
   try {
@@ -29,25 +34,30 @@ export async function listIncomeReceipts(req, res, next) {
   }
 }
 
-// POST /api/income-receipts  { companyId, month, year, amountReceived }
+// POST /api/income-receipts  { companyId, month, year, payrollAmount, extraAmount }
 export async function upsertIncomeReceipt(req, res, next) {
   try {
-    const { companyId, month, year, amountReceived } = req.body;
+    const { companyId, month, year, amountReceived, payrollAmount, extraAmount } = req.body;
     if (!companyId) return res.status(400).json({ ok: false, error: { message: "Falta companyId" } });
     if (!month || !year) return res.status(400).json({ ok: false, error: { message: "Faltan month/year" } });
-    if (amountReceived === undefined) return res.status(400).json({ ok: false, error: { message: "Falta amountReceived" } });
+    if (amountReceived === undefined && payrollAmount === undefined && extraAmount === undefined) {
+      return res.status(400).json({ ok: false, error: { message: "Falta importe" } });
+    }
 
     const company = await Company.findOne({ _id: companyId, user: req.user._id }).lean();
     if (!company) return res.status(404).json({ ok: false, error: { message: "Empresa no encontrada" } });
 
     const m = Number(month);
     const y = Number(year);
-    const amt = Number(amountReceived);
-    if (!Number.isFinite(amt) || amt < 0) return res.status(400).json({ ok: false, error: { message: "amountReceived invalido" } });
+    const payroll = payrollAmount === undefined ? parseAmount(amountReceived || 0) : parseAmount(payrollAmount || 0);
+    const extra = extraAmount === undefined ? 0 : parseAmount(extraAmount || 0);
+    if (!Number.isFinite(payroll) || payroll < 0) return res.status(400).json({ ok: false, error: { message: "payrollAmount invalido" } });
+    if (!Number.isFinite(extra) || extra < 0) return res.status(400).json({ ok: false, error: { message: "extraAmount invalido" } });
+    const amt = Number((payroll + extra).toFixed(2));
 
     const receipt = await IncomeReceipt.findOneAndUpdate(
       { user: req.user._id, company: companyId, month: m, year: y },
-      { $set: { amountReceived: amt } },
+      { $set: { amountReceived: amt, payrollAmount: payroll, extraAmount: extra } },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
@@ -77,4 +87,3 @@ export async function upsertIncomeReceipt(req, res, next) {
     next(e);
   }
 }
-
