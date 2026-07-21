@@ -129,6 +129,44 @@ textarea::placeholder {
   color: var(--color-text-tertiary);
 }
 
+@keyframes dashboard-card-glow {
+  0% {
+    background-position: 0% 50%;
+    opacity: 0.62;
+    transform: translateX(-3%);
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 1;
+    transform: translateX(3%);
+  }
+  100% {
+    background-position: 0% 50%;
+    opacity: 0.62;
+    transform: translateX(-3%);
+  }
+}
+
+.dashboard-card-glow {
+  position: absolute;
+  bottom: 10px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--card-glow-weak),
+    var(--card-glow-strong),
+    var(--card-glow-weak)
+  );
+  background-size: 220% 100%;
+  box-shadow:
+    0 0 8px 1px var(--card-glow-weak),
+    0 0 18px 3px var(--card-glow-strong);
+  animation: dashboard-card-glow 2.7s ease-in-out infinite;
+}
+
 input:-webkit-autofill,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
