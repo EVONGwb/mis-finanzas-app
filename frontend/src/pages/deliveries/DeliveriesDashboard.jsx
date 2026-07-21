@@ -85,9 +85,28 @@ export default function DeliveriesDashboard() {
 
   const formatReceiptDraft = (value) => {
     if (value === undefined || value === null || value === "") return "";
-    const parsed = Number(String(value).trim().replace(",", "."));
+    const parsed = Number(String(value).trim().replace(/\./g, "").replace(",", "."));
     if (Number.isFinite(parsed) && parsed === 0) return "";
-    return String(value);
+    if (!Number.isFinite(parsed)) return "";
+    return new Intl.NumberFormat("es-ES", { maximumFractionDigits: 2 }).format(parsed);
+  };
+
+  const formatMoneyInput = (value) => {
+    const raw = String(value ?? "").replace(/[^\d.,]/g, "");
+    if (!raw) return "";
+
+    const lastComma = raw.lastIndexOf(",");
+    const lastDot = raw.lastIndexOf(".");
+    const sepIndex = Math.max(lastComma, lastDot);
+    const hasDecimal = sepIndex >= 0 && raw.slice(sepIndex + 1).replace(/\D/g, "").length <= 2;
+
+    const integerDigits = (hasDecimal ? raw.slice(0, sepIndex) : raw)
+      .replace(/\D/g, "")
+      .replace(/^0+(?=\d)/, "");
+    const decimalDigits = hasDecimal ? raw.slice(sepIndex + 1).replace(/\D/g, "").slice(0, 2) : "";
+    const groupedInteger = integerDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    return hasDecimal ? `${groupedInteger || "0"},${decimalDigits}` : groupedInteger;
   };
 
   const fetchData = useCallback(async () => {
@@ -369,7 +388,11 @@ export default function DeliveriesDashboard() {
   }, [receipts]);
 
   const parseMoneyDraft = (value) => {
-    const parsed = Number(String(value ?? "").trim().replace(",", "."));
+    const raw = String(value ?? "").trim().replace(/[^\d.,]/g, "");
+    if (!raw) return 0;
+    const parsed = raw.includes(",")
+      ? Number(raw.replace(/\./g, "").replace(",", "."))
+      : Number(raw.replace(/\.(?=\d{3}(?:\.|$))/g, ""));
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
   };
 
@@ -638,7 +661,7 @@ export default function DeliveriesDashboard() {
                       value={payrollValue}
                       onChange={(e) => setReceiptDrafts((prev) => ({
                         ...prev,
-                        [cid]: { ...(prev[cid] || {}), payroll: e.target.value }
+                        [cid]: { ...(prev[cid] || {}), payroll: formatMoneyInput(e.target.value) }
                       }))}
                       inputMode="decimal"
                       placeholder=""
@@ -659,7 +682,7 @@ export default function DeliveriesDashboard() {
                       value={extraValue}
                       onChange={(e) => setReceiptDrafts((prev) => ({
                         ...prev,
-                        [cid]: { ...(prev[cid] || {}), extra: e.target.value }
+                        [cid]: { ...(prev[cid] || {}), extra: formatMoneyInput(e.target.value) }
                       }))}
                       inputMode="decimal"
                       placeholder=""

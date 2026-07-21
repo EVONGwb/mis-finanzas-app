@@ -11,7 +11,11 @@ function monthBoundsUTC(year, month) {
 }
 
 function parseAmount(value) {
-  const parsed = Number(String(value ?? "").trim().replace(",", "."));
+  const raw = String(value ?? "").trim().replace(/[^\d.,]/g, "");
+  if (!raw) return 0;
+  const parsed = raw.includes(",")
+    ? Number(raw.replace(/\./g, "").replace(",", "."))
+    : Number(raw.replace(/\.(?=\d{3}(?:\.|$))/g, ""));
   return Number.isFinite(parsed) ? parsed : NaN;
 }
 
