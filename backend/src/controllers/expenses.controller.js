@@ -1,5 +1,7 @@
 import { Expense } from "../models/expense.model.js";
 import { BankMovement } from "../models/bankMovement.model.js";
+import { MonthlyExpenseTemplate } from "../models/monthlyExpenseTemplate.model.js";
+import { MonthlyExpenseInstance } from "../models/monthlyExpenseInstance.model.js";
 
 export async function listExpenses(req, res, next) {
   try {
@@ -60,6 +62,43 @@ export async function deleteExpense(req, res, next) {
     await BankMovement.deleteOne({ relatedId: deleted._id, relatedModel: "Expense" });
 
     res.json({ ok: true, data: deleted });
+  } catch (e) {
+    next(e);
+  }
+}
+
+export async function resetExpenses(req, res, next) {
+  try {
+    const userId = req.user._id;
+    const { confirm } = req.body;
+
+    if (confirm !== "RESET") {
+      return res.status(400).json({ ok: false, error: { message: "Confirmacion requerida" } });
+    }
+
+    const [dailyResult, templateResult, instanceResult, movementResult] = await Promise.all([
+      Expense.deleteMany({ user: userId }),
+      MonthlyExpenseTemplate.deleteMany({ user: userId }),
+      MonthlyExpenseInstance.deleteMany({ user: userId }),
+      BankMovement.deleteMany({
+        user: userId,
+        $or: [
+          { type: "expense" },
+          { relatedModel: "Expense" },
+          { relatedModel: "MonthlyExpenseInstance" }
+        ]
+      })
+    ]);
+
+    res.json({
+      ok: true,
+      data: {
+        deletedDailyExpenses: dailyResult.deletedCount || 0,
+        deletedMonthlyTemplates: templateResult.deletedCount || 0,
+        deletedMonthlyInstances: instanceResult.deletedCount || 0,
+        deletedBankMovements: movementResult.deletedCount || 0
+      }
+    });
   } catch (e) {
     next(e);
   }

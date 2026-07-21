@@ -7,6 +7,7 @@ import { apiFetch } from "../lib/api";
 import { useCurrency } from "../context/CurrencyContext";
 import { Modal } from "../components/ui/Modal";
 import { Button } from "../components/ui/Button";
+import { AlertCircle } from "lucide-react";
 
 export default function Expenses() {
   const { formatCurrency } = useCurrency();
@@ -17,6 +18,7 @@ export default function Expenses() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [filterOpen, setFilterOpen] = useState(false);
   const [yearDraft, setYearDraft] = useState(new Date().getFullYear());
+  const [resetVersion, setResetVersion] = useState(0);
 
   // Totals state
   const [totals, setTotals] = useState({ monthlyPlanned: 0, monthlyPaid: 0, daily: 0, totalPlanned: 0, totalPaid: 0 });
@@ -50,6 +52,24 @@ export default function Expenses() {
   useEffect(() => {
     fetchTotals();
   }, [fetchTotals]);
+
+  const handleResetExpenses = async () => {
+    const confirmation = window.prompt("Esto eliminara todo el historial de gastos: gastos variables, plantillas mensuales, pagos mensuales y movimientos de Banco asociados a gastos. Escribe RESET para confirmar.");
+    if (confirmation !== "RESET") return;
+
+    try {
+      const res = await apiFetch("/expenses/reset", {
+        method: "POST",
+        body: { confirm: "RESET" }
+      });
+      const data = res.data || {};
+      alert(`Gastos reiniciados. Variables: ${data.deletedDailyExpenses || 0}. Plantillas: ${data.deletedMonthlyTemplates || 0}. Pagos mensuales: ${data.deletedMonthlyInstances || 0}. Movimientos Banco: ${data.deletedBankMovements || 0}.`);
+      setResetVersion((value) => value + 1);
+      fetchTotals();
+    } catch (e) {
+      alert(e.message);
+    }
+  };
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: "5rem" }}>
@@ -97,6 +117,19 @@ export default function Expenses() {
             <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#F87171" }}>{formatCurrency(totals.totalPlanned - totals.totalPaid)}</span>
           </div>
         </div>
+      </Card>
+
+      <Card style={{ marginBottom: "1.5rem", padding: "1rem", display: "grid", gap: "0.75rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-danger)", fontWeight: 800 }}>
+          <AlertCircle size={18} />
+          Resetear historial de gastos
+        </div>
+        <p style={{ margin: 0, color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
+          Elimina todos los gastos variables, plantillas mensuales, pagos confirmados y movimientos del Banco asociados a gastos.
+        </p>
+        <Button type="button" variant="danger" onClick={handleResetExpenses} style={{ width: "100%" }}>
+          Eliminar historial completo de gastos
+        </Button>
       </Card>
 
       {/* Gastos (Mensuales / Variables) */}
@@ -207,9 +240,9 @@ export default function Expenses() {
 
       {/* Content */}
       {viewType === "monthly" ? (
-        <MonthlyExpenses month={month} year={year} onUpdate={fetchTotals} />
+        <MonthlyExpenses key={`monthly-${resetVersion}`} month={month} year={year} onUpdate={fetchTotals} />
       ) : (
-        <DailyExpenses month={month} year={year} onUpdate={fetchTotals} />
+        <DailyExpenses key={`daily-${resetVersion}`} month={month} year={year} onUpdate={fetchTotals} />
       )}
 
       <Modal
