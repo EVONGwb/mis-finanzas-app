@@ -72,6 +72,63 @@ function lineValue(lines, keywordGroups, { max = 100000, min = 0 } = {}) {
   return null;
 }
 
+function linePercent(lines, keywordGroups) {
+  for (const line of lines) {
+    const normalizedLine = normalizePayrollText(line);
+    const matchesKeywords = keywordGroups.every((group) =>
+      group.some((keyword) => normalizedLine.includes(keyword))
+    );
+    if (!matchesKeywords) continue;
+
+    const match = line.match(/-?\d+(?:[,.]\d+)?\s*%/);
+    if (!match) continue;
+    const parsed = parsePayrollNumber(match[0]);
+    if (parsed !== null) return parsed;
+  }
+  return null;
+}
+
+function sumLinePercents(lines, keywordGroupsList) {
+  let total = 0;
+  let found = false;
+  keywordGroupsList.forEach((keywordGroups) => {
+    const value = linePercent(lines, keywordGroups);
+    if (value === null) return;
+    total += value;
+    found = true;
+  });
+  return found ? Number(total.toFixed(2)) : null;
+}
+
+function lineAmount(lines, keywordGroups) {
+  for (const line of lines) {
+    const normalizedLine = normalizePayrollText(line);
+    const matchesKeywords = keywordGroups.every((group) =>
+      group.some((keyword) => normalizedLine.includes(keyword))
+    );
+    if (!matchesKeywords) continue;
+
+    const euroMatches = Array.from(line.matchAll(/-?\d{1,3}(?:[.\s]\d{3})*(?:[,.]\d{1,2})?\s*€|-?\d+(?:[,.]\d{1,2})?\s*€/g));
+    const values = euroMatches
+      .map((match) => parsePayrollNumber(match[0]))
+      .filter((number) => number !== null && number >= 0);
+    if (values.length > 0) return values[values.length - 1];
+  }
+  return null;
+}
+
+function sumLineAmounts(lines, keywordGroupsList) {
+  let total = 0;
+  let found = false;
+  keywordGroupsList.forEach((keywordGroups) => {
+    const value = lineAmount(lines, keywordGroups);
+    if (value === null) return;
+    total += value;
+    found = true;
+  });
+  return found ? Number(total.toFixed(2)) : null;
+}
+
 function inferCompanyNameFromFile(fileName) {
   return String(fileName || "")
     .replace(/\.[^.]+$/, "")
@@ -81,24 +138,47 @@ function inferCompanyNameFromFile(fileName) {
     .trim();
 }
 
+function inferCompanyNameFromPayrollText(lines, fallback) {
+  const companySuffix = /\b(?:s\.?\s*l\.?|s\.?\s*a\.?|slu|sl|sa|sll|coop)\b/i;
+  for (const line of lines) {
+    const cleaned = line
+      .replace(/\b(trabajador|empresa|empleador)\b/gi, "")
+      .replace(/\b(cif|dni|naf|domicilio|puesto|antiguedad)\b.*$/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (cleaned.length < 4 || !companySuffix.test(cleaned)) continue;
+    return cleaned;
+  }
+  return fallback;
+}
+
 function inferPayrollFields(text, fileName) {
   const lines = String(text || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const fallbackName = inferCompanyNameFromFile(fileName);
   const inferred = {
-    name: inferCompanyNameFromFile(fileName),
+    name: inferCompanyNameFromPayrollText(lines, fallbackName),
     hourlyRateDefault: lineValue(lines, [["hora", "h."], ["normal", "ordinaria", "estandar"]], { max: 200 }),
     nightHourlyRateDefault: lineValue(lines, [["hora", "h.", "precio", "valor", "importe", "tarifa"], ["nocturn"]], { max: 200 }),
     deductions: {
-      commonContingencies: lineValue(lines, [["contingencia"]], { max: 100 }),
-      unemploymentAccident: lineValue(lines, [["desempleo"]], { max: 100 }),
-      irpf: lineValue(lines, [["irpf"]], { max: 100 }),
-      other: lineValue(lines, [["otras", "otros"], ["deduccion", "deducciones"]], { max: 100 })
+      commonContingencies: linePercent(lines, [["contingencia"], ["comun"]]),
+      unemploymentAccident: linePercent(lines, [["desempleo"]]),
+      irpf: linePercent(lines, [["irpf"]]),
+      other: sumLinePercents(lines, [
+        [["mecanismo"], ["equidad"]],
+        [["formacion"], ["profesional"]],
+        [["otras", "otros"], ["deduccion", "deducciones"]]
+      ])
     },
     supplements: {
-      benefits: lineValue(lines, [["beneficio", "beneficios"]], { max: 100000 }),
-      agreementBonus: lineValue(lines, [["plus"], ["convenio"]], { max: 100000 }),
-      proratedPayments: lineValue(lines, [["prorrata", "pagas"]], { max: 100000 }),
-      voluntaryImprovement: lineValue(lines, [["mejora"], ["voluntaria"]], { max: 100000 }),
-      other: lineValue(lines, [["hora", "horas"], ["extra", "extraordinaria"]], { max: 100000 })
+      benefits: lineAmount(lines, [["beneficio", "beneficios"]]),
+      agreementBonus: lineAmount(lines, [["plus"], ["convenio"]]),
+      proratedPayments: lineAmount(lines, [["prorrata", "pagas"]]),
+      voluntaryImprovement: lineAmount(lines, [["mejora"], ["voluntaria"]]),
+      other: sumLineAmounts(lines, [
+        [["plus"], ["festivo"]],
+        [["hora", "horas"], ["extra", "extraordinaria"]],
+        [["plus"], ["hora", "horas"], ["nocturn"]]
+      ])
     }
   };
 
@@ -440,6 +520,8 @@ export default function DeliveriesDashboard() {
           deductions: { ...prev.deductions },
           supplements: { ...prev.supplements }
         };
+
+        if (!prev.name && inferred.name) detected.push("empresa");
 
         if (inferred.hourlyRateDefault !== null) {
           next.hourlyRateDefault = compactNumber(inferred.hourlyRateDefault);
