@@ -146,6 +146,7 @@ function getTrueLayerRedirectUrl(req) {
 }
 
 function buildTrueLayerAuthLink(connection, req) {
+  const providers = env.TRUELAYER_PROVIDERS || (env.TRUELAYER_ENV === "sandbox" ? "mock" : "");
   const params = new URLSearchParams({
     response_type: "code",
     client_id: env.TRUELAYER_CLIENT_ID,
@@ -153,6 +154,8 @@ function buildTrueLayerAuthLink(connection, req) {
     redirect_uri: getTrueLayerRedirectUrl(req),
     state: connection.reference
   });
+
+  if (providers) params.set("providers", providers);
 
   return `${trueLayerAuthBase()}/?${params.toString()}`;
 }
