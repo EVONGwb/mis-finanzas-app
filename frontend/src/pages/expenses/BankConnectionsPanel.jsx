@@ -44,7 +44,7 @@ export default function BankConnectionsPanel({ onImported }) {
   const openConnectModal = async () => {
     setOpen(true);
     setMessage("");
-    if (!status.configured || institutions.length > 0) return;
+    if (!status.configured || status.provider === "truelayer" || institutions.length > 0) return;
 
     setLoading(true);
     try {
@@ -58,15 +58,16 @@ export default function BankConnectionsPanel({ onImported }) {
   };
 
   const createConnection = async () => {
+    const isTrueLayer = status.provider === "truelayer";
     const institution = institutions.find((item) => item.id === selectedInstitution);
-    if (!institution) return;
+    if (!isTrueLayer && !institution) return;
 
     setLoading(true);
     setMessage("");
     try {
       const res = await apiFetch("/bank-connections/connections", {
         method: "POST",
-        body: {
+        body: isTrueLayer ? { country: "ES" } : {
           country: "ES",
           institutionId: institution.id,
           institutionName: institution.name
@@ -161,7 +162,7 @@ export default function BankConnectionsPanel({ onImported }) {
               <div>
                 <div style={{ fontWeight: 900 }}>{connection.institutionName || connection.institutionId}</div>
                 <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "0.25rem" }}>
-                  {connection.status === "linked" ? "Autorizado" : "Pendiente"} · {connection.accounts?.length || 0} cuentas
+                  {connection.status === "linked" ? "Autorizado" : "Pendiente"} · {connection.accounts?.length || 0} cuentas · {connection.cards?.length || 0} tarjetas
                 </div>
               </div>
               <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -198,6 +199,35 @@ export default function BankConnectionsPanel({ onImported }) {
             <div style={{ color: "var(--color-warning)", fontWeight: 800 }}>
               Open Banking no esta configurado en Render.
             </div>
+          ) : status.provider === "truelayer" ? (
+            <>
+              <div
+                style={{
+                  padding: "0.9rem",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--color-border)",
+                  background: "var(--color-surface)",
+                  color: "var(--color-text-secondary)",
+                  lineHeight: 1.45
+                }}
+              >
+                Se abrira TrueLayer para que autorices tu banco o tarjeta. Al volver, podras sincronizar los movimientos y registrar gastos automaticamente.
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", flexWrap: "wrap" }}>
+                <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  isLoading={loading}
+                  disabled={loading}
+                  onClick={createConnection}
+                >
+                  Autorizar banco
+                </Button>
+              </div>
+            </>
           ) : (
             <>
               <label style={{ display: "grid", gap: "0.5rem", color: "var(--color-text)" }}>

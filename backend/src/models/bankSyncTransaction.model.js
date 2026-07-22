@@ -4,7 +4,7 @@ const BankSyncTransactionSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     connection: { type: mongoose.Schema.Types.ObjectId, ref: "BankConnection", required: true, index: true },
-    provider: { type: String, enum: ["gocardless"], default: "gocardless", index: true },
+    provider: { type: String, enum: ["gocardless", "truelayer"], default: "gocardless", index: true },
     accountId: { type: String, required: true, index: true },
     transactionId: { type: String, required: true },
     amount: { type: Number, required: true },

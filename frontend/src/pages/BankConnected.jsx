@@ -13,22 +13,44 @@ export default function BankConnected() {
 
   useEffect(() => {
     const connectionId = params.get("connection");
-    if (!connectionId) {
+    const code = params.get("code");
+    const state = params.get("state");
+    const error = params.get("error");
+    const errorDescription = params.get("error_description");
+
+    if (error) {
       setStatus("error");
-      setMessage("No se encontro la conexion bancaria.");
+      setMessage(errorDescription || "El banco no completo la autorizacion.");
       return;
     }
 
     let alive = true;
     async function refresh() {
       try {
-        const res = await apiFetch(`/bank-connections/connections/${connectionId}/refresh`, { method: "POST" });
+        let res;
+        if (code && state) {
+          res = await apiFetch("/bank-connections/truelayer/callback", {
+            method: "POST",
+            body: {
+              code,
+              state,
+              redirectUri: `${window.location.origin}/bank-connected`
+            }
+          });
+        } else if (connectionId) {
+          res = await apiFetch(`/bank-connections/connections/${connectionId}/refresh`, { method: "POST" });
+        } else {
+          throw new Error("No se encontro la conexion bancaria.");
+        }
+
         if (!alive) return;
         const accounts = res.data?.accounts?.length || 0;
-        setStatus(accounts > 0 ? "success" : "error");
-        setMessage(accounts > 0
+        const cards = res.data?.cards?.length || 0;
+        const linked = accounts > 0 || cards > 0 || res.data?.status === "linked";
+        setStatus(linked ? "success" : "error");
+        setMessage(linked
           ? "Banco autorizado correctamente."
-          : "El banco todavia no devolvio cuentas autorizadas.");
+          : "El banco todavia no devolvio cuentas o tarjetas autorizadas.");
       } catch (e) {
         if (!alive) return;
         setStatus("error");
