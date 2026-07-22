@@ -131,19 +131,6 @@ export default function Expenses() {
         </div>
       </Card>
 
-      <Card style={{ marginBottom: "1.5rem", padding: "1rem", display: "grid", gap: "0.75rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-danger)", fontWeight: 800 }}>
-          <AlertCircle size={18} />
-          Resetear historial de gastos
-        </div>
-        <p style={{ margin: 0, color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
-          Elimina todos los gastos variables, plantillas mensuales, pagos confirmados y movimientos del Banco asociados a gastos.
-        </p>
-        <Button type="button" variant="danger" onClick={openResetModal} style={{ width: "100%" }}>
-          Eliminar historial completo de gastos
-        </Button>
-      </Card>
-
       {/* Gastos (Mensuales / Variables) */}
       <Card style={{ marginBottom: "1.5rem" }} padding="0">
         <div style={{
@@ -256,6 +243,37 @@ export default function Expenses() {
       ) : (
         <DailyExpenses key={`daily-${resetVersion}`} month={month} year={year} onUpdate={fetchTotals} />
       )}
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginTop: "0.75rem",
+          marginBottom: "1.5rem"
+        }}
+      >
+        <button
+          type="button"
+          onClick={openResetModal}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.4rem",
+            padding: "0.45rem 0.65rem",
+            borderRadius: "var(--radius-sm)",
+            border: "1px solid rgba(239, 68, 68, 0.22)",
+            background: "rgba(239, 68, 68, 0.06)",
+            color: "var(--color-text-secondary)",
+            fontSize: "0.78rem",
+            fontWeight: 800,
+            cursor: "pointer"
+          }}
+          title="Eliminar todo el historial de gastos"
+        >
+          <AlertCircle size={13} color="var(--color-danger)" />
+          Resetear historial
+        </button>
+      </div>
 
       <Modal
         isOpen={filterOpen}
