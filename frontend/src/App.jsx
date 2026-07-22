@@ -24,7 +24,6 @@ const DeliveriesDashboard = lazy(() => import("./pages/deliveries/DeliveriesDash
 const Goals = lazy(() => import("./pages/Goals"));
 const Reports = lazy(() => import("./pages/Reports"));
 const Bank = lazy(() => import("./pages/Bank"));
-const BankConnected = lazy(() => import("./pages/BankConnected"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminAudit = lazy(() => import("./pages/admin/AdminAudit"));
@@ -243,14 +242,6 @@ export default function App() {
             element={
               <ProtectedWithSubscription>
                 <Bank />
-              </ProtectedWithSubscription>
-            }
-          />
-          <Route
-            path="/bank-connected"
-            element={
-              <ProtectedWithSubscription>
-                <BankConnected />
               </ProtectedWithSubscription>
             }
           />

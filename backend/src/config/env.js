@@ -17,16 +17,7 @@ RATE_LIMIT_MAX: Number(process.env.RATE_LIMIT_MAX || 120),
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || "",
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || "",
   STRIPE_PRICE_ID_MONTHLY: process.env.STRIPE_PRICE_ID_MONTHLY || "",
-  FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:5173",
-
-  GOCARDLESS_SECRET_ID: process.env.GOCARDLESS_SECRET_ID || "",
-  GOCARDLESS_SECRET_KEY: process.env.GOCARDLESS_SECRET_KEY || "",
-
-  TRUELAYER_CLIENT_ID: process.env.TRUELAYER_CLIENT_ID || "",
-  TRUELAYER_CLIENT_SECRET: process.env.TRUELAYER_CLIENT_SECRET || "",
-  TRUELAYER_ENV: process.env.TRUELAYER_ENV || "sandbox",
-  TRUELAYER_SCOPES: process.env.TRUELAYER_SCOPES || "info accounts balance transactions cards offline_access",
-  TRUELAYER_PROVIDERS: process.env.TRUELAYER_PROVIDERS || ""
+  FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:5173"
 };
 
 // Si quieres OBLIGAR Mongo en producción:
