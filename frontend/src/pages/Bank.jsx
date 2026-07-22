@@ -3,6 +3,7 @@ import { apiFetch } from "../lib/api";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Badge } from "../components/ui/Badge";
+import { Modal } from "../components/ui/Modal";
 import { useCurrency } from "../context/CurrencyContext";
 import { 
   Building2, 
@@ -25,6 +26,17 @@ export default function Bank() {
   const [loading, setLoading] = useState(true);
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
+  const [resetFromOpen, setResetFromOpen] = useState(false);
+  const [resetFromConfirmation, setResetFromConfirmation] = useState("");
+  const [resetFromStatus, setResetFromStatus] = useState("");
+  const [resetFromLoading, setResetFromLoading] = useState(false);
+  const [incomeResetOpen, setIncomeResetOpen] = useState(false);
+  const [incomeMonths, setIncomeMonths] = useState([]);
+  const [incomeMonthsLoading, setIncomeMonthsLoading] = useState(false);
+  const [selectedIncomeMonths, setSelectedIncomeMonths] = useState([]);
+  const [incomeResetConfirmation, setIncomeResetConfirmation] = useState("");
+  const [incomeResetStatus, setIncomeResetStatus] = useState("");
+  const [incomeResetLoading, setIncomeResetLoading] = useState(false);
   
   // Filters for Movements
   const [filterType, setFilterType] = useState("all");
@@ -72,11 +84,17 @@ export default function Bank() {
     }
   };
 
-  const handleResetBank = async () => {
-    const label = `${monthName} ${year}`;
-    const warning = `Esto reiniciara Banco desde ${label}. Se eliminaran movimientos y cierres anteriores a ese mes, pero se conservara ${label} en adelante. Escribe RESET para confirmar.`;
-    if (window.prompt(warning) !== "RESET") return;
+  const openResetFromModal = () => {
+    setResetFromConfirmation("");
+    setResetFromStatus("");
+    setResetFromOpen(true);
+  };
 
+  const handleResetBank = async () => {
+    if (resetFromConfirmation !== "RESET") return;
+    const label = `${monthName} ${year}`;
+    setResetFromLoading(true);
+    setResetFromStatus("");
     try {
       const res = await apiFetch("/bank/reset", {
         method: "POST",
@@ -84,10 +102,66 @@ export default function Bank() {
       });
       const deletedMovements = res.data?.deletedMovements ?? 0;
       const deletedClosings = res.data?.deletedClosings ?? 0;
-      alert(`Banco reiniciado desde ${label}. Movimientos eliminados: ${deletedMovements}. Cierres eliminados: ${deletedClosings}.`);
+      setResetFromStatus(`Banco reiniciado desde ${label}. Movimientos eliminados: ${deletedMovements}. Cierres eliminados: ${deletedClosings}.`);
+      setResetFromConfirmation("");
       fetchData();
     } catch (e) {
-      alert(e.message);
+      setResetFromStatus(e.message || "No se pudo reiniciar Banco.");
+    } finally {
+      setResetFromLoading(false);
+    }
+  };
+
+  const loadIncomeMonths = async () => {
+    setIncomeMonthsLoading(true);
+    setIncomeResetStatus("");
+    try {
+      const res = await apiFetch("/bank/income-months");
+      const months = res.data || [];
+      setIncomeMonths(months);
+      setSelectedIncomeMonths([]);
+      setIncomeResetConfirmation("");
+      setIncomeResetOpen(true);
+    } catch (e) {
+      setIncomeResetStatus(e.message || "No se pudieron cargar los meses con ingresos.");
+      setIncomeResetOpen(true);
+    } finally {
+      setIncomeMonthsLoading(false);
+    }
+  };
+
+  const toggleIncomeMonth = (key) => {
+    setSelectedIncomeMonths((current) => (
+      current.includes(key)
+        ? current.filter((item) => item !== key)
+        : [...current, key]
+    ));
+  };
+
+  const handleResetSelectedIncomeMonths = async () => {
+    if (incomeResetConfirmation !== "RESET" || selectedIncomeMonths.length === 0) return;
+    const months = incomeMonths
+      .filter((item) => selectedIncomeMonths.includes(item.key))
+      .map((item) => ({ month: item.month, year: item.year }));
+
+    setIncomeResetLoading(true);
+    setIncomeResetStatus("");
+    try {
+      const res = await apiFetch("/bank/reset-income-months", {
+        method: "POST",
+        body: { months, confirm: "RESET" }
+      });
+      const data = res.data || {};
+      setIncomeResetStatus(`Meses reseteados: ${data.months?.length || 0}. Cobros H & C eliminados: ${data.deletedIncomeReceipts || 0}. Ingresos manuales: ${data.deletedManualIncomes || 0}. Cierres: ${data.deletedClosings || 0}. Movimientos Banco: ${data.deletedBankMovements || 0}.`);
+      setIncomeResetConfirmation("");
+      setSelectedIncomeMonths([]);
+      const refreshed = await apiFetch("/bank/income-months");
+      setIncomeMonths(refreshed.data || []);
+      fetchData();
+    } catch (e) {
+      setIncomeResetStatus(e.message || "No se pudieron resetear los meses seleccionados.");
+    } finally {
+      setIncomeResetLoading(false);
     }
   };
 
@@ -217,8 +291,11 @@ export default function Bank() {
                 <p style={{ margin: 0, color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
                   Usa el mes seleccionado como nuevo inicio. Se eliminan movimientos y cierres anteriores; los datos de {monthName} {year} en adelante se conservan.
                 </p>
-                <Button variant="danger" onClick={handleResetBank} style={{ width: "100%" }}>
+                <Button variant="danger" onClick={openResetFromModal} style={{ width: "100%" }}>
                   <AlertCircle size={18} style={{ marginRight: "0.5rem" }} /> Reiniciar desde este mes
+                </Button>
+                <Button variant="outline" onClick={loadIncomeMonths} isLoading={incomeMonthsLoading} style={{ width: "100%", borderColor: "var(--color-warning)", color: "var(--color-warning)" }}>
+                  <Calendar size={18} style={{ marginRight: "0.5rem" }} /> Resetear meses con ingresos
                 </Button>
               </Card>
             </div>
@@ -343,6 +420,192 @@ export default function Bank() {
           )}
         </>
       )}
+
+      <Modal
+        isOpen={resetFromOpen}
+        onClose={() => {
+          if (!resetFromLoading) setResetFromOpen(false);
+        }}
+        title="Reiniciar Banco"
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{
+            padding: "1rem",
+            borderRadius: "var(--radius-md)",
+            border: "1px solid rgba(245, 158, 11, 0.45)",
+            background: "rgba(245, 158, 11, 0.08)"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-warning)", fontWeight: 900, marginBottom: "0.5rem" }}>
+              <AlertCircle size={18} />
+              Reinicio desde {monthName} {year}
+            </div>
+            <p style={{ margin: 0, color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
+              Se eliminarán movimientos y cierres anteriores a ese mes. Los datos de {monthName} {year} en adelante se conservan.
+            </p>
+          </div>
+
+          <label style={{ display: "flex", flexDirection: "column", gap: "0.5rem", color: "var(--color-text)" }}>
+            <span style={{ fontWeight: 800 }}>Escribe RESET para confirmar</span>
+            <input
+              value={resetFromConfirmation}
+              onChange={(e) => setResetFromConfirmation(e.target.value)}
+              placeholder="RESET"
+              autoComplete="off"
+              disabled={resetFromLoading}
+              style={{
+                width: "100%",
+                padding: "0.85rem 1rem",
+                borderRadius: "var(--radius-md)",
+                border: "1px solid var(--color-border)",
+                backgroundColor: "var(--color-surface)",
+                color: "var(--color-text)",
+                fontWeight: 800
+              }}
+            />
+          </label>
+
+          {resetFromStatus && (
+            <div style={{
+              padding: "0.85rem 1rem",
+              borderRadius: "var(--radius-md)",
+              background: resetFromStatus.startsWith("Banco reiniciado") ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
+              color: resetFromStatus.startsWith("Banco reiniciado") ? "var(--color-success)" : "var(--color-danger)",
+              fontWeight: 800
+            }}>
+              {resetFromStatus}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", flexWrap: "wrap" }}>
+            <Button type="button" variant="ghost" disabled={resetFromLoading} onClick={() => setResetFromOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              isLoading={resetFromLoading}
+              disabled={resetFromConfirmation !== "RESET" || resetFromLoading}
+              onClick={handleResetBank}
+            >
+              Reiniciar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={incomeResetOpen}
+        onClose={() => {
+          if (!incomeResetLoading) setIncomeResetOpen(false);
+        }}
+        title="Resetear meses con ingresos"
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{
+            padding: "1rem",
+            borderRadius: "var(--radius-md)",
+            border: "1px solid rgba(239, 68, 68, 0.45)",
+            background: "rgba(239, 68, 68, 0.08)"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-danger)", fontWeight: 900, marginBottom: "0.5rem" }}>
+              <AlertCircle size={18} />
+              Eliminar ingresos detectados
+            </div>
+            <p style={{ margin: 0, color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
+              Selecciona los meses que quieras resetear. Se eliminarán cobros de H & C, ingresos manuales, cierres y movimientos positivos del Banco de esos meses.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gap: "0.75rem", maxHeight: "35vh", overflowY: "auto", paddingRight: "0.25rem" }}>
+            {incomeMonthsLoading ? (
+              <div style={{ color: "var(--color-text-secondary)", textAlign: "center", padding: "1rem" }}>Buscando meses con ingresos...</div>
+            ) : incomeMonths.length === 0 ? (
+              <div style={{ color: "var(--color-text-secondary)", textAlign: "center", padding: "1rem" }}>No hay meses con ingresos detectados.</div>
+            ) : (
+              incomeMonths.map((item) => {
+                const checked = selectedIncomeMonths.includes(item.key);
+                const label = new Date(item.year, item.month - 1).toLocaleString("es-ES", { month: "long", year: "numeric" });
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => toggleIncomeMonth(item.key)}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "auto 1fr auto",
+                      alignItems: "center",
+                      gap: "0.75rem",
+                      padding: "0.85rem",
+                      borderRadius: "var(--radius-md)",
+                      border: checked ? "1px solid var(--color-danger)" : "1px solid var(--color-border)",
+                      background: checked ? "rgba(239, 68, 68, 0.12)" : "var(--color-surface)",
+                      color: "var(--color-text)",
+                      textAlign: "left",
+                      cursor: "pointer"
+                    }}
+                  >
+                    <input type="checkbox" checked={checked} readOnly />
+                    <div>
+                      <div style={{ fontWeight: 900, textTransform: "capitalize" }}>{label}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)", marginTop: "0.25rem" }}>
+                        Banco: {item.movementCount} mov. · H & C: {item.receiptCount} · Manuales: {item.manualIncomeCount} · Cierres: {item.closingCount}
+                      </div>
+                    </div>
+                    <div style={{ fontWeight: 900, color: "var(--color-success)" }}>{formatCurrency(item.total || item.receiptsTotal || item.manualIncomesTotal || item.closingsTotal)}</div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+
+          <label style={{ display: "flex", flexDirection: "column", gap: "0.5rem", color: "var(--color-text)" }}>
+            <span style={{ fontWeight: 800 }}>Escribe RESET para confirmar</span>
+            <input
+              value={incomeResetConfirmation}
+              onChange={(e) => setIncomeResetConfirmation(e.target.value)}
+              placeholder="RESET"
+              autoComplete="off"
+              disabled={incomeResetLoading}
+              style={{
+                width: "100%",
+                padding: "0.85rem 1rem",
+                borderRadius: "var(--radius-md)",
+                border: "1px solid var(--color-border)",
+                backgroundColor: "var(--color-surface)",
+                color: "var(--color-text)",
+                fontWeight: 800
+              }}
+            />
+          </label>
+
+          {incomeResetStatus && (
+            <div style={{
+              padding: "0.85rem 1rem",
+              borderRadius: "var(--radius-md)",
+              background: incomeResetStatus.startsWith("Meses reseteados") ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
+              color: incomeResetStatus.startsWith("Meses reseteados") ? "var(--color-success)" : "var(--color-danger)",
+              fontWeight: 800
+            }}>
+              {incomeResetStatus}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", flexWrap: "wrap" }}>
+            <Button type="button" variant="ghost" disabled={incomeResetLoading} onClick={() => setIncomeResetOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              isLoading={incomeResetLoading}
+              disabled={incomeResetConfirmation !== "RESET" || selectedIncomeMonths.length === 0 || incomeResetLoading}
+              onClick={handleResetSelectedIncomeMonths}
+            >
+              Eliminar meses seleccionados
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
