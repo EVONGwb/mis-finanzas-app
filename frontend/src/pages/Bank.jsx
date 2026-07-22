@@ -283,21 +283,62 @@ export default function Bank() {
                 </Card>
               </div>
 
-              <Card style={{ padding: "1rem", display: "grid", gap: "0.75rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-warning)", fontWeight: 700 }}>
-                  <AlertCircle size={18} />
-                  Reiniciar Banco
-                </div>
-                <p style={{ margin: 0, color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
-                  Usa el mes seleccionado como nuevo inicio. Se eliminan movimientos y cierres anteriores; los datos de {monthName} {year} en adelante se conservan.
-                </p>
-                <Button variant="danger" onClick={openResetFromModal} style={{ width: "100%" }}>
-                  <AlertCircle size={18} style={{ marginRight: "0.5rem" }} /> Reiniciar desde este mes
-                </Button>
-                <Button variant="outline" onClick={loadIncomeMonths} isLoading={incomeMonthsLoading} style={{ width: "100%", borderColor: "var(--color-warning)", color: "var(--color-warning)" }}>
-                  <Calendar size={18} style={{ marginRight: "0.5rem" }} /> Resetear meses con ingresos
-                </Button>
-              </Card>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  flexWrap: "wrap",
+                  marginTop: "-0.25rem",
+                  marginBottom: "0.75rem"
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={openResetFromModal}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.4rem",
+                    padding: "0.45rem 0.65rem",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid rgba(245, 158, 11, 0.22)",
+                    background: "rgba(245, 158, 11, 0.06)",
+                    color: "var(--color-text-secondary)",
+                    fontSize: "0.78rem",
+                    fontWeight: 800,
+                    cursor: "pointer"
+                  }}
+                  title={`Usar ${monthName} ${year} como nuevo inicio del Banco`}
+                >
+                  <AlertCircle size={13} color="var(--color-warning)" />
+                  Reiniciar desde este mes
+                </button>
+                <button
+                  type="button"
+                  onClick={loadIncomeMonths}
+                  disabled={incomeMonthsLoading}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.4rem",
+                    padding: "0.45rem 0.65rem",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid rgba(245, 158, 11, 0.22)",
+                    background: "rgba(245, 158, 11, 0.06)",
+                    color: "var(--color-text-secondary)",
+                    fontSize: "0.78rem",
+                    fontWeight: 800,
+                    cursor: incomeMonthsLoading ? "wait" : "pointer",
+                    opacity: incomeMonthsLoading ? 0.7 : 1
+                  }}
+                  title="Elegir meses con ingresos para resetear"
+                >
+                  <Calendar size={13} color="var(--color-warning)" />
+                  {incomeMonthsLoading ? "Buscando meses..." : "Resetear meses con ingresos"}
+                </button>
+              </div>
             </div>
           )}
 
