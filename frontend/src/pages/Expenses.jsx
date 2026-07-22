@@ -3,6 +3,7 @@ import { Card } from "../components/ui/Card";
 import { Filter, DollarSign, AlertCircle } from "lucide-react";
 import MonthlyExpenses from "./expenses/MonthlyExpenses";
 import DailyExpenses from "./expenses/DailyExpenses";
+import BankConnectionsPanel from "./expenses/BankConnectionsPanel";
 import { apiFetch } from "../lib/api";
 import { useCurrency } from "../context/CurrencyContext";
 import { Modal } from "../components/ui/Modal";
@@ -130,6 +131,8 @@ export default function Expenses() {
           </div>
         </div>
       </Card>
+
+      <BankConnectionsPanel onImported={fetchTotals} />
 
       <Card style={{ marginBottom: "1.5rem", padding: "1rem", display: "grid", gap: "0.75rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-danger)", fontWeight: 800 }}>
