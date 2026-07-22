@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card } from "../components/ui/Card";
-import { Filter, DollarSign } from "lucide-react";
+import { Filter, DollarSign, AlertCircle } from "lucide-react";
 import MonthlyExpenses from "./expenses/MonthlyExpenses";
 import DailyExpenses from "./expenses/DailyExpenses";
 import { apiFetch } from "../lib/api";
 import { useCurrency } from "../context/CurrencyContext";
 import { Modal } from "../components/ui/Modal";
 import { Button } from "../components/ui/Button";
-import { AlertCircle } from "lucide-react";
 
 export default function Expenses() {
   const { formatCurrency } = useCurrency();
@@ -19,6 +18,10 @@ export default function Expenses() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [yearDraft, setYearDraft] = useState(new Date().getFullYear());
   const [resetVersion, setResetVersion] = useState(0);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetConfirmation, setResetConfirmation] = useState("");
+  const [resetStatus, setResetStatus] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
 
   // Totals state
   const [totals, setTotals] = useState({ monthlyPlanned: 0, monthlyPaid: 0, daily: 0, totalPlanned: 0, totalPaid: 0 });
@@ -53,21 +56,30 @@ export default function Expenses() {
     fetchTotals();
   }, [fetchTotals]);
 
-  const handleResetExpenses = async () => {
-    const confirmation = window.prompt("Esto eliminara todo el historial de gastos: gastos variables, plantillas mensuales, pagos mensuales y movimientos de Banco asociados a gastos. Escribe RESET para confirmar.");
-    if (confirmation !== "RESET") return;
+  const openResetModal = () => {
+    setResetConfirmation("");
+    setResetStatus("");
+    setResetOpen(true);
+  };
 
+  const handleResetExpenses = async () => {
+    if (resetConfirmation !== "RESET") return;
+    setResetLoading(true);
+    setResetStatus("");
     try {
       const res = await apiFetch("/expenses/reset", {
         method: "POST",
         body: { confirm: "RESET" }
       });
       const data = res.data || {};
-      alert(`Gastos reiniciados. Variables: ${data.deletedDailyExpenses || 0}. Plantillas: ${data.deletedMonthlyTemplates || 0}. Pagos mensuales: ${data.deletedMonthlyInstances || 0}. Movimientos Banco: ${data.deletedBankMovements || 0}.`);
+      setResetStatus(`Gastos reiniciados. Variables: ${data.deletedDailyExpenses || 0}. Plantillas: ${data.deletedMonthlyTemplates || 0}. Pagos mensuales: ${data.deletedMonthlyInstances || 0}. Movimientos Banco: ${data.deletedBankMovements || 0}.`);
+      setResetConfirmation("");
       setResetVersion((value) => value + 1);
       fetchTotals();
     } catch (e) {
-      alert(e.message);
+      setResetStatus(e.message || "No se pudo resetear el historial de gastos.");
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -127,7 +139,7 @@ export default function Expenses() {
         <p style={{ margin: 0, color: "var(--color-text-secondary)", fontSize: "0.875rem" }}>
           Elimina todos los gastos variables, plantillas mensuales, pagos confirmados y movimientos del Banco asociados a gastos.
         </p>
-        <Button type="button" variant="danger" onClick={handleResetExpenses} style={{ width: "100%" }}>
+        <Button type="button" variant="danger" onClick={openResetModal} style={{ width: "100%" }}>
           Eliminar historial completo de gastos
         </Button>
       </Card>
@@ -283,6 +295,79 @@ export default function Expenses() {
               }}
             >
               Aplicar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={resetOpen}
+        onClose={() => {
+          if (!resetLoading) setResetOpen(false);
+        }}
+        title="Resetear gastos"
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{
+            padding: "1rem",
+            borderRadius: "var(--radius-md)",
+            border: "1px solid rgba(239, 68, 68, 0.45)",
+            background: "rgba(239, 68, 68, 0.08)",
+            color: "var(--color-text)"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--color-danger)", fontWeight: 900, marginBottom: "0.5rem" }}>
+              <AlertCircle size={18} />
+              Eliminación completa
+            </div>
+            <p style={{ margin: 0, color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
+              Se borrarán todos los gastos variables, plantillas mensuales, pagos confirmados y movimientos del Banco asociados a gastos.
+            </p>
+          </div>
+
+          <label style={{ display: "flex", flexDirection: "column", gap: "0.5rem", color: "var(--color-text)" }}>
+            <span style={{ fontWeight: 800 }}>Escribe RESET para confirmar</span>
+            <input
+              value={resetConfirmation}
+              onChange={(e) => setResetConfirmation(e.target.value)}
+              placeholder="RESET"
+              autoComplete="off"
+              disabled={resetLoading}
+              style={{
+                width: "100%",
+                padding: "0.85rem 1rem",
+                borderRadius: "var(--radius-md)",
+                border: "1px solid var(--color-border)",
+                backgroundColor: "var(--color-surface)",
+                color: "var(--color-text)",
+                fontWeight: 800
+              }}
+            />
+          </label>
+
+          {resetStatus && (
+            <div style={{
+              padding: "0.85rem 1rem",
+              borderRadius: "var(--radius-md)",
+              background: resetStatus.startsWith("Gastos reiniciados") ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
+              color: resetStatus.startsWith("Gastos reiniciados") ? "var(--color-success)" : "var(--color-danger)",
+              fontWeight: 800
+            }}>
+              {resetStatus}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", flexWrap: "wrap" }}>
+            <Button type="button" variant="ghost" disabled={resetLoading} onClick={() => setResetOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              isLoading={resetLoading}
+              disabled={resetConfirmation !== "RESET" || resetLoading}
+              onClick={handleResetExpenses}
+            >
+              Eliminar todo
             </Button>
           </div>
         </div>
