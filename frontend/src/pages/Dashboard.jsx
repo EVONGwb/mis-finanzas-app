@@ -63,29 +63,17 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="animate-fade-in" style={{ paddingBottom: "6rem" }}>
+    <div className="animate-fade-in dashboard-home">
       
       {/* HEADER */}
-      <div style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="dashboard-home-header">
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", width: "100%", justifyContent: "space-between" }}>
-           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--color-text)", letterSpacing: "-0.5px" }}>
+           <h1 className="dashboard-home-title">
              Hola, {user?.name?.split(' ')[0] || "Prudencio"} 👋
            </h1>
            
            {/* Month Selector Compact */}
-           <div style={{ 
-             display: "flex", 
-             alignItems: "center", 
-             gap: "0.25rem", 
-             backgroundColor: "var(--color-surface)", 
-             padding: "0.5rem 0.75rem", 
-             borderRadius: "99px", 
-             border: "1px solid var(--color-border)",
-             color: "var(--color-text-secondary)",
-             fontWeight: 600,
-             fontSize: "0.8rem",
-             boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
-           }}>
+           <div className="dashboard-month-pill">
              <span style={{ textTransform: "capitalize" }}>{new Date().toLocaleString('es-ES', { month: 'long' })}</span>
              <ChevronDown size={14} />
            </div>
@@ -93,14 +81,9 @@ export default function Dashboard() {
       </div>
       
       {/* GRID MENU */}
-      <div style={{ 
-        display: "grid", 
-        gridTemplateColumns: "1fr 1fr", 
-        gap: "0.75rem", // Slightly tighter gap
-        paddingBottom: "1rem"
-      }}>
+      <div className="dashboard-menu-grid">
         {loading ? (
-          Array(6).fill(0).map((_, i) => <Skeleton key={i} height="120px" borderRadius="24px" />)
+          Array(6).fill(0).map((_, i) => <Skeleton key={i} height="var(--dashboard-card-height)" borderRadius="18px" />)
         ) : (
           menuItems.map((item, index) => (
             <Link 
@@ -114,14 +97,8 @@ export default function Dashboard() {
                 gridColumn: item.fullWidth ? "span 2" : "span 1"
               }}
             >
-              <div style={{
+              <div className="dashboard-menu-card" style={{
                 background: item.bg,
-                borderRadius: "20px", // Rounded corners
-                padding: "1rem 1rem 1rem 1rem", // Padding adjusted
-                height: "90px", // Shorter height like the design
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
                 boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
                 transition: "transform 0.1s ease-in-out",
                 cursor: "pointer",
@@ -166,27 +143,16 @@ export default function Dashboard() {
                   marginBottom: "0.25rem"
                 }}>
                    {/* Icon Wrapper */}
-                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <item.icon size={24} strokeWidth={2.5} color="var(--color-on-accent)" />
-                      <h3 style={{ 
-                        fontSize: "0.95rem", 
-                        fontWeight: 800, 
-                        letterSpacing: "0.3px",
-                        lineHeight: 1.1
-                      }}>
+                   <div className="dashboard-card-heading">
+                      <item.icon className="dashboard-card-icon" strokeWidth={2.5} color="var(--color-on-accent)" />
+                      <h3 className="dashboard-card-title">
                         {item.title}
                       </h3>
                    </div>
                 </div>
                 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                  <p style={{ 
-                    fontSize: "0.65rem", 
-                    opacity: 0.9, 
-                    fontWeight: 500,
-                    lineHeight: 1.2,
-                    maxWidth: "85%"
-                  }}>
+                  <p className="dashboard-card-desc">
                     {item.desc}
                   </p>
                   <div style={{ opacity: 0.8 }}>
